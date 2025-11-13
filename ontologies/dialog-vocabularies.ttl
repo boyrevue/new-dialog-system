@@ -310,3 +310,37 @@ vocab:VehicleRegInputMode a vocab:InputMode ;
     vocab:spellingTimeout 5 ;
     vocab:usesSpaceSeparator true ;
     rdfs:comment "Input configuration for vehicle registration numbers" .
+
+vocab:DateInputMode a vocab:InputMode ;
+    rdfs:label "Date Input Mode" ;
+    vocab:supportsLetterByLetterSpelling false ;
+    rdfs:comment "Input configuration for date fields (DD/MM/YYYY or spoken format)" .
+
+vocab:PhoneInputMode a vocab:InputMode ;
+    rdfs:label "Phone Input Mode" ;
+    vocab:supportsLetterByLetterSpelling true ;
+    vocab:spellingTerminationKeyword "end" ;
+    vocab:spellingTimeout 5 ;
+    vocab:usesSpaceSeparator true ;
+    rdfs:comment "Input configuration for UK phone numbers - supports digit-by-digit input" .
+
+vocab:PostcodeInputMode a vocab:InputMode ;
+    rdfs:label "Postcode Input Mode" ;
+    vocab:supportsLetterByLetterSpelling true ;
+    vocab:spellingTerminationKeyword "end" ;
+    vocab:spellingTimeout 5 ;
+    vocab:usesSpaceSeparator true ;
+    rdfs:comment "Input configuration for UK postcodes - supports letter-by-letter spelling" .
+
+vocab:LicenceInputMode a vocab:InputMode ;
+    rdfs:label "Driving Licence Input Mode" ;
+    vocab:supportsLetterByLetterSpelling true ;
+    vocab:spellingTerminationKeyword "end" ;
+    vocab:spellingTimeout 5 ;
+    vocab:usesSpaceSeparator true ;
+    rdfs:comment "Input configuration for UK driving licence numbers - supports letter-by-letter spelling" .
+
+vocab:AddressInputMode a vocab:InputMode ;
+    rdfs:label "Address Input Mode" ;
+    vocab:supportsLetterByLetterSpelling false ;
+    rdfs:comment "Input configuration for address lines - free text input" .

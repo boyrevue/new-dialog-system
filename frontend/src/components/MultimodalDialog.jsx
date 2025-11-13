@@ -449,7 +449,6 @@ const MultimodalDialog = () => {
     }
 
     try {
-      setIsRecording(true);
       setError(null);
       console.log('Starting speech recognition...');
 
@@ -467,15 +466,17 @@ const MultimodalDialog = () => {
 
           mediaRecorderRef.current.start();
           console.log('MediaRecorder started');
+
+          // Start speech recognition AFTER microphone permission is granted
+          recognitionRef.current.start();
+          console.log('SpeechRecognition.start() called');
+          setIsRecording(true);
         })
         .catch(err => {
           console.error('Microphone access error:', err);
           setError('Microphone access denied: ' + err.message);
           setIsRecording(false);
         });
-
-      recognitionRef.current.start();
-      console.log('SpeechRecognition.start() called');
     } catch (err) {
       console.error('Failed to start speech recognition:', err);
       setError('Failed to start speech recognition: ' + err.message);

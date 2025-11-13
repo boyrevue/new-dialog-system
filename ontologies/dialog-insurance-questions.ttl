@@ -1,0 +1,995 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix mm: <http://diggi.io/ontology/multimodal#> .
+@prefix vocab: <http://diggi.io/ontology/vocabularies#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ============================================================================
+# SECTION 1: DRIVERS - 12 Questions
+# ============================================================================
+
+# Q1: First Name
+:FirstNameQuestion a mm:MultimodalQuestion ;
+    rdfs:label "First Name" ;
+    :questionId "q_first_name" ;
+    :questionText "What is your first name?" ;
+    :slotName "firstName" ;
+    :required true ;
+    :spellingRequired true ;
+    :order 10 ;
+    :inSection :DriversSection ;
+    :hasInputMode vocab:NameInputMode ;
+    mm:hasTTSPrompt :FirstNameTTS .
+
+:FirstNameTTS a mm:TTSPrompt ;
+    mm:ttsText "Please tell me your first name." ;
+    mm:ttsVariant1 "Please tell me your first name." ;
+    mm:ttsVariant2 "Could you provide your first name, please?" ;
+    mm:ttsVariant3 "What's your first name?" ;
+    mm:ttsVariant4 "I need your first name." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q2: Last Name
+:LastNameQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Last Name" ;
+    :questionId "q_last_name" ;
+    :questionText "What is your last name?" ;
+    :slotName "lastName" ;
+    :required true ;
+    :spellingRequired true ;
+    :order 11 ;
+    :inSection :DriversSection ;
+    :hasInputMode vocab:NameInputMode ;
+    mm:hasTTSPrompt :LastNameTTS .
+
+:LastNameTTS a mm:TTSPrompt ;
+    mm:ttsText "Please tell me your last name or surname." ;
+    mm:ttsVariant1 "Please tell me your last name or surname." ;
+    mm:ttsVariant2 "Could you provide your surname, please?" ;
+    mm:ttsVariant3 "What's your family name?" ;
+    mm:ttsVariant4 "I need your last name." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q3: Date of Birth
+:DateOfBirthQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Date of Birth" ;
+    :questionId "q_date_of_birth" ;
+    :questionText "What is your date of birth?" ;
+    :slotName "dateOfBirth" ;
+    :required true ;
+    :order 12 ;
+    :inSection :DriversSection ;
+    :hasInputMode vocab:DateInputMode ;
+    mm:hasTTSPrompt :DateOfBirthTTS .
+
+:DateOfBirthTTS a mm:TTSPrompt ;
+    mm:ttsText "Please tell me your date of birth. For example, fifteenth of March nineteen ninety." ;
+    mm:ttsVariant1 "Please tell me your date of birth. For example, fifteenth of March nineteen ninety." ;
+    mm:ttsVariant2 "What's your date of birth? Please say it as day, month, year." ;
+    mm:ttsVariant3 "Could you provide your date of birth, please?" ;
+    mm:ttsVariant4 "When were you born?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q4: Email
+:EmailQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Email Address" ;
+    :questionId "q_email" ;
+    :questionText "What is your email address?" ;
+    :slotName "email" ;
+    :required true ;
+    :spellingRequired true ;
+    :order 13 ;
+    :inSection :DriversSection ;
+    :hasInputMode vocab:EmailInputMode ;
+    mm:hasTTSPrompt :EmailTTS .
+
+:EmailTTS a mm:TTSPrompt ;
+    mm:ttsText "Please tell me your email address. You can spell it letter by letter." ;
+    mm:ttsVariant1 "Please tell me your email address. You can spell it letter by letter." ;
+    mm:ttsVariant2 "What's your email address? Please spell it out." ;
+    mm:ttsVariant3 "Could you provide your email, spelling it letter by letter?" ;
+    mm:ttsVariant4 "I need your email address. Please spell it." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q5: Phone Number
+:PhoneQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Phone Number" ;
+    :questionId "q_phone" ;
+    :questionText "What is your phone number?" ;
+    :slotName "phone" ;
+    :required true ;
+    :order 14 ;
+    :inSection :DriversSection ;
+    :hasInputMode vocab:PhoneInputMode ;
+    mm:hasTTSPrompt :PhoneTTS .
+
+:PhoneTTS a mm:TTSPrompt ;
+    mm:ttsText "Please tell me your UK mobile number, starting with zero seven." ;
+    mm:ttsVariant1 "Please tell me your UK mobile number, starting with zero seven." ;
+    mm:ttsVariant2 "What's your mobile phone number? UK numbers start with zero seven." ;
+    mm:ttsVariant3 "Could you provide your phone number, please?" ;
+    mm:ttsVariant4 "I need your UK mobile number." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q6: Address
+:AddressQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Address" ;
+    :questionId "q_address" ;
+    :questionText "What is your address?" ;
+    :slotName "address" ;
+    :required true ;
+    :order 15 ;
+    :inSection :DriversSection ;
+    mm:hasTTSPrompt :AddressTTS .
+
+:AddressTTS a mm:TTSPrompt ;
+    mm:ttsText "Please tell me your full address, including house number and street name." ;
+    mm:ttsVariant1 "Please tell me your full address, including house number and street name." ;
+    mm:ttsVariant2 "What's your home address? Include the house number and street." ;
+    mm:ttsVariant3 "Could you provide your full address, please?" ;
+    mm:ttsVariant4 "I need your complete address." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q7: Postcode
+:PostcodeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Postcode" ;
+    :questionId "q_postcode" ;
+    :questionText "What is your postcode?" ;
+    :slotName "postcode" ;
+    :required true ;
+    :spellingRequired true ;
+    :order 16 ;
+    :inSection :DriversSection ;
+    :hasInputMode vocab:PostcodeInputMode ;
+    mm:hasTTSPrompt :PostcodeTTS .
+
+:PostcodeTTS a mm:TTSPrompt ;
+    mm:ttsText "Please tell me your postcode. You can spell it letter by letter." ;
+    mm:ttsVariant1 "Please tell me your postcode. You can spell it letter by letter." ;
+    mm:ttsVariant2 "What's your postcode? Please spell it out." ;
+    mm:ttsVariant3 "Could you provide your postcode, spelling it if needed?" ;
+    mm:ttsVariant4 "I need your postcode." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q8: Licence Type
+:LicenceTypeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Licence Type" ;
+    :questionId "q_licence_type" ;
+    :questionText "What type of driving licence do you have?" ;
+    :slotName "licenceType" ;
+    :required true ;
+    :order 17 ;
+    :inSection :DriversSection ;
+    mm:hasTTSPrompt :LicenceTypeTTS ;
+    mm:hasOption :LicenceTypeFull, :LicenceTypeProvisional, :LicenceTypeInternational .
+
+:LicenceTypeTTS a mm:TTSPrompt ;
+    mm:ttsText "What type of driving licence do you have? Full UK, Provisional, or International?" ;
+    mm:ttsVariant1 "What type of driving licence do you have? Full UK, Provisional, or International?" ;
+    mm:ttsVariant2 "Please select your licence type: Full UK Licence, Provisional, or International." ;
+    mm:ttsVariant3 "What kind of driving licence do you hold?" ;
+    mm:ttsVariant4 "Tell me your licence type." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:LicenceTypeFull a mm:SelectOption ;
+    mm:optionValue "FULL_UK" ;
+    mm:optionLabel "Full UK Licence" ;
+    mm:optionDescription "Full UK driving licence" ;
+    mm:optionAlias "Full" ;
+    mm:optionAlias "Full UK" ;
+    mm:optionPhonetic "full you-kay" .
+
+:LicenceTypeProvisional a mm:SelectOption ;
+    mm:optionValue "PROVISIONAL" ;
+    mm:optionLabel "Provisional Licence" ;
+    mm:optionDescription "Provisional driving licence" ;
+    mm:optionAlias "Provisional" ;
+    mm:optionPhonetic "pro-vizh-uh-nul" .
+
+:LicenceTypeInternational a mm:SelectOption ;
+    mm:optionValue "INTERNATIONAL" ;
+    mm:optionLabel "International Licence" ;
+    mm:optionDescription "International driving licence" ;
+    mm:optionAlias "International" ;
+    mm:optionPhonetic "in-ter-nash-uh-nul" .
+
+# Q9: Licence Number
+:LicenceNumberQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Licence Number" ;
+    :questionId "q_licence_number" ;
+    :questionText "What is your driving licence number?" ;
+    :slotName "licenceNumber" ;
+    :required true ;
+    :spellingRequired true ;
+    :order 18 ;
+    :inSection :DriversSection ;
+    :hasInputMode vocab:LicenceInputMode ;
+    mm:hasTTSPrompt :LicenceNumberTTS .
+
+:LicenceNumberTTS a mm:TTSPrompt ;
+    mm:ttsText "Please tell me your driving licence number. You can spell it letter by letter." ;
+    mm:ttsVariant1 "Please tell me your driving licence number. You can spell it letter by letter." ;
+    mm:ttsVariant2 "What's your licence number? Please spell it out." ;
+    mm:ttsVariant3 "Could you provide your driving licence number?" ;
+    mm:ttsVariant4 "I need your licence number." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q10: Years Licence Held
+:YearsHeldQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Years Licence Held" ;
+    :questionId "q_years_held" ;
+    :questionText "How many years have you held your licence?" ;
+    :slotName "yearsHeld" ;
+    :required true ;
+    :order 19 ;
+    :inSection :DriversSection ;
+    mm:hasTTSPrompt :YearsHeldTTS .
+
+:YearsHeldTTS a mm:TTSPrompt ;
+    mm:ttsText "How many years have you held your driving licence?" ;
+    mm:ttsVariant1 "How many years have you held your driving licence?" ;
+    mm:ttsVariant2 "For how long have you had your licence? Please tell me in years." ;
+    mm:ttsVariant3 "How many years of driving experience do you have?" ;
+    mm:ttsVariant4 "Years you've held your licence?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# ============================================================================
+# SECTION 2: VEHICLE - 8 Main Questions
+# ============================================================================
+
+# Q11: Registration Number
+:RegistrationNumberQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Registration Number" ;
+    :questionId "q_registration_number" ;
+    :questionText "What is your vehicle registration number?" ;
+    :slotName "registrationNumber" ;
+    :required true ;
+    :spellingRequired true ;
+    :order 20 ;
+    :inSection :VehicleSection ;
+    :hasInputMode vocab:VehicleRegInputMode ;
+    mm:hasTTSPrompt :RegistrationNumberTTS .
+
+:RegistrationNumberTTS a mm:TTSPrompt ;
+    mm:ttsText "Please tell me your vehicle registration number. You can spell it letter by letter." ;
+    mm:ttsVariant1 "Please tell me your vehicle registration number. You can spell it letter by letter." ;
+    mm:ttsVariant2 "What's your car registration? Please spell it out." ;
+    mm:ttsVariant3 "Could you provide your vehicle reg, spelling it if needed?" ;
+    mm:ttsVariant4 "I need your registration number." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q12: Vehicle Make
+:VehicleMakeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Make" ;
+    :questionId "q_vehicle_make" ;
+    :questionText "What make is your vehicle?" ;
+    :slotName "vehicleMake" ;
+    :required true ;
+    :order 21 ;
+    :inSection :VehicleSection ;
+    mm:hasTTSPrompt :VehicleMakeTTS ;
+    mm:hasOption :MakeToyota, :MakeVolkswagen, :MakeFord, :MakeBMW, :MakeMercedes,
+                 :MakeAudi, :MakeHonda, :MakeNissan, :MakePeugeot, :MakeRenault,
+                 :MakeCitroen, :MakeMazda, :MakeHyundai, :MakeKia, :MakeSeat,
+                 :MakeSkoda, :MakeVolvo, :MakeLandRover, :MakeJaguar, :MakeMini .
+
+:VehicleMakeTTS a mm:TTSPrompt ;
+    mm:ttsText "What make is your vehicle? For example, Toyota, Ford, or BMW." ;
+    mm:ttsVariant1 "What make is your vehicle? For example, Toyota, Ford, or BMW." ;
+    mm:ttsVariant2 "Which manufacturer made your car?" ;
+    mm:ttsVariant3 "What's the make of your vehicle?" ;
+    mm:ttsVariant4 "Tell me your car's make." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Vehicle makes defined in dialog-multimodal.ttl (already exist)
+
+# Q13: Vehicle Model
+:VehicleModelQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Model" ;
+    :questionId "q_vehicle_model" ;
+    :questionText "What model is your vehicle?" ;
+    :slotName "vehicleModel" ;
+    :required true ;
+    :order 22 ;
+    :inSection :VehicleSection ;
+    mm:hasTTSPrompt :VehicleModelTTS .
+
+:VehicleModelTTS a mm:TTSPrompt ;
+    mm:ttsText "What model is your vehicle? For example, Corolla, Focus, or Three Series." ;
+    mm:ttsVariant1 "What model is your vehicle? For example, Corolla, Focus, or Three Series." ;
+    mm:ttsVariant2 "Which model is your car?" ;
+    mm:ttsVariant3 "What's your vehicle model?" ;
+    mm:ttsVariant4 "Tell me the model." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q14: Vehicle Year
+:VehicleYearQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Year" ;
+    :questionId "q_vehicle_year" ;
+    :questionText "What year was your vehicle manufactured?" ;
+    :slotName "vehicleYear" ;
+    :required true ;
+    :order 23 ;
+    :inSection :VehicleSection ;
+    mm:hasTTSPrompt :VehicleYearTTS .
+
+:VehicleYearTTS a mm:TTSPrompt ;
+    mm:ttsText "What year was your vehicle manufactured? For example, two thousand and twenty." ;
+    mm:ttsVariant1 "What year was your vehicle manufactured? For example, two thousand and twenty." ;
+    mm:ttsVariant2 "In which year was your car made?" ;
+    mm:ttsVariant3 "What's your vehicle's year?" ;
+    mm:ttsVariant4 "Tell me the year." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q15: Annual Mileage
+:AnnualMileageQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Annual Mileage" ;
+    :questionId "q_annual_mileage" ;
+    :questionText "What is your estimated annual mileage?" ;
+    :slotName "annualMileage" ;
+    :required true ;
+    :order 24 ;
+    :inSection :VehicleSection ;
+    mm:hasTTSPrompt :AnnualMileageTTS .
+
+:AnnualMileageTTS a mm:TTSPrompt ;
+    mm:ttsText "What is your estimated annual mileage? This is how many miles you drive per year." ;
+    mm:ttsVariant1 "What is your estimated annual mileage? This is how many miles you drive per year." ;
+    mm:ttsVariant2 "How many miles do you drive each year, approximately?" ;
+    mm:ttsVariant3 "What's your yearly mileage?" ;
+    mm:ttsVariant4 "Tell me your annual mileage." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q16: Vehicle Value
+:VehicleValueQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Value" ;
+    :questionId "q_vehicle_value" ;
+    :questionText "What is the current value of your vehicle?" ;
+    :slotName "vehicleValue" ;
+    :required true ;
+    :order 25 ;
+    :inSection :VehicleSection ;
+    mm:hasTTSPrompt :VehicleValueTTS .
+
+:VehicleValueTTS a mm:TTSPrompt ;
+    mm:ttsText "What is the current value of your vehicle in pounds?" ;
+    mm:ttsVariant1 "What is the current value of your vehicle in pounds?" ;
+    mm:ttsVariant2 "How much is your car worth?" ;
+    mm:ttsVariant3 "What's your vehicle's current market value?" ;
+    mm:ttsVariant4 "Tell me your car's value." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q17: Overnight Location
+:OvernightLocationQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Overnight Parking" ;
+    :questionId "q_overnight_location" ;
+    :questionText "Where is your vehicle parked overnight?" ;
+    :slotName "overnightLocation" ;
+    :required true ;
+    :order 26 ;
+    :inSection :VehicleSection ;
+    mm:hasTTSPrompt :OvernightLocationTTS ;
+    mm:hasOption :ParkingGarage, :ParkingDriveway, :ParkingStreet, :ParkingCarPark .
+
+:OvernightLocationTTS a mm:TTSPrompt ;
+    mm:ttsText "Where is your vehicle usually parked overnight? Garage, driveway, street, or car park?" ;
+    mm:ttsVariant1 "Where is your vehicle usually parked overnight? Garage, driveway, street, or car park?" ;
+    mm:ttsVariant2 "Where do you park your car at night?" ;
+    mm:ttsVariant3 "What's your overnight parking location?" ;
+    mm:ttsVariant4 "Where do you park overnight?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:ParkingGarage a mm:SelectOption ;
+    mm:optionValue "GARAGE" ;
+    mm:optionLabel "Garage" ;
+    mm:optionDescription "Parked in a garage" .
+
+:ParkingDriveway a mm:SelectOption ;
+    mm:optionValue "DRIVEWAY" ;
+    mm:optionLabel "Driveway" ;
+    mm:optionDescription "Parked on a driveway" .
+
+:ParkingStreet a mm:SelectOption ;
+    mm:optionValue "STREET" ;
+    mm:optionLabel "Street" ;
+    mm:optionDescription "Parked on the street" .
+
+:ParkingCarPark a mm:SelectOption ;
+    mm:optionValue "CAR_PARK" ;
+    mm:optionLabel "Car Park" ;
+    mm:optionDescription "Parked in a car park" .
+
+# Q18: Has Modifications
+:HasModificationsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Modifications" ;
+    :questionId "q_has_modifications" ;
+    :questionText "Does your vehicle have any modifications?" ;
+    :slotName "hasModifications" ;
+    :required true ;
+    :order 27 ;
+    :inSection :VehicleSection ;
+    mm:hasTTSPrompt :HasModificationsTTS ;
+    mm:hasOption :ModsYes, :ModsNo .
+
+:HasModificationsTTS a mm:TTSPrompt ;
+    mm:ttsText "Does your vehicle have any modifications? This includes performance, cosmetic, or any other changes from standard." ;
+    mm:ttsVariant1 "Does your vehicle have any modifications? This includes performance, cosmetic, or any other changes from standard." ;
+    mm:ttsVariant2 "Has your car been modified in any way?" ;
+    mm:ttsVariant3 "Are there any modifications to your vehicle?" ;
+    mm:ttsVariant4 "Any mods on your car?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:ModsYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "Vehicle has modifications" .
+
+:ModsNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No modifications" .
+
+# ============================================================================
+# SECTION 3: POLICY - 5 Questions
+# ============================================================================
+
+# Q19: Cover Type
+:CoverTypeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Cover Type" ;
+    :questionId "q_cover_type" ;
+    :questionText "What type of cover would you like?" ;
+    :slotName "coverType" ;
+    :required true ;
+    :order 30 ;
+    :inSection :PolicySection ;
+    mm:hasTTSPrompt :CoverTypeTTS ;
+    mm:hasOption :CoverComprehensive, :CoverTPFT, :CoverTP .
+
+:CoverTypeTTS a mm:TTSPrompt ;
+    mm:ttsText "What type of cover would you like? Comprehensive, Third Party Fire and Theft, or Third Party only?" ;
+    mm:ttsVariant1 "What type of cover would you like? Comprehensive, Third Party Fire and Theft, or Third Party only?" ;
+    mm:ttsVariant2 "Which level of insurance cover do you need?" ;
+    mm:ttsVariant3 "What type of insurance coverage?" ;
+    mm:ttsVariant4 "Tell me your preferred cover type." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:CoverComprehensive a mm:SelectOption ;
+    mm:optionValue "COMPREHENSIVE" ;
+    mm:optionLabel "Comprehensive" ;
+    mm:optionDescription "Full comprehensive cover" ;
+    mm:optionAlias "Comp" ;
+    mm:optionAlias "Fully Comp" .
+
+:CoverTPFT a mm:SelectOption ;
+    mm:optionValue "TPFT" ;
+    mm:optionLabel "Third Party Fire & Theft" ;
+    mm:optionDescription "Third party, fire and theft" ;
+    mm:optionAlias "TPFT" ;
+    mm:optionAlias "Third Party Fire and Theft" .
+
+:CoverTP a mm:SelectOption ;
+    mm:optionValue "TP" ;
+    mm:optionLabel "Third Party" ;
+    mm:optionDescription "Third party only" ;
+    mm:optionAlias "TP" ;
+    mm:optionAlias "Third Party Only" .
+
+# Q20: Start Date
+:StartDateQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Policy Start Date" ;
+    :questionId "q_start_date" ;
+    :questionText "When would you like your policy to start?" ;
+    :slotName "startDate" ;
+    :required true ;
+    :order 31 ;
+    :inSection :PolicySection ;
+    mm:hasTTSPrompt :StartDateTTS .
+
+:StartDateTTS a mm:TTSPrompt ;
+    mm:ttsText "When would you like your policy to start? Please tell me the date." ;
+    mm:ttsVariant1 "When would you like your policy to start? Please tell me the date." ;
+    mm:ttsVariant2 "What's your preferred start date for the insurance?" ;
+    mm:ttsVariant3 "When should your cover begin?" ;
+    mm:ttsVariant4 "Tell me the start date." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q21: Voluntary Excess
+:VoluntaryExcessQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Voluntary Excess" ;
+    :questionId "q_voluntary_excess" ;
+    :questionText "What voluntary excess would you like?" ;
+    :slotName "voluntaryExcess" ;
+    :required true ;
+    :order 32 ;
+    :inSection :PolicySection ;
+    mm:hasTTSPrompt :VoluntaryExcessTTS ;
+    mm:hasOption :Excess0, :Excess100, :Excess200, :Excess300, :Excess500, :Excess1000 .
+
+:VoluntaryExcessTTS a mm:TTSPrompt ;
+    mm:ttsText "What voluntary excess would you like? This is the amount you pay towards a claim. Options are zero, one hundred, two hundred, three hundred, five hundred, or one thousand pounds." ;
+    mm:ttsVariant1 "What voluntary excess would you like? This is the amount you pay towards a claim. Options are zero, one hundred, two hundred, three hundred, five hundred, or one thousand pounds." ;
+    mm:ttsVariant2 "Choose your voluntary excess amount." ;
+    mm:ttsVariant3 "What excess level do you prefer?" ;
+    mm:ttsVariant4 "Tell me your excess amount." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:Excess0 a mm:SelectOption ;
+    mm:optionValue "0" ;
+    mm:optionLabel "£0" ;
+    mm:optionDescription "No voluntary excess" .
+
+:Excess100 a mm:SelectOption ;
+    mm:optionValue "100" ;
+    mm:optionLabel "£100" ;
+    mm:optionDescription "One hundred pounds excess" .
+
+:Excess200 a mm:SelectOption ;
+    mm:optionValue "200" ;
+    mm:optionLabel "£200" ;
+    mm:optionDescription "Two hundred pounds excess" .
+
+:Excess300 a mm:SelectOption ;
+    mm:optionValue "300" ;
+    mm:optionLabel "£300" ;
+    mm:optionDescription "Three hundred pounds excess" .
+
+:Excess500 a mm:SelectOption ;
+    mm:optionValue "500" ;
+    mm:optionLabel "£500" ;
+    mm:optionDescription "Five hundred pounds excess" .
+
+:Excess1000 a mm:SelectOption ;
+    mm:optionValue "1000" ;
+    mm:optionLabel "£1000" ;
+    mm:optionDescription "One thousand pounds excess" .
+
+# Q22: NCD Years
+:NCDYearsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "No Claims Discount" ;
+    :questionId "q_ncd_years" ;
+    :questionText "How many years of no claims discount do you have?" ;
+    :slotName "ncdYears" ;
+    :required true ;
+    :order 33 ;
+    :inSection :PolicySection ;
+    mm:hasTTSPrompt :NCDYearsTTS .
+
+:NCDYearsTTS a mm:TTSPrompt ;
+    mm:ttsText "How many years of no claims discount do you have? This is the number of claim-free years." ;
+    mm:ttsVariant1 "How many years of no claims discount do you have? This is the number of claim-free years." ;
+    mm:ttsVariant2 "What's your no claims bonus in years?" ;
+    mm:ttsVariant3 "How many years NCD?" ;
+    mm:ttsVariant4 "Tell me your no claims years." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q23: Protect NCD
+:ProtectNCDQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Protect No Claims" ;
+    :questionId "q_protect_ncd" ;
+    :questionText "Would you like to protect your no claims discount?" ;
+    :slotName "protectNCD" ;
+    :required false ;
+    :order 34 ;
+    :inSection :PolicySection ;
+    mm:hasTTSPrompt :ProtectNCDTTS ;
+    mm:hasOption :ProtectYes, :ProtectNo .
+
+:ProtectNCDTTS a mm:TTSPrompt ;
+    mm:ttsText "Would you like to protect your no claims discount for an additional fee?" ;
+    mm:ttsVariant1 "Would you like to protect your no claims discount for an additional fee?" ;
+    mm:ttsVariant2 "Do you want NCD protection?" ;
+    mm:ttsVariant3 "Protect your no claims bonus?" ;
+    mm:ttsVariant4 "NCD protection - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:ProtectYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "Protect my NCD" .
+
+:ProtectNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "Don't protect NCD" .
+
+# ============================================================================
+# SECTION 4: CLAIMS - 2 Main Questions (with conditional sub-questions)
+# ============================================================================
+
+# Q24: Has Claims or Accidents
+:HasClaimsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Claims or Accidents" ;
+    :questionId "q_has_claims" ;
+    :questionText "Have you had any claims or accidents in the last 5 years?" ;
+    :slotName "hasClaimsOrAccidents" ;
+    :required true ;
+    :order 40 ;
+    :inSection :ClaimsSection ;
+    mm:hasTTSPrompt :HasClaimsTTS ;
+    mm:hasOption :ClaimsYes, :ClaimsNo .
+
+:HasClaimsTTS a mm:TTSPrompt ;
+    mm:ttsText "Have you had any claims or accidents in the last five years?" ;
+    mm:ttsVariant1 "Have you had any claims or accidents in the last five years?" ;
+    mm:ttsVariant2 "Any insurance claims or accidents in the past five years?" ;
+    mm:ttsVariant3 "Have you made any claims recently?" ;
+    mm:ttsVariant4 "Any claims or accidents?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:ClaimsYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "I have had claims or accidents" .
+
+:ClaimsNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No claims or accidents" .
+
+# Q25: Has Convictions
+:HasConvictionsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driving Convictions" ;
+    :questionId "q_has_convictions" ;
+    :questionText "Do you have any driving convictions?" ;
+    :slotName "hasConvictions" ;
+    :required true ;
+    :order 41 ;
+    :inSection :ClaimsSection ;
+    mm:hasTTSPrompt :HasConvictionsTTS ;
+    mm:hasOption :ConvictionsYes, :ConvictionsNo .
+
+:HasConvictionsTTS a mm:TTSPrompt ;
+    mm:ttsText "Do you have any driving convictions or penalty points?" ;
+    mm:ttsVariant1 "Do you have any driving convictions or penalty points?" ;
+    mm:ttsVariant2 "Any motoring convictions?" ;
+    mm:ttsVariant3 "Do you have penalty points?" ;
+    mm:ttsVariant4 "Any convictions?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:ConvictionsYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "I have driving convictions" .
+
+:ConvictionsNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No driving convictions" .
+
+# ============================================================================
+# SECTION 5: PAYMENT - 2 Questions
+# ============================================================================
+
+# Q26: Payment Frequency
+:PaymentFrequencyQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Payment Frequency" ;
+    :questionId "q_payment_frequency" ;
+    :questionText "How would you like to pay?" ;
+    :slotName "paymentFrequency" ;
+    :required true ;
+    :order 50 ;
+    :inSection :PaymentSection ;
+    mm:hasTTSPrompt :PaymentFrequencyTTS ;
+    mm:hasOption :PayAnnual, :PayMonthly .
+
+:PaymentFrequencyTTS a mm:TTSPrompt ;
+    mm:ttsText "How would you like to pay? Annually in one payment, or monthly?" ;
+    mm:ttsVariant1 "How would you like to pay? Annually in one payment, or monthly?" ;
+    mm:ttsVariant2 "Choose your payment frequency: annual or monthly." ;
+    mm:ttsVariant3 "Pay annually or monthly?" ;
+    mm:ttsVariant4 "Payment frequency?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:PayAnnual a mm:SelectOption ;
+    mm:optionValue "ANNUAL" ;
+    mm:optionLabel "Annual Payment" ;
+    mm:optionDescription "Pay once per year" ;
+    mm:optionAlias "Annual" ;
+    mm:optionAlias "Yearly" .
+
+:PayMonthly a mm:SelectOption ;
+    mm:optionValue "MONTHLY" ;
+    mm:optionLabel "Monthly Payment" ;
+    mm:optionDescription "Pay monthly" ;
+    mm:optionAlias "Monthly" ;
+    mm:optionAlias "Per month" .
+
+# Q27: Payment Method
+:PaymentMethodQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Payment Method" ;
+    :questionId "q_payment_method" ;
+    :questionText "What payment method would you like to use?" ;
+    :slotName "paymentMethod" ;
+    :required true ;
+    :order 51 ;
+    :inSection :PaymentSection ;
+    mm:hasTTSPrompt :PaymentMethodTTS ;
+    mm:hasOption :PayCredit, :PayDebit, :PayDD .
+
+:PaymentMethodTTS a mm:TTSPrompt ;
+    mm:ttsText "What payment method would you like to use? Credit card, debit card, or direct debit?" ;
+    mm:ttsVariant1 "What payment method would you like to use? Credit card, debit card, or direct debit?" ;
+    mm:ttsVariant2 "How will you be paying?" ;
+    mm:ttsVariant3 "Choose your payment method." ;
+    mm:ttsVariant4 "Payment method?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:PayCredit a mm:SelectOption ;
+    mm:optionValue "CREDIT_CARD" ;
+    mm:optionLabel "Credit Card" ;
+    mm:optionDescription "Pay by credit card" .
+
+:PayDebit a mm:SelectOption ;
+    mm:optionValue "DEBIT_CARD" ;
+    mm:optionLabel "Debit Card" ;
+    mm:optionDescription "Pay by debit card" .
+
+:PayDD a mm:SelectOption ;
+    mm:optionValue "DIRECT_DEBIT" ;
+    mm:optionLabel "Direct Debit" ;
+    mm:optionDescription "Pay by direct debit" .
+
+# ============================================================================
+# SECTION 6: EXTRAS - 3 Questions
+# ============================================================================
+
+# Q28: Breakdown Cover
+:BreakdownCoverQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Breakdown Cover" ;
+    :questionId "q_breakdown_cover" ;
+    :questionText "Would you like breakdown cover?" ;
+    :slotName "breakdownCover" ;
+    :required false ;
+    :order 60 ;
+    :inSection :ExtrasSection ;
+    mm:hasTTSPrompt :BreakdownCoverTTS ;
+    mm:hasOption :BreakdownNone, :BreakdownRoadside, :BreakdownNational, :BreakdownEuropean .
+
+:BreakdownCoverTTS a mm:TTSPrompt ;
+    mm:ttsText "Would you like breakdown cover? Options are none, roadside assistance, national coverage, or European coverage." ;
+    mm:ttsVariant1 "Would you like breakdown cover? Options are none, roadside assistance, national coverage, or European coverage." ;
+    mm:ttsVariant2 "Do you want breakdown cover?" ;
+    mm:ttsVariant3 "Choose your breakdown level." ;
+    mm:ttsVariant4 "Breakdown cover?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:BreakdownNone a mm:SelectOption ;
+    mm:optionValue "NONE" ;
+    mm:optionLabel "No Breakdown Cover" ;
+    mm:optionDescription "No breakdown assistance" .
+
+:BreakdownRoadside a mm:SelectOption ;
+    mm:optionValue "ROADSIDE" ;
+    mm:optionLabel "Roadside Assistance" ;
+    mm:optionDescription "Roadside breakdown assistance" .
+
+:BreakdownNational a mm:SelectOption ;
+    mm:optionValue "NATIONAL" ;
+    mm:optionLabel "National Coverage" ;
+    mm:optionDescription "UK-wide breakdown cover" .
+
+:BreakdownEuropean a mm:SelectOption ;
+    mm:optionValue "EUROPEAN" ;
+    mm:optionLabel "European Coverage" ;
+    mm:optionDescription "European breakdown cover" .
+
+# Q29: Legal Expenses
+:LegalExpensesQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Legal Expenses" ;
+    :questionId "q_legal_expenses" ;
+    :questionText "Would you like legal expenses cover?" ;
+    :slotName "legalExpenses" ;
+    :required false ;
+    :order 61 ;
+    :inSection :ExtrasSection ;
+    mm:hasTTSPrompt :LegalExpensesTTS ;
+    mm:hasOption :LegalYes, :LegalNo .
+
+:LegalExpensesTTS a mm:TTSPrompt ;
+    mm:ttsText "Would you like legal expenses cover? This helps with legal costs after an accident." ;
+    mm:ttsVariant1 "Would you like legal expenses cover? This helps with legal costs after an accident." ;
+    mm:ttsVariant2 "Do you want legal expenses protection?" ;
+    mm:ttsVariant3 "Add legal cover?" ;
+    mm:ttsVariant4 "Legal expenses?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:LegalYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "Add legal expenses cover" .
+
+:LegalNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No legal expenses cover" .
+
+# Q30: Courtesy Car
+:CourtesyCarQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Courtesy Car" ;
+    :questionId "q_courtesy_car" ;
+    :questionText "Would you like a courtesy car?" ;
+    :slotName "courtesyCar" ;
+    :required false ;
+    :order 62 ;
+    :inSection :ExtrasSection ;
+    mm:hasTTSPrompt :CourtesyCarTTS ;
+    mm:hasOption :CarYes, :CarNo .
+
+:CourtesyCarTTS a mm:TTSPrompt ;
+    mm:ttsText "Would you like a courtesy car while yours is being repaired?" ;
+    mm:ttsVariant1 "Would you like a courtesy car while yours is being repaired?" ;
+    mm:ttsVariant2 "Do you want a replacement car during repairs?" ;
+    mm:ttsVariant3 "Add courtesy car?" ;
+    mm:ttsVariant4 "Courtesy car?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:CarYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "Include courtesy car" .
+
+:CarNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No courtesy car" .
+
+# ============================================================================
+# SECTION 7: MARKETING - 3 Questions
+# ============================================================================
+
+# Q31: Email Marketing
+:EmailMarketingQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Email Marketing" ;
+    :questionId "q_email_marketing" ;
+    :questionText "May we contact you by email with offers and updates?" ;
+    :slotName "emailMarketing" ;
+    :required false ;
+    :order 70 ;
+    :inSection :MarketingSection ;
+    mm:hasTTSPrompt :EmailMarketingTTS ;
+    mm:hasOption :EmailMarketingYes, :EmailMarketingNo .
+
+:EmailMarketingTTS a mm:TTSPrompt ;
+    mm:ttsText "May we contact you by email with offers and updates?" ;
+    mm:ttsVariant1 "May we contact you by email with offers and updates?" ;
+    mm:ttsVariant2 "Do you consent to email marketing?" ;
+    mm:ttsVariant3 "Receive emails from us?" ;
+    mm:ttsVariant4 "Email marketing consent?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:EmailMarketingYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "I consent to email marketing" .
+
+:EmailMarketingNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No email marketing" .
+
+# Q32: SMS Marketing
+:SMSMarketingQuestion a mm:MultimodalQuestion ;
+    rdfs:label "SMS Marketing" ;
+    :questionId "q_sms_marketing" ;
+    :questionText "May we contact you by text message?" ;
+    :slotName "smsMarketing" ;
+    :required false ;
+    :order 71 ;
+    :inSection :MarketingSection ;
+    mm:hasTTSPrompt :SMSMarketingTTS ;
+    mm:hasOption :SMSMarketingYes, :SMSMarketingNo .
+
+:SMSMarketingTTS a mm:TTSPrompt ;
+    mm:ttsText "May we contact you by text message with offers and updates?" ;
+    mm:ttsVariant1 "May we contact you by text message with offers and updates?" ;
+    mm:ttsVariant2 "Do you consent to SMS marketing?" ;
+    mm:ttsVariant3 "Receive text messages from us?" ;
+    mm:ttsVariant4 "SMS marketing consent?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:SMSMarketingYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "I consent to SMS marketing" .
+
+:SMSMarketingNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No SMS marketing" .
+
+# Q33: Post Marketing
+:PostMarketingQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Postal Marketing" ;
+    :questionId "q_post_marketing" ;
+    :questionText "May we contact you by post?" ;
+    :slotName "postMarketing" ;
+    :required false ;
+    :order 72 ;
+    :inSection :MarketingSection ;
+    mm:hasTTSPrompt :PostMarketingTTS ;
+    mm:hasOption :PostMarketingYes, :PostMarketingNo .
+
+:PostMarketingTTS a mm:TTSPrompt ;
+    mm:ttsText "May we contact you by post with offers and updates?" ;
+    mm:ttsVariant1 "May we contact you by post with offers and updates?" ;
+    mm:ttsVariant2 "Do you consent to postal marketing?" ;
+    mm:ttsVariant3 "Receive mail from us?" ;
+    mm:ttsVariant4 "Postal marketing consent?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:PostMarketingYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "I consent to postal marketing" .
+
+:PostMarketingNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No postal marketing" .

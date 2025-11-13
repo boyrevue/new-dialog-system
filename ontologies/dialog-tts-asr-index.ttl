@@ -1,0 +1,465 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix tts: <http://diggi.io/ontology/tts#> .
+@prefix asr: <http://diggi.io/ontology/asr#> .
+@prefix faq: <http://diggi.io/ontology/faq#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+# TTS/ASR Indexing Ontology
+<http://diggi.io/ontology/tts-asr-index> a owl:Ontology ;
+    rdfs:label "TTS/ASR Indexing Ontology" ;
+    rdfs:comment "Central indexing system for TTS prompts, ASR grammars, and FAQs linked to questions and fields" ;
+    owl:versionInfo "1.0" .
+
+# Core Classes
+
+tts:TTSPrompt a owl:Class ;
+    rdfs:label "TTS Prompt" ;
+    rdfs:comment "Text-to-speech prompt with variations and voice settings" .
+
+asr:ASRGrammar a owl:Class ;
+    rdfs:label "ASR Grammar" ;
+    rdfs:comment "Automatic speech recognition grammar for field/option" .
+
+asr:GrammarRule a owl:Class ;
+    rdfs:label "Grammar Rule" ;
+    rdfs:comment "Specific grammar rule with patterns and alternatives" .
+
+asr:BreakoutKeyword a owl:Class ;
+    rdfs:label "Breakout Keyword" ;
+    rdfs:comment "Keyword that allows user to interrupt flow and ask FAQ" .
+
+faq:FAQ a owl:Class ;
+    rdfs:label "FAQ" ;
+    rdfs:comment "Frequently asked question with TTS response" .
+
+faq:FAQCategory a owl:Class ;
+    rdfs:label "FAQ Category" ;
+    rdfs:comment "Category grouping for FAQs" .
+
+# TTS Properties
+
+tts:ttsId a owl:DatatypeProperty ;
+    rdfs:label "TTS ID" ;
+    rdfs:domain tts:TTSPrompt ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Unique identifier for TTS prompt" .
+
+tts:mainText a owl:DatatypeProperty ;
+    rdfs:label "main text" ;
+    rdfs:domain tts:TTSPrompt ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Primary TTS text" .
+
+tts:variant1 a owl:DatatypeProperty ;
+    rdfs:label "variant 1" ;
+    rdfs:domain tts:TTSPrompt ;
+    rdfs:range xsd:string ;
+    rdfs:comment "First TTS variation for rephrase" .
+
+tts:variant2 a owl:DatatypeProperty ;
+    rdfs:label "variant 2" ;
+    rdfs:domain tts:TTSPrompt ;
+    rdfs:range xsd:string .
+
+tts:variant3 a owl:DatatypeProperty ;
+    rdfs:label "variant 3" ;
+    rdfs:domain tts:TTSPrompt ;
+    rdfs:range xsd:string .
+
+tts:variant4 a owl:DatatypeProperty ;
+    rdfs:label "variant 4" ;
+    rdfs:domain tts:TTSPrompt ;
+    rdfs:range xsd:string .
+
+tts:voice a owl:DatatypeProperty ;
+    rdfs:label "voice" ;
+    rdfs:domain tts:TTSPrompt ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Voice identifier (e.g., 'en-GB-Neural2-A')" .
+
+tts:rate a owl:DatatypeProperty ;
+    rdfs:label "rate" ;
+    rdfs:domain tts:TTSPrompt ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Speech rate (0.5 - 2.0)" .
+
+tts:pitch a owl:DatatypeProperty ;
+    rdfs:label "pitch" ;
+    rdfs:domain tts:TTSPrompt ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Speech pitch (-20.0 to 20.0)" .
+
+tts:volume a owl:DatatypeProperty ;
+    rdfs:label "volume" ;
+    rdfs:domain tts:TTSPrompt ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Speech volume (0.0 - 1.0)" .
+
+tts:ssmlTags a owl:DatatypeProperty ;
+    rdfs:label "SSML tags" ;
+    rdfs:domain tts:TTSPrompt ;
+    rdfs:range xsd:string ;
+    rdfs:comment "SSML markup for advanced control (pauses, emphasis, etc.)" .
+
+tts:context a owl:DatatypeProperty ;
+    rdfs:label "context" ;
+    rdfs:domain tts:TTSPrompt ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Context when this prompt is used: 'initial', 'repeat', 'error', 'confirm'" .
+
+# ASR Grammar Properties
+
+asr:grammarId a owl:DatatypeProperty ;
+    rdfs:label "grammar ID" ;
+    rdfs:domain asr:ASRGrammar ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Unique identifier for grammar" .
+
+asr:grammarName a owl:DatatypeProperty ;
+    rdfs:label "grammar name" ;
+    rdfs:domain asr:ASRGrammar ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Human-readable name for grammar" .
+
+asr:grammarFormat a owl:DatatypeProperty ;
+    rdfs:label "grammar format" ;
+    rdfs:domain asr:ASRGrammar ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Grammar format: 'jsgf', 'grxml', 'abnf', 'regex'" .
+
+asr:grammarContent a owl:DatatypeProperty ;
+    rdfs:label "grammar content" ;
+    rdfs:domain asr:ASRGrammar ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Full grammar definition" .
+
+asr:hasRule a owl:ObjectProperty ;
+    rdfs:label "has rule" ;
+    rdfs:domain asr:ASRGrammar ;
+    rdfs:range asr:GrammarRule ;
+    rdfs:comment "Links grammar to its rules" .
+
+asr:confidenceThreshold a owl:DatatypeProperty ;
+    rdfs:label "confidence threshold" ;
+    rdfs:domain asr:ASRGrammar ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Minimum confidence for accepting recognition (0.0 - 1.0)" .
+
+asr:allowBreakout a owl:DatatypeProperty ;
+    rdfs:label "allow breakout" ;
+    rdfs:domain asr:ASRGrammar ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether user can interrupt with FAQs" .
+
+# Grammar Rule Properties
+
+asr:ruleName a owl:DatatypeProperty ;
+    rdfs:label "rule name" ;
+    rdfs:domain asr:GrammarRule ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Name of the grammar rule" .
+
+asr:rulePattern a owl:DatatypeProperty ;
+    rdfs:label "rule pattern" ;
+    rdfs:domain asr:GrammarRule ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Pattern or alternatives for this rule" .
+
+asr:ruleValue a owl:DatatypeProperty ;
+    rdfs:label "rule value" ;
+    rdfs:domain asr:GrammarRule ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Normalized value when this rule matches" .
+
+asr:ruleWeight a owl:DatatypeProperty ;
+    rdfs:label "rule weight" ;
+    rdfs:domain asr:GrammarRule ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Weight/priority for this rule (1.0 = default)" .
+
+# Breakout Keyword Properties
+
+asr:keyword a owl:DatatypeProperty ;
+    rdfs:label "keyword" ;
+    rdfs:domain asr:BreakoutKeyword ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Keyword phrase (e.g., 'I have a question', 'help')" .
+
+asr:keywordAlternatives a owl:DatatypeProperty ;
+    rdfs:label "keyword alternatives" ;
+    rdfs:domain asr:BreakoutKeyword ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Alternative phrasings for the keyword" .
+
+asr:action a owl:DatatypeProperty ;
+    rdfs:label "action" ;
+    rdfs:domain asr:BreakoutKeyword ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Action to take: 'show_faq', 'show_help', 'repeat_question'" .
+
+# FAQ Properties
+
+faq:faqId a owl:DatatypeProperty ;
+    rdfs:label "FAQ ID" ;
+    rdfs:domain faq:FAQ ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Unique identifier for FAQ" .
+
+faq:question a owl:DatatypeProperty ;
+    rdfs:label "question" ;
+    rdfs:domain faq:FAQ ;
+    rdfs:range xsd:string ;
+    rdfs:comment "FAQ question text" .
+
+faq:questionVariants a owl:DatatypeProperty ;
+    rdfs:label "question variants" ;
+    rdfs:domain faq:FAQ ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Alternative phrasings of the question" .
+
+faq:answer a owl:DatatypeProperty ;
+    rdfs:label "answer" ;
+    rdfs:domain faq:FAQ ;
+    rdfs:range xsd:string ;
+    rdfs:comment "FAQ answer text" .
+
+faq:answerTTS a owl:ObjectProperty ;
+    rdfs:label "answer TTS" ;
+    rdfs:domain faq:FAQ ;
+    rdfs:range tts:TTSPrompt ;
+    rdfs:comment "TTS prompt for speaking the answer" .
+
+faq:category a owl:ObjectProperty ;
+    rdfs:label "category" ;
+    rdfs:domain faq:FAQ ;
+    rdfs:range faq:FAQCategory ;
+    rdfs:comment "Category this FAQ belongs to" .
+
+faq:order a owl:DatatypeProperty ;
+    rdfs:label "order" ;
+    rdfs:domain faq:FAQ ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Display order within category" .
+
+faq:keywords a owl:DatatypeProperty ;
+    rdfs:label "keywords" ;
+    rdfs:domain faq:FAQ ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Keywords for FAQ search" .
+
+faq:contextRelevant a owl:DatatypeProperty ;
+    rdfs:label "context relevant" ;
+    rdfs:domain faq:FAQ ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether this FAQ is shown based on current question context" .
+
+# FAQ Category Properties
+
+faq:categoryId a owl:DatatypeProperty ;
+    rdfs:label "category ID" ;
+    rdfs:domain faq:FAQCategory ;
+    rdfs:range xsd:string .
+
+faq:categoryName a owl:DatatypeProperty ;
+    rdfs:label "category name" ;
+    rdfs:domain faq:FAQCategory ;
+    rdfs:range xsd:string .
+
+faq:categoryIcon a owl:DatatypeProperty ;
+    rdfs:label "category icon" ;
+    rdfs:domain faq:FAQCategory ;
+    rdfs:range xsd:string .
+
+# Linking Properties
+
+:hasTTSPrompt a owl:ObjectProperty ;
+    rdfs:label "has TTS prompt" ;
+    rdfs:comment "Links question/field/option to TTS prompt" ;
+    rdfs:range tts:TTSPrompt .
+
+:hasASRGrammar a owl:ObjectProperty ;
+    rdfs:label "has ASR grammar" ;
+    rdfs:comment "Links question/field/option to ASR grammar" ;
+    rdfs:range asr:ASRGrammar .
+
+:hasFAQ a owl:ObjectProperty ;
+    rdfs:label "has FAQ" ;
+    rdfs:comment "Links question to relevant FAQs" ;
+    rdfs:range faq:FAQ .
+
+:hasBreakoutKeyword a owl:ObjectProperty ;
+    rdfs:label "has breakout keyword" ;
+    rdfs:comment "Links question to breakout keywords" ;
+    rdfs:range asr:BreakoutKeyword .
+
+# Index Maintenance Properties
+
+:ttsLastModified a owl:DatatypeProperty ;
+    rdfs:label "TTS last modified" ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "Timestamp of last TTS modification" .
+
+:asrLastModified a owl:DatatypeProperty ;
+    rdfs:label "ASR last modified" ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "Timestamp of last ASR modification" .
+
+:indexVersion a owl:DatatypeProperty ;
+    rdfs:label "index version" ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Version number for TTS/ASR index" .
+
+# ====================
+# EXAMPLE: First Name Question with Full TTS/ASR/FAQ
+# ====================
+
+# TTS for First Name Question
+:FirstNameTTS a tts:TTSPrompt ;
+    tts:ttsId "tts_first_name" ;
+    tts:mainText "What is your first name?" ;
+    tts:variant1 "Could you please tell me your first name?" ;
+    tts:variant2 "I'd like to know your first name, please." ;
+    tts:variant3 "May I have your first name?" ;
+    tts:variant4 "Please provide your first name." ;
+    tts:voice "en-GB-Neural2-A" ;
+    tts:rate 1.0 ;
+    tts:pitch 0.0 ;
+    tts:volume 1.0 ;
+    tts:context "initial" .
+
+:FirstNameTTSRepeat a tts:TTSPrompt ;
+    tts:ttsId "tts_first_name_repeat" ;
+    tts:mainText "Sorry, I didn't catch that. Could you repeat your first name?" ;
+    tts:voice "en-GB-Neural2-A" ;
+    tts:rate 0.95 ;
+    tts:context "repeat" .
+
+# ASR Grammar for First Name
+:FirstNameASRGrammar a asr:ASRGrammar ;
+    asr:grammarId "asr_first_name" ;
+    asr:grammarName "First Name Recognition" ;
+    asr:grammarFormat "jsgf" ;
+    asr:grammarContent """
+        #JSGF V1.0;
+        grammar firstName;
+        public <name> = <common_names> | <spelled_name> ;
+        <common_names> = John | James | Robert | Michael | William | David | Sarah | Emma | Olivia | Sophia ;
+        <spelled_name> = <letter>+ ;
+        <letter> = A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z ;
+    """ ;
+    asr:confidenceThreshold 0.70 ;
+    asr:allowBreakout true ;
+    asr:hasRule :CommonNamesRule, :SpelledNameRule .
+
+:CommonNamesRule a asr:GrammarRule ;
+    asr:ruleName "common_names" ;
+    asr:rulePattern "John | James | Robert | Michael | William" ;
+    asr:ruleWeight 1.2 .
+
+:SpelledNameRule a asr:GrammarRule ;
+    asr:ruleName "spelled_name" ;
+    asr:rulePattern "[A-Z]+" ;
+    asr:ruleWeight 1.0 .
+
+# Breakout Keywords
+:QuestionBreakout a asr:BreakoutKeyword ;
+    asr:keyword "I have a question" ;
+    asr:keywordAlternatives "question, help, I don't understand, what does this mean" ;
+    asr:action "show_faq" .
+
+:RepeatBreakout a asr:BreakoutKeyword ;
+    asr:keyword "repeat" ;
+    asr:keywordAlternatives "say that again, pardon, what" ;
+    asr:action "repeat_question" .
+
+# FAQ Categories
+:GeneralFAQCategory a faq:FAQCategory ;
+    faq:categoryId "general" ;
+    faq:categoryName "General Questions" ;
+    faq:categoryIcon "info" .
+
+:DataPrivacyCategory a faq:FAQCategory ;
+    faq:categoryId "data_privacy" ;
+    faq:categoryName "Data & Privacy" ;
+    faq:categoryIcon "lock" .
+
+# FAQs for First Name Question
+:WhyFirstNameFAQ a faq:FAQ ;
+    faq:faqId "why_first_name" ;
+    faq:question "Why do you need my first name?" ;
+    faq:questionVariants "Why are you asking for my name?, Do I have to give my name?, Why is my name required?" ;
+    faq:answer "We need your first name to personalize your insurance quote and to address you correctly in all communications." ;
+    faq:answerTTS :WhyFirstNameTTS ;
+    faq:category :GeneralFAQCategory ;
+    faq:order 1 ;
+    faq:keywords "name, required, why, personal" ;
+    faq:contextRelevant true .
+
+:WhyFirstNameTTS a tts:TTSPrompt ;
+    tts:ttsId "tts_faq_why_first_name" ;
+    tts:mainText "We need your first name to personalize your insurance quote and to address you correctly in all communications. Shall we continue?" ;
+    tts:voice "en-GB-Neural2-A" ;
+    tts:rate 0.95 ;
+    tts:context "faq_answer" .
+
+:DataSecurityFAQ a faq:FAQ ;
+    faq:faqId "data_security" ;
+    faq:question "Is my data secure?" ;
+    faq:questionVariants "Will my information be safe?, How do you protect my data?, Is this secure?" ;
+    faq:answer "Yes, all your information is encrypted and stored securely in compliance with UK GDPR regulations." ;
+    faq:answerTTS :DataSecurityTTS ;
+    faq:category :DataPrivacyCategory ;
+    faq:order 1 ;
+    faq:keywords "security, safe, data, protection, GDPR" ;
+    faq:contextRelevant true .
+
+:DataSecurityTTS a tts:TTSPrompt ;
+    tts:ttsId "tts_faq_data_security" ;
+    tts:mainText "Yes, all your information is encrypted and stored securely in compliance with UK GDPR regulations. Your data is safe with us." ;
+    tts:voice "en-GB-Neural2-A" ;
+    tts:rate 0.95 ;
+    tts:context "faq_answer" .
+
+# Link to First Name Question
+:FirstNameQuestion
+    :hasTTSPrompt :FirstNameTTS, :FirstNameTTSRepeat ;
+    :hasASRGrammar :FirstNameASRGrammar ;
+    :hasFAQ :WhyFirstNameFAQ, :DataSecurityFAQ ;
+    :hasBreakoutKeyword :QuestionBreakout, :RepeatBreakout .
+
+# ====================
+# EXAMPLE: Select Option with TTS/ASR
+# ====================
+
+:ComprehensiveCoverOptionTTS a tts:TTSPrompt ;
+    tts:ttsId "tts_comprehensive_cover" ;
+    tts:mainText "Comprehensive cover" ;
+    tts:voice "en-GB-Neural2-A" ;
+    tts:rate 1.0 ;
+    tts:context "option" .
+
+:ComprehensiveCoverASR a asr:ASRGrammar ;
+    asr:grammarId "asr_comprehensive_cover" ;
+    asr:grammarName "Comprehensive Cover Recognition" ;
+    asr:grammarFormat "jsgf" ;
+    asr:grammarContent """
+        #JSGF V1.0;
+        grammar comprehensiveCover;
+        public <cover> = comprehensive | comp | fully comp | full coverage ;
+    """ ;
+    asr:confidenceThreshold 0.75 ;
+    asr:hasRule :ComprehensiveRule .
+
+:ComprehensiveRule a asr:GrammarRule ;
+    asr:ruleName "comprehensive_variations" ;
+    asr:rulePattern "comprehensive | comp | fully comp | full coverage" ;
+    asr:ruleValue "comprehensive" ;
+    asr:ruleWeight 1.0 .
+
+# Link to option (would be defined in vocabularies)
+# :ComprehensiveCoverOption :hasTTSPrompt :ComprehensiveCoverOptionTTS ;
+#                          :hasASRGrammar :ComprehensiveCoverASR .

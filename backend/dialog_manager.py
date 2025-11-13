@@ -748,6 +748,99 @@ class DialogManager:
 
         return fields
 
+    def get_all_sections(self) -> List[Dict]:
+        """
+        Query all sections from ontology with their metadata.
+        Returns list of sections ordered by sectionOrder.
+        """
+        query = prepareQuery("""
+            SELECT ?section ?sectionId ?sectionTitle ?sectionDescription ?sectionOrder
+            WHERE {
+                ?section a dialog:Section ;
+                         dialog:sectionId ?sectionId ;
+                         dialog:sectionTitle ?sectionTitle ;
+                         dialog:sectionDescription ?sectionDescription ;
+                         dialog:sectionOrder ?sectionOrder .
+            }
+            ORDER BY ?sectionOrder
+        """, initNs={"dialog": DIALOG})
+
+        sections = []
+        for row in self.graph.query(query):
+            sections.append({
+                "section_uri": str(row.section),
+                "section_id": str(row.sectionId),
+                "section_title": str(row.sectionTitle),
+                "section_description": str(row.sectionDescription),
+                "section_order": int(row.sectionOrder)
+            })
+
+        return sections
+
+    def get_section_for_question(self, question_id: str) -> Optional[Dict]:
+        """
+        Get the section a question belongs to via :inSection relationship.
+
+        Args:
+            question_id: Question ID (e.g., "q_first_name")
+
+        Returns:
+            Section metadata dict or None if no section assigned
+        """
+        # Query by questionId property to find the Question resource, then get its section
+        query = prepareQuery("""
+            SELECT ?section ?sectionId ?sectionTitle ?sectionOrder
+            WHERE {
+                ?question dialog:questionId ?qid ;
+                         dialog:inSection ?section .
+                ?section dialog:sectionId ?sectionId ;
+                         dialog:sectionTitle ?sectionTitle ;
+                         dialog:sectionOrder ?sectionOrder .
+            }
+        """, initNs={"dialog": DIALOG})
+
+        results = list(self.graph.query(query, initBindings={'qid': Literal(question_id)}))
+
+        if results:
+            row = results[0]
+            return {
+                "section_uri": str(row.section),
+                "section_id": str(row.sectionId),
+                "section_title": str(row.sectionTitle),
+                "section_order": int(row.sectionOrder)
+            }
+
+        return None
+
+    def get_questions_by_section(self) -> Dict[str, List]:
+        """
+        Get all questions grouped by their sections.
+        Returns dict with section_id as keys and lists of question_ids as values.
+        """
+        query = prepareQuery("""
+            SELECT ?question ?questionId ?section ?sectionId ?sectionOrder
+            WHERE {
+                ?question a dialog:Question ;
+                         dialog:questionId ?questionId ;
+                         dialog:inSection ?section .
+                ?section dialog:sectionId ?sectionId ;
+                         dialog:sectionOrder ?sectionOrder .
+            }
+            ORDER BY ?sectionOrder
+        """, initNs={"dialog": DIALOG})
+
+        sections_map = {}
+        for row in self.graph.query(query):
+            section_id = str(row.sectionId)
+            question_id = str(row.questionId)
+
+            if section_id not in sections_map:
+                sections_map[section_id] = []
+
+            sections_map[section_id].append(question_id)
+
+        return sections_map
+
 
 if __name__ == "__main__":
     # Example usage

@@ -33,6 +33,7 @@ ONTOLOGY_FILES = {
     "dialog": "dialog.ttl",
     "multimodal": "dialog-multimodal.ttl",
     "insurance_questions": "dialog-insurance-questions.ttl",
+    "sections": "dialog-sections.ttl",
     "vocabularies": "dialog-vocabularies.ttl",
     "documents": "dialog-documents.ttl",
     "validation": "dialog-validation.ttl",
@@ -154,13 +155,16 @@ async def update_ontology(ontology_type: str, data: OntologyContent):
 
 @app.get("/api/config/questions")
 async def list_questions():
-    """List all questions with their TTS/ASR configurations."""
+    """List all questions with their TTS/ASR configurations and sections."""
     from dialog_manager import DialogManager
 
     ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
     dialog_manager = DialogManager(ontology_paths)
 
     flow = dialog_manager.get_dialog_flow("InsuranceQuoteDialog")
+    sections = dialog_manager.get_all_sections()
+    questions_by_section = dialog_manager.get_questions_by_section()
+
     questions = []
 
     for node in flow:
@@ -168,6 +172,9 @@ async def list_questions():
             question_id = node["question_id"]
             features = dialog_manager.get_multimodal_features(question_id)
             threshold, priority = dialog_manager.get_confidence_threshold(question_id)
+
+            # Get section for this question
+            section_info = dialog_manager.get_section_for_question(question_id)
 
             questions.append({
                 "question_id": question_id,
@@ -179,10 +186,15 @@ async def list_questions():
                 "select_options": features["select_options"],
                 "faqs": features["faqs"],
                 "confidence_threshold": threshold,
-                "priority": priority
+                "priority": priority,
+                "section": section_info
             })
 
-    return {"questions": questions}
+    return {
+        "questions": questions,
+        "sections": sections,
+        "questions_by_section": questions_by_section
+    }
 
 
 @app.get("/api/config/asr")

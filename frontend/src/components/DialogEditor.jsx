@@ -24,8 +24,34 @@ import {
   Mic,
   FileText,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  List,
+  LayoutGrid,
+  Type,
+  Hash,
+  Mail,
+  Phone,
+  Calendar,
+  Clock,
+  ToggleLeft,
+  CheckSquare,
+  Circle,
+  ChevronDown,
+  List as ListIcon,
+  AlignLeft,
+  Link,
+  Image,
+  File,
+  MapPin,
+  DollarSign,
+  Percent,
+  GitBranch,
+  Layers,
+  Move,
+  Copy,
+  Settings
 } from 'lucide-react';
+import WorkflowEditor from './WorkflowEditor';
 
 const API_BASE_URL = '/api/config';
 
@@ -37,6 +63,7 @@ const DialogEditor = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [activeTab, setActiveTab] = useState('details'); // 'details', 'forms', or 'workflow'
 
   // TTS Variants
   const [ttsVariants, setTtsVariants] = useState(['', '', '', '']);
@@ -146,70 +173,336 @@ const DialogEditor = () => {
     setTtsVariants(newVariants);
   };
 
-  const renderFlowVisualization = () => {
-    return (
-      <div className="space-y-2">
-        {questions.map((question, index) => {
-          const isSelected = selectedQuestion?.question_id === question.question_id;
-          const isEditing = editedQuestion?.question_id === question.question_id;
+  const deleteVariant = (index) => {
+    const newVariants = [...ttsVariants];
+    newVariants[index] = '';
+    setTtsVariants(newVariants);
+  };
 
-          return (
-            <div
-              key={question.question_id}
-              onClick={() => handleSelectQuestion(question)}
-              className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                isEditing
-                  ? 'border-blue-500 bg-blue-50'
-                  : isSelected
-                  ? 'border-blue-300 bg-blue-25'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">
-                      {index + 1}. {question.question_text}
-                    </span>
-                    {isEditing && (
-                      <Badge color="blue" size="xs">Editing</Badge>
-                    )}
-                    {question.required && (
-                      <Badge color="failure" size="xs">Required</Badge>
-                    )}
-                    {question.spelling_required && (
-                      <Badge color="purple" size="xs">Spelling</Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-gray-600">
-                    <span className="font-medium">Slot:</span> {question.slot_name}
-                    {question.tts && (
-                      <Badge color="info" size="xs">
-                        <Volume2 className="w-3 h-3 inline mr-1" />
-                        TTS
-                      </Badge>
-                    )}
-                    {question.faqs && question.faqs.length > 0 && (
-                      <Badge color="gray" size="xs">
-                        {question.faqs.length} FAQs
-                      </Badge>
-                    )}
-                  </div>
-                  {question.confidence_threshold && (
-                    <Badge
-                      color={question.confidence_threshold < 0.7 ? 'failure' : question.confidence_threshold < 0.85 ? 'warning' : 'success'}
-                      size="xs"
-                      className="mt-2"
-                    >
-                      Confidence: {(question.confidence_threshold * 100).toFixed(0)}%
-                    </Badge>
-                  )}
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-400" />
-              </div>
+  const duplicateVariant = (index) => {
+    // Find next empty slot
+    const emptyIndex = ttsVariants.findIndex((v, i) => i > index && !v);
+    if (emptyIndex !== -1) {
+      const newVariants = [...ttsVariants];
+      newVariants[emptyIndex] = ttsVariants[index];
+      setTtsVariants(newVariants);
+      setSuccess(`Variant ${index + 1} duplicated to Variant ${emptyIndex + 1}`);
+      setTimeout(() => setSuccess(null), 2000);
+    }
+  };
+
+  const generateTTSVariants = async () => {
+    if (!editedQuestion) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`${API_BASE_URL}/generate-tts-variants`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question_text: editedQuestion.question_text,
+          question_id: editedQuestion.question_id,
+          slot_name: editedQuestion.slot_name
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.variants) {
+        const newVariants = [
+          data.variants.variant1 || data.variants.text,
+          data.variants.variant2 || data.variants.text,
+          data.variants.variant3 || data.variants.text,
+          data.variants.variant4 || data.variants.text
+        ];
+        setTtsVariants(newVariants);
+        setSuccess('TTS variants generated successfully!');
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        throw new Error('Failed to generate variants');
+      }
+    } catch (err) {
+      setError('Failed to generate TTS variants: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderFlowVisualization = () => {
+    // Group questions by section
+    const groupedQuestions = questions.reduce((acc, question) => {
+      const sectionTitle = question.section?.section_title || 'Unsectioned Questions';
+      if (!acc[sectionTitle]) {
+        acc[sectionTitle] = {
+          section: question.section,
+          questions: []
+        };
+      }
+      acc[sectionTitle].questions.push(question);
+      return acc;
+    }, {});
+
+    // Sort sections by order
+    const sortedSections = Object.entries(groupedQuestions).sort((a, b) => {
+      const orderA = a[1].section?.section_order || 999;
+      const orderB = b[1].section?.section_order || 999;
+      return orderA - orderB;
+    });
+
+    let questionIndex = 0;
+
+    return (
+      <div className="space-y-6">
+        {sortedSections.map(([sectionTitle, { section, questions: sectionQuestions }]) => (
+          <div key={sectionTitle} className="space-y-2">
+            {/* Section Heading */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-3 rounded-lg shadow-md">
+              <h4 className="text-lg font-bold">{sectionTitle}</h4>
+              {section?.section_description && (
+                <p className="text-sm text-blue-100 mt-1">{section.section_description}</p>
+              )}
             </div>
-          );
-        })}
+
+            {/* Questions in this section */}
+            {sectionQuestions.map((question) => {
+              const currentIndex = questionIndex++;
+              const isSelected = selectedQuestion?.question_id === question.question_id;
+              const isEditing = editedQuestion?.question_id === question.question_id;
+
+              return (
+                <div
+                  key={question.question_id}
+                  onClick={() => handleSelectQuestion(question)}
+                  className={`ml-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                    isEditing
+                      ? 'border-blue-500 bg-blue-50'
+                      : isSelected
+                      ? 'border-blue-300 bg-blue-25'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">
+                          {currentIndex + 1}. {question.question_text}
+                        </span>
+                        {isEditing && (
+                          <Badge color="blue" size="xs">Editing</Badge>
+                        )}
+                        {question.required && (
+                          <Badge color="failure" size="xs">Required</Badge>
+                        )}
+                        {question.spelling_required && (
+                          <Badge color="purple" size="xs">Spelling</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-2 text-xs text-gray-600">
+                        <span className="font-medium">Slot:</span> {question.slot_name}
+                        {question.tts && (
+                          <Badge color="info" size="xs">
+                            <Volume2 className="w-3 h-3 inline mr-1" />
+                            TTS
+                          </Badge>
+                        )}
+                        {question.faqs && question.faqs.length > 0 && (
+                          <Badge color="gray" size="xs">
+                            {question.faqs.length} FAQs
+                          </Badge>
+                        )}
+                      </div>
+                      {question.confidence_threshold && (
+                        <Badge
+                          color={question.confidence_threshold < 0.7 ? 'failure' : question.confidence_threshold < 0.85 ? 'warning' : 'success'}
+                          size="xs"
+                          className="mt-2"
+                        >
+                          Confidence: {(question.confidence_threshold * 100).toFixed(0)}%
+                        </Badge>
+                      )}
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-400" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderFormsEditor = () => {
+    const formFields = [
+      { id: 'text', label: 'Text Input', icon: Type, color: 'bg-blue-500', desc: 'Single line text' },
+      { id: 'textarea', label: 'Text Area', icon: AlignLeft, color: 'bg-blue-600', desc: 'Multi-line text' },
+      { id: 'number', label: 'Number', icon: Hash, color: 'bg-green-500', desc: 'Numeric input' },
+      { id: 'email', label: 'Email', icon: Mail, color: 'bg-purple-500', desc: 'Email address' },
+      { id: 'phone', label: 'Phone', icon: Phone, color: 'bg-purple-600', desc: 'Phone number' },
+      { id: 'date', label: 'Date', icon: Calendar, color: 'bg-indigo-500', desc: 'Date picker' },
+      { id: 'time', label: 'Time', icon: Clock, color: 'bg-indigo-600', desc: 'Time picker' },
+      { id: 'toggle', label: 'Toggle', icon: ToggleLeft, color: 'bg-amber-500', desc: 'On/off switch' },
+      { id: 'checkbox', label: 'Checkbox', icon: CheckSquare, color: 'bg-amber-600', desc: 'Multiple choice' },
+      { id: 'radio', label: 'Radio', icon: Circle, color: 'bg-orange-500', desc: 'Single choice' },
+      { id: 'select', label: 'Dropdown', icon: ChevronDown, color: 'bg-cyan-500', desc: 'Select menu' },
+      { id: 'multiselect', label: 'Multi-Select', icon: ListIcon, color: 'bg-cyan-600', desc: 'Multiple options' },
+      { id: 'url', label: 'URL', icon: Link, color: 'bg-rose-500', desc: 'Web address' },
+      { id: 'file', label: 'File Upload', icon: File, color: 'bg-rose-600', desc: 'File picker' },
+      { id: 'image', label: 'Image', icon: Image, color: 'bg-pink-500', desc: 'Image upload' },
+      { id: 'address', label: 'Address', icon: MapPin, color: 'bg-teal-500', desc: 'Location input' },
+      { id: 'currency', label: 'Currency', icon: DollarSign, color: 'bg-emerald-500', desc: 'Money amount' },
+      { id: 'percentage', label: 'Percentage', icon: Percent, color: 'bg-emerald-600', desc: 'Percent value' },
+    ];
+
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                <LayoutGrid className="w-8 h-8" />
+                Drag & Drop Form Builder
+              </h3>
+              <p className="text-blue-100">
+                Create dynamic forms with field groups, validations, and conditional logic
+              </p>
+            </div>
+            <Button className="bg-white text-blue-600 hover:bg-blue-50">
+              <Plus className="w-4 h-4 mr-2" />
+              Create New Form
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-12 gap-6">
+          {/* Left Panel - Field Palette */}
+          <div className="col-span-3">
+            <Card className="sticky top-4">
+              <h4 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800">
+                <Layers className="w-5 h-5 text-blue-600" />
+                Field Palette
+              </h4>
+              <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                {formFields.map((field) => {
+                  const Icon = field.icon;
+                  return (
+                    <div
+                      key={field.id}
+                      className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-move bg-white"
+                      draggable
+                    >
+                      <div className={`${field.color} p-2 rounded-lg flex-shrink-0`}>
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm text-gray-900">{field.label}</div>
+                        <div className="text-xs text-gray-500 truncate">{field.desc}</div>
+                      </div>
+                      <Move className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          </div>
+
+          {/* Center Panel - Form Canvas */}
+          <div className="col-span-6">
+            <Card>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-bold text-lg text-gray-800">Form Canvas</h4>
+                <div className="flex gap-2">
+                  <Button size="sm" color="light">
+                    <Copy className="w-4 h-4 mr-1" />
+                    Duplicate
+                  </Button>
+                  <Button size="sm" color="light">
+                    <Settings className="w-4 h-4 mr-1" />
+                    Settings
+                  </Button>
+                </div>
+              </div>
+
+              <div className="min-h-[600px] border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
+                <div className="text-center py-20">
+                  <LayoutGrid className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg font-medium mb-2">Drop fields here</p>
+                  <p className="text-gray-400 text-sm">Drag fields from the palette to build your form</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Right Panel - Properties & Features */}
+          <div className="col-span-3">
+            <div className="space-y-4 sticky top-4">
+              {/* Workflow Editor */}
+              <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-purple-900">
+                  <GitBranch className="w-5 h-5 text-purple-600" />
+                  Workflow Editor
+                </h4>
+                <p className="text-xs text-purple-700 mb-3">
+                  Define conditional logic and field dependencies
+                </p>
+                <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700">
+                  <Plus className="w-3 h-3 mr-1" />
+                  Add Condition
+                </Button>
+              </Card>
+
+              {/* Field Groups */}
+              <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-blue-900">
+                  <Layers className="w-5 h-5 text-blue-600" />
+                  Field Groups
+                </h4>
+                <p className="text-xs text-blue-700 mb-3">
+                  Create repeatable groups (e.g., additional drivers)
+                </p>
+                <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
+                  <Plus className="w-3 h-3 mr-1" />
+                  New Group
+                </Button>
+              </Card>
+
+              {/* Validation Rules */}
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-green-900">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  Validation Rules
+                </h4>
+                <p className="text-xs text-green-700 mb-3">
+                  SHACL-based validation for form fields
+                </p>
+                <Button size="sm" className="w-full bg-green-600 hover:bg-green-700">
+                  <Plus className="w-3 h-3 mr-1" />
+                  Add Rule
+                </Button>
+              </Card>
+
+              {/* Hierarchical Selects */}
+              <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-amber-900">
+                  <GitBranch className="w-5 h-5 text-amber-600" />
+                  Hierarchical Selects
+                </h4>
+                <p className="text-xs text-amber-700 mb-3">
+                  Multi-level cascading dropdowns
+                </p>
+                <Button size="sm" className="w-full bg-amber-600 hover:bg-amber-700">
+                  <Plus className="w-3 h-3 mr-1" />
+                  Configure
+                </Button>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
@@ -224,156 +517,245 @@ const DialogEditor = () => {
     }
 
     return (
-      <div className="space-y-6">
-        {/* Basic Question Info */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Question Details</h3>
-
-          <div>
-            <Label htmlFor="question-text">Question Text</Label>
-            <Textarea
-              id="question-text"
-              value={editedQuestion.question_text}
-              onChange={(e) => handleFieldChange('question_text', e.target.value)}
-              rows={2}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="question-id">Question ID</Label>
-              <TextInput
-                id="question-id"
-                value={editedQuestion.question_id}
-                disabled
-                className="bg-gray-100"
-              />
-            </div>
-            <div>
-              <Label htmlFor="slot-name">Slot Name</Label>
-              <TextInput
-                id="slot-name"
-                value={editedQuestion.slot_name}
-                onChange={(e) => handleFieldChange('slot_name', e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center gap-2">
-              <ToggleSwitch
-                checked={editedQuestion.required || false}
-                onChange={(checked) => handleFieldChange('required', checked)}
-                label="Required"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <ToggleSwitch
-                checked={editedQuestion.spelling_required || false}
-                onChange={(checked) => handleFieldChange('spelling_required', checked)}
-                label="Spelling Required"
-              />
-              <Badge color="purple" size="xs">Uses Phonetic Alphabet</Badge>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="confidence-threshold">Confidence Threshold</Label>
-            <div className="flex items-center gap-4">
-              <input
-                type="range"
-                id="confidence-threshold"
-                min="0.5"
-                max="1.0"
-                step="0.05"
-                value={editedQuestion.confidence_threshold || 0.85}
-                onChange={(e) => handleFieldChange('confidence_threshold', parseFloat(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <Badge color="info">{((editedQuestion.confidence_threshold || 0.85) * 100).toFixed(0)}%</Badge>
-            </div>
-          </div>
+      <div className="space-y-4">
+        {/* Custom Tab Navigation */}
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-4" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('details')}
+              className={`py-2 px-4 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${
+                activeTab === 'details'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              Question Details
+            </button>
+            <button
+              onClick={() => setActiveTab('forms')}
+              className={`py-2 px-4 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${
+                activeTab === 'forms'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              Forms Editor
+            </button>
+            <button
+              onClick={() => setActiveTab('workflow')}
+              className={`py-2 px-4 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${
+                activeTab === 'workflow'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <GitBranch className="w-4 h-4" />
+              Workflow Editor
+            </button>
+          </nav>
         </div>
 
-        {/* TTS Configuration */}
-        <div className="space-y-4 border-t pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Volume2 className="w-5 h-5" />
-            Text-to-Speech Configuration
-          </h3>
-
-          <div>
-            <Label htmlFor="tts-text">Main TTS Text</Label>
-            <Textarea
-              id="tts-text"
-              value={editedQuestion.tts?.text || ''}
-              onChange={(e) => handleTTSChange('text', e.target.value)}
-              rows={2}
-              placeholder="Text to be spoken..."
-            />
-          </div>
-
-          {/* TTS Variants */}
-          <div className="space-y-3">
-            <Label>TTS Variants (for Rephrase)</Label>
-            <p className="text-xs text-gray-600">
-              When user clicks "Rephrase Question", the system will cycle through these variants
-            </p>
-            {ttsVariants.map((variant, index) => (
-              <div key={index}>
-                <Label htmlFor={`variant-${index}`} className="text-sm">
-                  Variant {index + 1} {index === 0 && '(Main)'}
-                </Label>
+        {/* Tab Content */}
+        {activeTab === 'details' && (
+          <div className="space-y-6 pt-4">
+            {/* Basic Question Info */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="question-text">Question Text</Label>
                 <Textarea
-                  id={`variant-${index}`}
-                  value={variant}
-                  onChange={(e) => handleVariantChange(index, e.target.value)}
+                  id="question-text"
+                  value={editedQuestion.question_text}
+                  onChange={(e) => handleFieldChange('question_text', e.target.value)}
                   rows={2}
-                  placeholder={`Variant ${index + 1}...`}
                 />
               </div>
-            ))}
-          </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="tts-voice">Voice</Label>
-              <Select
-                id="tts-voice"
-                value={editedQuestion.tts?.voice || 'en-GB-Neural2-A'}
-                onChange={(e) => handleTTSChange('voice', e.target.value)}
-              >
-                <option value="en-GB-Neural2-A">UK English Female</option>
-                <option value="en-GB-Neural2-B">UK English Male</option>
-                <option value="en-GB-Neural2-C">UK English Clear</option>
-              </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="question-id">Question ID</Label>
+                  <TextInput
+                    id="question-id"
+                    value={editedQuestion.question_id}
+                    disabled
+                    className="bg-gray-100"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="slot-name">Slot Name</Label>
+                  <TextInput
+                    id="slot-name"
+                    value={editedQuestion.slot_name}
+                    onChange={(e) => handleFieldChange('slot_name', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <ToggleSwitch
+                    checked={editedQuestion.required || false}
+                    onChange={(checked) => handleFieldChange('required', checked)}
+                    label="Required"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <ToggleSwitch
+                    checked={editedQuestion.spelling_required || false}
+                    onChange={(checked) => handleFieldChange('spelling_required', checked)}
+                    label="Spelling Required (Uses Phonetic Alphabet)"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="confidence-threshold">Confidence Threshold</Label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    id="confidence-threshold"
+                    min="0.5"
+                    max="1.0"
+                    step="0.05"
+                    value={editedQuestion.confidence_threshold || 0.85}
+                    onChange={(e) => handleFieldChange('confidence_threshold', parseFloat(e.target.value))}
+                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <Badge color="info">{((editedQuestion.confidence_threshold || 0.85) * 100).toFixed(0)}%</Badge>
+                </div>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="tts-rate">Rate</Label>
-              <TextInput
-                id="tts-rate"
-                type="number"
-                step="0.1"
-                min="0.5"
-                max="2.0"
-                value={editedQuestion.tts?.rate || 1.0}
-                onChange={(e) => handleTTSChange('rate', parseFloat(e.target.value))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="tts-pitch">Pitch</Label>
-              <TextInput
-                id="tts-pitch"
-                type="number"
-                step="0.1"
-                min="0.5"
-                max="2.0"
-                value={editedQuestion.tts?.pitch || 1.0}
-                onChange={(e) => handleTTSChange('pitch', parseFloat(e.target.value))}
-              />
+
+            {/* TTS Configuration */}
+            <div className="space-y-4 border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Volume2 className="w-5 h-5" />
+                Text-to-Speech Configuration
+              </h3>
+
+              <div>
+                <Label htmlFor="tts-text">Main TTS Text</Label>
+                <Textarea
+                  id="tts-text"
+                  value={editedQuestion.tts?.text || ''}
+                  onChange={(e) => handleTTSChange('text', e.target.value)}
+                  rows={2}
+                  placeholder="Text to be spoken..."
+                />
+              </div>
+
+              {/* TTS Variants */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>TTS Variants (for Rephrase)</Label>
+                    <p className="text-xs text-gray-600">
+                      When user clicks "Rephrase Question", the system will cycle through these variants
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                    onClick={generateTTSVariants}
+                    disabled={loading}
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                    Generate with AI
+                  </Button>
+                </div>
+                {ttsVariants.map((variant, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor={`variant-${index}`} className="text-sm font-medium">
+                        Variant {index + 1} {index === 0 && <Badge color="blue" className="ml-2">Main</Badge>}
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        {variant && (
+                          <>
+                            <button
+                              onClick={() => duplicateVariant(index)}
+                              className="text-blue-600 hover:text-blue-800 transition-colors"
+                              title="Duplicate this variant"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => deleteVariant(index)}
+                              className="text-red-600 hover:text-red-800 transition-colors"
+                              title="Delete this variant"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <Textarea
+                      id={`variant-${index}`}
+                      value={variant}
+                      onChange={(e) => handleVariantChange(index, e.target.value)}
+                      rows={2}
+                      placeholder={`Variant ${index + 1}...`}
+                      className="resize-none"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="tts-voice">Voice</Label>
+                  <Select
+                    id="tts-voice"
+                    value={editedQuestion.tts?.voice || 'en-GB-Neural2-A'}
+                    onChange={(e) => handleTTSChange('voice', e.target.value)}
+                  >
+                    <option value="en-GB-Neural2-A">UK English Female</option>
+                    <option value="en-GB-Neural2-B">UK English Male</option>
+                    <option value="en-GB-Neural2-C">UK English Clear</option>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="tts-rate">Rate</Label>
+                  <TextInput
+                    id="tts-rate"
+                    type="number"
+                    step="0.1"
+                    min="0.5"
+                    max="2.0"
+                    value={editedQuestion.tts?.rate || 1.0}
+                    onChange={(e) => handleTTSChange('rate', parseFloat(e.target.value))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="tts-pitch">Pitch</Label>
+                  <TextInput
+                    id="tts-pitch"
+                    type="number"
+                    step="0.1"
+                    min="0.5"
+                    max="2.0"
+                    value={editedQuestion.tts?.pitch || 1.0}
+                    onChange={(e) => handleTTSChange('pitch', parseFloat(e.target.value))}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {activeTab === 'forms' && (
+          <div className="pt-4">
+            {renderFormsEditor()}
+          </div>
+        )}
+
+        {activeTab === 'workflow' && (
+          <div className="pt-4" style={{ height: '800px' }}>
+            <WorkflowEditor questions={questions} />
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-4 border-t">

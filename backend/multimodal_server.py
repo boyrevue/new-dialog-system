@@ -39,6 +39,7 @@ ontology_paths = [
     "../ontologies/dialog.ttl",
     "../ontologies/dialog-multimodal.ttl",
     "../ontologies/dialog-insurance-questions.ttl",
+    "../ontologies/dialog-sections.ttl",
     "../ontologies/dialog-vocabularies.ttl",
     "../ontologies/dialog-documents.ttl",
     "../ontologies/dialog-validation.ttl",

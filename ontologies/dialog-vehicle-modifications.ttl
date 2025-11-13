@@ -1,0 +1,698 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix mod: <http://diggi.io/ontology/modifications#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+# Vehicle Modifications Ontology
+<http://diggi.io/ontology/modifications> a owl:Ontology ;
+    rdfs:label "Vehicle Modifications Ontology" ;
+    rdfs:comment "Hierarchical ontology of vehicle modifications for UK car insurance" ;
+    owl:versionInfo "1.0" .
+
+# Core Classes
+
+mod:ModificationCategory a owl:Class ;
+    rdfs:label "Modification Category" ;
+    rdfs:comment "Top-level category of vehicle modification (e.g., Engine, Body, Suspension)" .
+
+mod:ModificationSubcategory a owl:Class ;
+    rdfs:subClassOf mod:ModificationCategory ;
+    rdfs:label "Modification Subcategory" ;
+    rdfs:comment "Second-level grouping of modifications" .
+
+mod:Modification a owl:Class ;
+    rdfs:label "Modification" ;
+    rdfs:comment "Specific vehicle modification" .
+
+# Properties
+
+mod:modificationId a owl:DatatypeProperty ;
+    rdfs:label "modification ID" ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Unique identifier for the modification" .
+
+mod:hasSubcategory a owl:ObjectProperty ;
+    rdfs:label "has subcategory" ;
+    rdfs:domain mod:ModificationCategory ;
+    rdfs:range mod:ModificationSubcategory ;
+    rdfs:comment "Links category to its subcategories" .
+
+mod:hasModification a owl:ObjectProperty ;
+    rdfs:label "has modification" ;
+    rdfs:domain mod:ModificationSubcategory ;
+    rdfs:range mod:Modification ;
+    rdfs:comment "Links subcategory to specific modifications" .
+
+mod:insuranceImpact a owl:DatatypeProperty ;
+    rdfs:label "insurance impact" ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Impact on insurance: 'low', 'medium', 'high', 'very-high'" .
+
+mod:requiresDeclaration a owl:DatatypeProperty ;
+    rdfs:label "requires declaration" ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether this modification must be declared to insurers" .
+
+mod:affectsSafety a owl:DatatypeProperty ;
+    rdfs:label "affects safety" ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether modification affects vehicle safety" .
+
+# ====================
+# 1. ENGINE MODIFICATIONS
+# ====================
+
+mod:EngineCategory a mod:ModificationCategory ;
+    rdfs:label "Engine & Performance" ;
+    skos:prefLabel "Engine & Performance"@en ;
+    mod:modificationId "cat_engine" ;
+    rdfs:comment "Modifications to engine, performance, and power delivery" .
+
+# 1.1 Engine Tuning
+mod:EngineTuning a mod:ModificationSubcategory ;
+    rdfs:label "Engine Tuning" ;
+    skos:prefLabel "Engine Tuning"@en ;
+    mod:modificationId "subcat_engine_tuning" ;
+    rdfs:comment "Software and hardware engine tuning modifications" .
+
+mod:EngineCategory mod:hasSubcategory mod:EngineTuning .
+
+mod:ECURemapping a mod:Modification ;
+    rdfs:label "ECU Remapping / Chip Tuning" ;
+    skos:prefLabel "ECU Remapping"@en ;
+    skos:altLabel "Chip Tuning"@en, "ECU Tune"@en ;
+    mod:modificationId "mod_ecu_remap" ;
+    mod:insuranceImpact "high" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:PerformanceChip a mod:Modification ;
+    rdfs:label "Performance Chip" ;
+    skos:prefLabel "Performance Chip"@en ;
+    mod:modificationId "mod_perf_chip" ;
+    mod:insuranceImpact "high" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:EngineTuning mod:hasModification mod:ECURemapping, mod:PerformanceChip .
+
+# 1.2 Air Intake
+mod:AirIntake a mod:ModificationSubcategory ;
+    rdfs:label "Air Intake System" ;
+    skos:prefLabel "Air Intake System"@en ;
+    mod:modificationId "subcat_air_intake" ;
+    rdfs:comment "Modifications to air intake and filtration" .
+
+mod:EngineCategory mod:hasSubcategory mod:AirIntake .
+
+mod:InductionKit a mod:Modification ;
+    rdfs:label "Induction Kit / Cold Air Intake" ;
+    skos:prefLabel "Induction Kit"@en ;
+    skos:altLabel "Cold Air Intake"@en, "Performance Air Filter"@en ;
+    mod:modificationId "mod_induction_kit" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:AirFilter a mod:Modification ;
+    rdfs:label "High-Flow Air Filter" ;
+    skos:prefLabel "High-Flow Air Filter"@en ;
+    mod:modificationId "mod_air_filter" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:AirIntake mod:hasModification mod:InductionKit, mod:AirFilter .
+
+# 1.3 Exhaust System
+mod:ExhaustSystem a mod:ModificationSubcategory ;
+    rdfs:label "Exhaust System" ;
+    skos:prefLabel "Exhaust System"@en ;
+    mod:modificationId "subcat_exhaust" ;
+    rdfs:comment "Exhaust modifications" .
+
+mod:EngineCategory mod:hasSubcategory mod:ExhaustSystem .
+
+mod:FullExhaust a mod:Modification ;
+    rdfs:label "Full Exhaust System" ;
+    skos:prefLabel "Full Exhaust System"@en ;
+    mod:modificationId "mod_full_exhaust" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:BackBox a mod:Modification ;
+    rdfs:label "Back Box / Rear Silencer" ;
+    skos:prefLabel "Back Box"@en ;
+    skos:altLabel "Rear Silencer"@en, "Cat-Back Exhaust"@en ;
+    mod:modificationId "mod_back_box" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:DeCAT a mod:Modification ;
+    rdfs:label "De-Cat / Cat Delete" ;
+    skos:prefLabel "De-Cat"@en ;
+    skos:altLabel "Catalytic Converter Removal"@en ;
+    mod:modificationId "mod_decat" ;
+    mod:insuranceImpact "very-high" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false ;
+    rdfs:comment "May be illegal for road use without replacement" .
+
+mod:ExhaustSystem mod:hasModification mod:FullExhaust, mod:BackBox, mod:DeCAT .
+
+# 1.4 Forced Induction
+mod:ForcedInduction a mod:ModificationSubcategory ;
+    rdfs:label "Forced Induction" ;
+    skos:prefLabel "Forced Induction"@en ;
+    mod:modificationId "subcat_forced_induction" ;
+    rdfs:comment "Turbocharger and supercharger modifications" .
+
+mod:EngineCategory mod:hasSubcategory mod:ForcedInduction .
+
+mod:TurboUpgrade a mod:Modification ;
+    rdfs:label "Turbocharger Upgrade" ;
+    skos:prefLabel "Turbocharger Upgrade"@en ;
+    mod:modificationId "mod_turbo_upgrade" ;
+    mod:insuranceImpact "very-high" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:Supercharger a mod:Modification ;
+    rdfs:label "Supercharger Installation" ;
+    skos:prefLabel "Supercharger"@en ;
+    mod:modificationId "mod_supercharger" ;
+    mod:insuranceImpact "very-high" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:ForcedInduction mod:hasModification mod:TurboUpgrade, mod:Supercharger .
+
+# ====================
+# 2. BODY & EXTERIOR
+# ====================
+
+mod:BodyCategory a mod:ModificationCategory ;
+    rdfs:label "Body & Exterior" ;
+    skos:prefLabel "Body & Exterior"@en ;
+    mod:modificationId "cat_body" ;
+    rdfs:comment "Visual and structural body modifications" .
+
+# 2.1 Styling
+mod:BodyStyling a mod:ModificationSubcategory ;
+    rdfs:label "Body Styling" ;
+    skos:prefLabel "Body Styling"@en ;
+    mod:modificationId "subcat_body_styling" ;
+    rdfs:comment "Visual body modifications" .
+
+mod:BodyCategory mod:hasSubcategory mod:BodyStyling .
+
+mod:BodyKit a mod:Modification ;
+    rdfs:label "Body Kit" ;
+    skos:prefLabel "Body Kit"@en ;
+    mod:modificationId "mod_body_kit" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:Spoiler a mod:Modification ;
+    rdfs:label "Spoiler / Rear Wing" ;
+    skos:prefLabel "Spoiler"@en ;
+    skos:altLabel "Rear Wing"@en ;
+    mod:modificationId "mod_spoiler" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:Splitter a mod:Modification ;
+    rdfs:label "Front Splitter / Lip" ;
+    skos:prefLabel "Front Splitter"@en ;
+    skos:altLabel "Front Lip"@en ;
+    mod:modificationId "mod_splitter" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:Bonnet a mod:Modification ;
+    rdfs:label "Non-Standard Bonnet" ;
+    skos:prefLabel "Modified Bonnet"@en ;
+    skos:altLabel "Bonnet Bulge"@en, "Vented Bonnet"@en ;
+    mod:modificationId "mod_bonnet" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:BodyStyling mod:hasModification mod:BodyKit, mod:Spoiler, mod:Splitter, mod:Bonnet .
+
+# 2.2 Paint & Wrap
+mod:PaintWork a mod:ModificationSubcategory ;
+    rdfs:label "Paint & Wrap" ;
+    skos:prefLabel "Paint & Wrap"@en ;
+    mod:modificationId "subcat_paint" ;
+    rdfs:comment "Paint and vinyl wrap modifications" .
+
+mod:BodyCategory mod:hasSubcategory mod:PaintWork .
+
+mod:Respray a mod:Modification ;
+    rdfs:label "Full Respray / Colour Change" ;
+    skos:prefLabel "Full Respray"@en ;
+    skos:altLabel "Colour Change"@en ;
+    mod:modificationId "mod_respray" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:VinylWrap a mod:Modification ;
+    rdfs:label "Vinyl Wrap" ;
+    skos:prefLabel "Vinyl Wrap"@en ;
+    mod:modificationId "mod_vinyl_wrap" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:Decals a mod:Modification ;
+    rdfs:label "Decals / Stickers" ;
+    skos:prefLabel "Decals"@en ;
+    skos:altLabel "Stickers"@en ;
+    mod:modificationId "mod_decals" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration false ;
+    mod:affectsSafety false .
+
+mod:PaintWork mod:hasModification mod:Respray, mod:VinylWrap, mod:Decals .
+
+# 2.3 Lighting
+mod:Lighting a mod:ModificationSubcategory ;
+    rdfs:label "Lighting" ;
+    skos:prefLabel "Lighting"@en ;
+    mod:modificationId "subcat_lighting" ;
+    rdfs:comment "Exterior lighting modifications" .
+
+mod:BodyCategory mod:hasSubcategory mod:Lighting .
+
+mod:HIDLights a mod:Modification ;
+    rdfs:label "HID / Xenon Headlights" ;
+    skos:prefLabel "HID Headlights"@en ;
+    skos:altLabel "Xenon Headlights"@en ;
+    mod:modificationId "mod_hid_lights" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:LEDLights a mod:Modification ;
+    rdfs:label "LED Headlights / Tail Lights" ;
+    skos:prefLabel "LED Lights"@en ;
+    mod:modificationId "mod_led_lights" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:Underglow a mod:Modification ;
+    rdfs:label "Underglow Lighting" ;
+    skos:prefLabel "Underglow Lighting"@en ;
+    mod:modificationId "mod_underglow" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:Lighting mod:hasModification mod:HIDLights, mod:LEDLights, mod:Underglow .
+
+# 2.4 Windows & Glass
+mod:Windows a mod:ModificationSubcategory ;
+    rdfs:label "Windows & Glass" ;
+    skos:prefLabel "Windows & Glass"@en ;
+    mod:modificationId "subcat_windows" ;
+    rdfs:comment "Window and glass modifications" .
+
+mod:BodyCategory mod:hasSubcategory mod:Windows .
+
+mod:WindowTint a mod:Modification ;
+    rdfs:label "Window Tinting" ;
+    skos:prefLabel "Window Tinting"@en ;
+    mod:modificationId "mod_window_tint" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:SunRoof a mod:Modification ;
+    rdfs:label "Sunroof / Panoramic Roof Added" ;
+    skos:prefLabel "Sunroof Installation"@en ;
+    skos:altLabel "Panoramic Roof"@en ;
+    mod:modificationId "mod_sunroof" ;
+    mod:insuranceImpact "high" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:Windows mod:hasModification mod:WindowTint, mod:SunRoof .
+
+# ====================
+# 3. SUSPENSION & HANDLING
+# ====================
+
+mod:SuspensionCategory a mod:ModificationCategory ;
+    rdfs:label "Suspension & Handling" ;
+    skos:prefLabel "Suspension & Handling"@en ;
+    mod:modificationId "cat_suspension" ;
+    rdfs:comment "Suspension, brakes, and handling modifications" .
+
+# 3.1 Suspension
+mod:SuspensionMods a mod:ModificationSubcategory ;
+    rdfs:label "Suspension" ;
+    skos:prefLabel "Suspension"@en ;
+    mod:modificationId "subcat_suspension" ;
+    rdfs:comment "Suspension system modifications" .
+
+mod:SuspensionCategory mod:hasSubcategory mod:SuspensionMods .
+
+mod:LoweringSprings a mod:Modification ;
+    rdfs:label "Lowering Springs" ;
+    skos:prefLabel "Lowering Springs"@en ;
+    mod:modificationId "mod_lowering_springs" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:Coilovers a mod:Modification ;
+    rdfs:label "Coilover Suspension" ;
+    skos:prefLabel "Coilovers"@en ;
+    mod:modificationId "mod_coilovers" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:AirSuspension a mod:Modification ;
+    rdfs:label "Air Suspension / Air Ride" ;
+    skos:prefLabel "Air Suspension"@en ;
+    skos:altLabel "Air Ride"@en ;
+    mod:modificationId "mod_air_suspension" ;
+    mod:insuranceImpact "high" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:AntiRollBars a mod:Modification ;
+    rdfs:label "Upgraded Anti-Roll Bars" ;
+    skos:prefLabel "Anti-Roll Bars"@en ;
+    skos:altLabel "Sway Bars"@en ;
+    mod:modificationId "mod_anti_roll_bars" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:SuspensionMods mod:hasModification mod:LoweringSprings, mod:Coilovers, mod:AirSuspension, mod:AntiRollBars .
+
+# 3.2 Brakes
+mod:BrakesMods a mod:ModificationSubcategory ;
+    rdfs:label "Brakes" ;
+    skos:prefLabel "Brakes"@en ;
+    mod:modificationId "subcat_brakes" ;
+    rdfs:comment "Brake system modifications" .
+
+mod:SuspensionCategory mod:hasSubcategory mod:BrakesMods .
+
+mod:UpgradedBrakes a mod:Modification ;
+    rdfs:label "Upgraded Brake Discs / Pads" ;
+    skos:prefLabel "Upgraded Brakes"@en ;
+    skos:altLabel "Performance Brakes"@en ;
+    mod:modificationId "mod_upgraded_brakes" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:BigBrakeKit a mod:Modification ;
+    rdfs:label "Big Brake Kit" ;
+    skos:prefLabel "Big Brake Kit"@en ;
+    mod:modificationId "mod_big_brake_kit" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:BrakesMods mod:hasModification mod:UpgradedBrakes, mod:BigBrakeKit .
+
+# ====================
+# 4. WHEELS & TYRES
+# ====================
+
+mod:WheelsCategory a mod:ModificationCategory ;
+    rdfs:label "Wheels & Tyres" ;
+    skos:prefLabel "Wheels & Tyres"@en ;
+    mod:modificationId "cat_wheels" ;
+    rdfs:comment "Wheel and tyre modifications" .
+
+# 4.1 Wheels
+mod:WheelsMods a mod:ModificationSubcategory ;
+    rdfs:label "Wheels" ;
+    skos:prefLabel "Wheels"@en ;
+    mod:modificationId "subcat_wheels" ;
+    rdfs:comment "Wheel modifications" .
+
+mod:WheelsCategory mod:hasSubcategory mod:WheelsMods .
+
+mod:AlloyWheels a mod:Modification ;
+    rdfs:label "Non-Standard Alloy Wheels" ;
+    skos:prefLabel "Alloy Wheels"@en ;
+    mod:modificationId "mod_alloy_wheels" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:LargerWheels a mod:Modification ;
+    rdfs:label "Larger Wheels (Upsize)" ;
+    skos:prefLabel "Larger Wheels"@en ;
+    skos:altLabel "Wheel Upsize"@en ;
+    mod:modificationId "mod_larger_wheels" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:Spacers a mod:Modification ;
+    rdfs:label "Wheel Spacers" ;
+    skos:prefLabel "Wheel Spacers"@en ;
+    mod:modificationId "mod_spacers" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:WheelsMods mod:hasModification mod:AlloyWheels, mod:LargerWheels, mod:Spacers .
+
+# 4.2 Tyres
+mod:TyresMods a mod:ModificationSubcategory ;
+    rdfs:label "Tyres" ;
+    skos:prefLabel "Tyres"@en ;
+    mod:modificationId "subcat_tyres" ;
+    rdfs:comment "Tyre modifications" .
+
+mod:WheelsCategory mod:hasSubcategory mod:TyresMods .
+
+mod:PerformanceTyres a mod:Modification ;
+    rdfs:label "Performance Tyres" ;
+    skos:prefLabel "Performance Tyres"@en ;
+    mod:modificationId "mod_performance_tyres" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:LowProfileTyres a mod:Modification ;
+    rdfs:label "Low Profile Tyres" ;
+    skos:prefLabel "Low Profile Tyres"@en ;
+    mod:modificationId "mod_low_profile_tyres" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:TyresMods mod:hasModification mod:PerformanceTyres, mod:LowProfileTyres .
+
+# ====================
+# 5. INTERIOR & ELECTRONICS
+# ====================
+
+mod:InteriorCategory a mod:ModificationCategory ;
+    rdfs:label "Interior & Electronics" ;
+    skos:prefLabel "Interior & Electronics"@en ;
+    mod:modificationId "cat_interior" ;
+    rdfs:comment "Interior styling and electronic modifications" .
+
+# 5.1 Interior Styling
+mod:InteriorStyling a mod:ModificationSubcategory ;
+    rdfs:label "Interior Styling" ;
+    skos:prefLabel "Interior Styling"@en ;
+    mod:modificationId "subcat_interior_styling" ;
+    rdfs:comment "Interior visual modifications" .
+
+mod:InteriorCategory mod:hasSubcategory mod:InteriorStyling .
+
+mod:SportsSeats a mod:Modification ;
+    rdfs:label "Sports Seats / Bucket Seats" ;
+    skos:prefLabel "Sports Seats"@en ;
+    skos:altLabel "Bucket Seats"@en, "Racing Seats"@en ;
+    mod:modificationId "mod_sports_seats" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:SteeringWheel a mod:Modification ;
+    rdfs:label "Aftermarket Steering Wheel" ;
+    skos:prefLabel "Aftermarket Steering Wheel"@en ;
+    mod:modificationId "mod_steering_wheel" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:Gauges a mod:Modification ;
+    rdfs:label "Additional Gauges / Instrumentation" ;
+    skos:prefLabel "Additional Gauges"@en ;
+    mod:modificationId "mod_gauges" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration false ;
+    mod:affectsSafety false .
+
+mod:InteriorStyling mod:hasModification mod:SportsSeats, mod:SteeringWheel, mod:Gauges .
+
+# 5.2 Audio & Entertainment
+mod:AudioSystem a mod:ModificationSubcategory ;
+    rdfs:label "Audio & Entertainment" ;
+    skos:prefLabel "Audio & Entertainment"@en ;
+    mod:modificationId "subcat_audio" ;
+    rdfs:comment "Audio system modifications" .
+
+mod:InteriorCategory mod:hasSubcategory mod:AudioSystem .
+
+mod:UpgradedStereo a mod:Modification ;
+    rdfs:label "Upgraded Stereo / Head Unit" ;
+    skos:prefLabel "Upgraded Stereo"@en ;
+    skos:altLabel "Aftermarket Head Unit"@en ;
+    mod:modificationId "mod_upgraded_stereo" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:Subwoofer a mod:Modification ;
+    rdfs:label "Subwoofer / Amplifier" ;
+    skos:prefLabel "Subwoofer"@en ;
+    skos:altLabel "Amplifier"@en, "Sound System"@en ;
+    mod:modificationId "mod_subwoofer" ;
+    mod:insuranceImpact "medium" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety false .
+
+mod:AudioSystem mod:hasModification mod:UpgradedStereo, mod:Subwoofer .
+
+# ====================
+# 6. SECURITY & TRACKING
+# ====================
+
+mod:SecurityCategory a mod:ModificationCategory ;
+    rdfs:label "Security & Tracking" ;
+    skos:prefLabel "Security & Tracking"@en ;
+    mod:modificationId "cat_security" ;
+    rdfs:comment "Security and tracking device modifications" .
+
+# 6.1 Security
+mod:SecurityMods a mod:ModificationSubcategory ;
+    rdfs:label "Security Devices" ;
+    skos:prefLabel "Security Devices"@en ;
+    mod:modificationId "subcat_security" ;
+    rdfs:comment "Security system modifications" .
+
+mod:SecurityCategory mod:hasSubcategory mod:SecurityMods .
+
+mod:Alarm a mod:Modification ;
+    rdfs:label "Upgraded Alarm System" ;
+    skos:prefLabel "Upgraded Alarm"@en ;
+    mod:modificationId "mod_alarm" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration false ;
+    mod:affectsSafety false ;
+    rdfs:comment "May reduce insurance premium" .
+
+mod:Immobiliser a mod:Modification ;
+    rdfs:label "Upgraded Immobiliser" ;
+    skos:prefLabel "Upgraded Immobiliser"@en ;
+    mod:modificationId "mod_immobiliser" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration false ;
+    mod:affectsSafety false ;
+    rdfs:comment "May reduce insurance premium" .
+
+mod:Tracker a mod:Modification ;
+    rdfs:label "GPS Tracker" ;
+    skos:prefLabel "GPS Tracker"@en ;
+    skos:altLabel "Vehicle Tracker"@en ;
+    mod:modificationId "mod_tracker" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration false ;
+    mod:affectsSafety false ;
+    rdfs:comment "May reduce insurance premium" .
+
+mod:DashCam a mod:Modification ;
+    rdfs:label "Dash Camera" ;
+    skos:prefLabel "Dash Camera"@en ;
+    skos:altLabel "Dashcam"@en ;
+    mod:modificationId "mod_dashcam" ;
+    mod:insuranceImpact "low" ;
+    mod:requiresDeclaration false ;
+    mod:affectsSafety false ;
+    rdfs:comment "May reduce insurance premium" .
+
+mod:SecurityMods mod:hasModification mod:Alarm, mod:Immobiliser, mod:Tracker, mod:DashCam .
+
+# ====================
+# 7. OTHER MODIFICATIONS
+# ====================
+
+mod:OtherCategory a mod:ModificationCategory ;
+    rdfs:label "Other Modifications" ;
+    skos:prefLabel "Other Modifications"@en ;
+    mod:modificationId "cat_other" ;
+    rdfs:comment "Miscellaneous modifications" .
+
+# 7.1 Weight Reduction
+mod:WeightReduction a mod:ModificationSubcategory ;
+    rdfs:label "Weight Reduction" ;
+    skos:prefLabel "Weight Reduction"@en ;
+    mod:modificationId "subcat_weight" ;
+    rdfs:comment "Weight reduction modifications" .
+
+mod:OtherCategory mod:hasSubcategory mod:WeightReduction .
+
+mod:RearSeatRemoval a mod:Modification ;
+    rdfs:label "Rear Seat Removal" ;
+    skos:prefLabel "Rear Seat Removal"@en ;
+    mod:modificationId "mod_rear_seat_removal" ;
+    mod:insuranceImpact "high" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:WeightReduction mod:hasModification mod:RearSeatRemoval .
+
+# 7.2 Conversion
+mod:Conversion a mod:ModificationSubcategory ;
+    rdfs:label "Vehicle Conversion" ;
+    skos:prefLabel "Vehicle Conversion"@en ;
+    mod:modificationId "subcat_conversion" ;
+    rdfs:comment "Major vehicle conversions" .
+
+mod:OtherCategory mod:hasSubcategory mod:Conversion .
+
+mod:LPGConversion a mod:Modification ;
+    rdfs:label "LPG / Gas Conversion" ;
+    skos:prefLabel "LPG Conversion"@en ;
+    skos:altLabel "Gas Conversion"@en ;
+    mod:modificationId "mod_lpg_conversion" ;
+    mod:insuranceImpact "high" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:ElectricConversion a mod:Modification ;
+    rdfs:label "Electric / Hybrid Conversion" ;
+    skos:prefLabel "Electric Conversion"@en ;
+    skos:altLabel "EV Conversion"@en ;
+    mod:modificationId "mod_electric_conversion" ;
+    mod:insuranceImpact "very-high" ;
+    mod:requiresDeclaration true ;
+    mod:affectsSafety true .
+
+mod:Conversion mod:hasModification mod:LPGConversion, mod:ElectricConversion .

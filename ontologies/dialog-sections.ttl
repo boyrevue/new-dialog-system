@@ -1,0 +1,246 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ============================================================================
+# Dialog Sections for Insurance Quote Flow
+# ============================================================================
+# This file defines the section structure for the insurance quote dialog
+# and assigns all questions to their appropriate sections using OWL/SPARQL
+# relationships.
+# ============================================================================
+
+# Section 1: Personal Information
+:PersonalInfoSection a :Section ;
+    :sectionId "section_personal_info" ;
+    :sectionTitle "Personal Information" ;
+    :sectionDescription "Basic personal details required for your insurance quote" ;
+    :sectionOrder 1 ;
+    rdfs:label "Personal Information Section" .
+
+# Section 2: Contact Details
+:ContactDetailsSection a :Section ;
+    :sectionId "section_contact" ;
+    :sectionTitle "Contact Details" ;
+    :sectionDescription "How we can reach you" ;
+    :sectionOrder 2 ;
+    rdfs:label "Contact Details Section" .
+
+# Section 3: Address Information
+:AddressSection a :Section ;
+    :sectionId "section_address" ;
+    :sectionTitle "Address Information" ;
+    :sectionDescription "Your current residential address" ;
+    :sectionOrder 3 ;
+    rdfs:label "Address Section" .
+
+# Section 4: Vehicle Details
+:VehicleDetailsSection a :Section ;
+    :sectionId "section_vehicle" ;
+    :sectionTitle "Vehicle Details" ;
+    :sectionDescription "Information about the vehicle you want to insure" ;
+    :sectionOrder 4 ;
+    rdfs:label "Vehicle Details Section" .
+
+# Section 5: Driving History
+:DrivingHistorySection a :Section ;
+    :sectionId "section_driving" ;
+    :sectionTitle "Driving History" ;
+    :sectionDescription "Your driving experience and history" ;
+    :sectionOrder 5 ;
+    rdfs:label "Driving History Section" .
+
+# Section 6: Insurance History
+:InsuranceHistorySection a :Section ;
+    :sectionId "section_insurance" ;
+    :sectionTitle "Insurance History" ;
+    :sectionDescription "Your previous insurance and claims history" ;
+    :sectionOrder 6 ;
+    rdfs:label "Insurance History Section" .
+
+# Section 7: Policy Options
+:PolicyOptionsSection a :Section ;
+    :sectionId "section_policy_options" ;
+    :sectionTitle "Policy Options" ;
+    :sectionDescription "Choose your coverage level and policy preferences" ;
+    :sectionOrder 7 ;
+    rdfs:label "Policy Options Section" .
+
+# Section 8: Usage and Mileage
+:UsageMileageSection a :Section ;
+    :sectionId "section_usage" ;
+    :sectionTitle "Usage & Mileage" ;
+    :sectionDescription "How you use your vehicle" ;
+    :sectionOrder 8 ;
+    rdfs:label "Usage and Mileage Section" .
+
+# Section 9: Additional Drivers
+:AdditionalDriversSection a :Section ;
+    :sectionId "section_additional_drivers" ;
+    :sectionTitle "Additional Drivers" ;
+    :sectionDescription "Other people who will drive the vehicle" ;
+    :sectionOrder 9 ;
+    rdfs:label "Additional Drivers Section" .
+
+# Section 10: Occupation Details
+:OccupationSection a :Section ;
+    :sectionId "section_occupation" ;
+    :sectionTitle "Occupation Details" ;
+    :sectionDescription "Your employment and occupation information" ;
+    :sectionOrder 10 ;
+    rdfs:label "Occupation Section" .
+
+# ============================================================================
+# Question-to-Section Assignments (OWL Relationships)
+# ============================================================================
+
+# Personal Information Section Questions
+:FirstNameQuestion :inSection :PersonalInfoSection .
+:LastNameQuestion :inSection :PersonalInfoSection .
+:DateOfBirthQuestion :inSection :PersonalInfoSection .
+:TitleQuestion :inSection :PersonalInfoSection .
+:GenderQuestion :inSection :PersonalInfoSection .
+:MaritalStatusQuestion :inSection :PersonalInfoSection .
+:ResidentialStatusQuestion :inSection :PersonalInfoSection .
+:TimeAtAddressQuestion :inSection :PersonalInfoSection .
+
+# Contact Details Section Questions
+:EmailQuestion :inSection :ContactDetailsSection .
+:PhoneQuestion :inSection :ContactDetailsSection .
+:MobileNumberQuestion :inSection :ContactDetailsSection .
+:PreferredContactMethodQuestion :inSection :ContactDetailsSection .
+
+# Address Section Questions
+:PostcodeQuestion :inSection :AddressSection .
+:AddressLine1Question :inSection :AddressSection .
+:AddressLine2Question :inSection :AddressSection .
+:CityQuestion :inSection :AddressSection .
+:CountyQuestion :inSection :AddressSection .
+:PreviousPostcodeQuestion :inSection :AddressSection .
+:PreviousAddressLine1Question :inSection :AddressSection .
+:PreviousAddressLine2Question :inSection :AddressSection .
+
+# Vehicle Details Section Questions
+:VehicleRegistrationQuestion :inSection :VehicleDetailsSection .
+:VehicleMakeQuestion :inSection :VehicleDetailsSection .
+:VehicleModelQuestion :inSection :VehicleDetailsSection .
+:VehicleYearQuestion :inSection :VehicleDetailsSection .
+:VehicleValueQuestion :inSection :VehicleDetailsSection .
+:ParkingLocationQuestion :inSection :VehicleDetailsSection .
+:VehicleOwnerQuestion :inSection :VehicleDetailsSection .
+:VehiclePurchaseDateQuestion :inSection :VehicleDetailsSection .
+:VehicleKeeperQuestion :inSection :VehicleDetailsSection .
+:HasModificationsQuestion :inSection :VehicleDetailsSection .
+:ModificationDetailsQuestion :inSection :VehicleDetailsSection .
+:SecurityDevicesQuestion :inSection :VehicleDetailsSection .
+:HasAlarmQuestion :inSection :VehicleDetailsSection .
+:HasImmobiliserQuestion :inSection :VehicleDetailsSection .
+:HasTrackerQuestion :inSection :VehicleDetailsSection .
+:MOTStatusQuestion :inSection :VehicleDetailsSection .
+:MOTExpiryDateQuestion :inSection :VehicleDetailsSection .
+:IsVehicleFinancedQuestion :inSection :VehicleDetailsSection .
+:FinanceCompanyQuestion :inSection :VehicleDetailsSection .
+
+# Driving History Section Questions
+:LicenceTypeQuestion :inSection :DrivingHistorySection .
+:LicenceNumberQuestion :inSection :DrivingHistorySection .
+:YearsHoldingLicenceQuestion :inSection :DrivingHistorySection .
+:PassingDateQuestion :inSection :DrivingHistorySection .
+:DrivingConvictionsQuestion :inSection :DrivingHistorySection .
+:ConvictionDetailsQuestion :inSection :DrivingHistorySection .
+:EndorsementsQuestion :inSection :DrivingHistorySection .
+:PenaltyPointsQuestion :inSection :DrivingHistorySection .
+:BansOrDisqualificationsQuestion :inSection :DrivingHistorySection .
+:AccidentsQuestion :inSection :DrivingHistorySection .
+:AccidentDetailsQuestion :inSection :DrivingHistorySection .
+:MedicalConditionsQuestion :inSection :DrivingHistorySection .
+:MedicalConditionDetailsQuestion :inSection :DrivingHistorySection .
+:LicenceRestrictionsQuestion :inSection :DrivingHistorySection .
+
+# Insurance History Section Questions
+:PreviousInsurerQuestion :inSection :InsuranceHistorySection .
+:YearsNoClaimsQuestion :inSection :InsuranceHistorySection .
+:NoClaimsDiscountProofQuestion :inSection :InsuranceHistorySection .
+:ClaimsHistoryQuestion :inSection :InsuranceHistorySection .
+:ClaimDetailsQuestion :inSection :InsuranceHistorySection .
+:ClaimAmountQuestion :inSection :InsuranceHistorySection .
+:ClaimDateQuestion :inSection :InsuranceHistorySection .
+:ClaimTypeQuestion :inSection :InsuranceHistorySection .
+:InsuranceCancelledQuestion :inSection :InsuranceHistorySection .
+:CancellationReasonQuestion :inSection :InsuranceHistorySection .
+:InsuranceRefusedQuestion :inSection :InsuranceHistorySection .
+:SpecialTermsImposedQuestion :inSection :InsuranceHistorySection .
+
+# Policy Options Section Questions
+:CoverLevelQuestion :inSection :PolicyOptionsSection .
+:VoluntaryExcessQuestion :inSection :PolicyOptionsSection .
+:CompulsoryExcessQuestion :inSection :PolicyOptionsSection .
+:NCDProtectionQuestion :inSection :PolicyOptionsSection .
+:BreakdownCoverQuestion :inSection :PolicyOptionsSection .
+:LegalExpensesCoverQuestion :inSection :PolicyOptionsSection .
+:EuropeanCoverQuestion :inSection :PolicyOptionsSection .
+:WindscreenCoverQuestion :inSection :PolicyOptionsSection .
+:CourtesyCarQuestion :inSection :PolicyOptionsSection .
+:PersonalAccidentCoverQuestion :inSection :PolicyOptionsSection .
+:KeyCoverQuestion :inSection :PolicyOptionsSection .
+:PolicyStartDateQuestion :inSection :PolicyOptionsSection .
+:PolicyDurationQuestion :inSection :PolicyOptionsSection .
+
+# Usage and Mileage Section Questions
+:AnnualMileageQuestion :inSection :UsageMileageSection .
+:ClassOfUseQuestion :inSection :UsageMileageSection .
+:CommutingDistanceQuestion :inSection :UsageMileageSection .
+:CommutingFrequencyQuestion :inSection :UsageMileageSection .
+:BusinessMileageQuestion :inSection :UsageMileageSection .
+:BusinessUseTypeQuestion :inSection :UsageMileageSection .
+:MainDriverQuestion :inSection :UsageMileageSection .
+:VehicleKeptOvernightQuestion :inSection :UsageMileageSection .
+
+# Additional Drivers Section Questions
+:HasAdditionalDriversQuestion :inSection :AdditionalDriversSection .
+:AdditionalDriverCountQuestion :inSection :AdditionalDriversSection .
+:Driver2FirstNameQuestion :inSection :AdditionalDriversSection .
+:Driver2LastNameQuestion :inSection :AdditionalDriversSection .
+:Driver2DOBQuestion :inSection :AdditionalDriversSection .
+:Driver2GenderQuestion :inSection :AdditionalDriversSection .
+:Driver2RelationshipQuestion :inSection :AdditionalDriversSection .
+:Driver2LicenceTypeQuestion :inSection :AdditionalDriversSection .
+:Driver2YearsHoldingLicenceQuestion :inSection :AdditionalDriversSection .
+:Driver2ConvictionsQuestion :inSection :AdditionalDriversSection .
+:Driver2ClaimsQuestion :inSection :AdditionalDriversSection .
+:Driver2OccupationQuestion :inSection :AdditionalDriversSection .
+
+# Occupation Details Section Questions
+:OccupationQuestion :inSection :OccupationSection .
+:JobTitleQuestion :inSection :OccupationSection .
+:EmployerNameQuestion :inSection :OccupationSection .
+:IndustryQuestion :inSection :OccupationSection .
+:EmploymentStatusQuestion :inSection :OccupationSection .
+:SecondOccupationQuestion :inSection :OccupationSection .
+:SecondJobTitleQuestion :inSection :OccupationSection .
+
+# ============================================================================
+# Additional Properties for Section Management
+# ============================================================================
+
+:sectionId a owl:DatatypeProperty ;
+    rdfs:label "section ID" ;
+    rdfs:domain :Section ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Unique identifier for the section" .
+
+:sectionOrder a owl:DatatypeProperty ;
+    rdfs:label "section order" ;
+    rdfs:domain :Section ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "The display order of sections in the dialog flow" .
+
+# Inverse property for easier querying
+:hasSection a owl:ObjectProperty ;
+    rdfs:label "has section" ;
+    rdfs:domain :Dialog ;
+    rdfs:range :Section ;
+    owl:inverseOf :inSection ;
+    rdfs:comment "The sections contained in this dialog" .

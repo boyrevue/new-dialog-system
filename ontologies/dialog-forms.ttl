@@ -1,0 +1,518 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix form: <http://diggi.io/ontology/forms#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+# Form Builder Ontology
+<http://diggi.io/ontology/forms> a owl:Ontology ;
+    rdfs:label "Dynamic Form Builder Ontology" ;
+    rdfs:comment "Ontology for defining dynamic forms with conditional logic that can be injected into modals" ;
+    owl:versionInfo "1.0" .
+
+# Core Classes
+
+form:Form a owl:Class ;
+    rdfs:label "Form" ;
+    rdfs:comment "A reusable form definition that can be displayed in a modal" .
+
+form:FieldGroup a owl:Class ;
+    rdfs:label "Field Group" ;
+    rdfs:comment "A group of related fields that can be repeated together" .
+
+form:FormField a owl:Class ;
+    rdfs:label "Form Field" ;
+    rdfs:comment "An individual field within a form or field group" .
+
+form:ConditionalLogic a owl:Class ;
+    rdfs:label "Conditional Logic" ;
+    rdfs:comment "Rules that determine when fields or sections should be shown/hidden" .
+
+form:ValidationRule a owl:Class ;
+    rdfs:label "Validation Rule" ;
+    rdfs:comment "Validation logic for form fields" .
+
+form:FieldOption a owl:Class ;
+    rdfs:label "Field Option" ;
+    rdfs:comment "An option for select, radio, or checkbox fields" .
+
+# Field Type Enumeration (via SKOS)
+form:FieldTypes a skos:ConceptScheme ;
+    skos:prefLabel "Form Field Types"@en ;
+    skos:definition "Types of fields that can be used in forms"@en .
+
+form:TextInput a skos:Concept ;
+    skos:prefLabel "Text Input"@en ;
+    skos:notation "text" ;
+    skos:inScheme form:FieldTypes .
+
+form:TextArea a skos:Concept ;
+    skos:prefLabel "Text Area"@en ;
+    skos:notation "textarea" ;
+    skos:inScheme form:FieldTypes .
+
+form:NumberInput a skos:Concept ;
+    skos:prefLabel "Number Input"@en ;
+    skos:notation "number" ;
+    skos:inScheme form:FieldTypes .
+
+form:DateInput a skos:Concept ;
+    skos:prefLabel "Date Input"@en ;
+    skos:notation "date" ;
+    skos:inScheme form:FieldTypes .
+
+form:SelectDropdown a skos:Concept ;
+    skos:prefLabel "Select Dropdown"@en ;
+    skos:notation "select" ;
+    skos:inScheme form:FieldTypes .
+
+form:MultiSelect a skos:Concept ;
+    skos:prefLabel "Multi-Select"@en ;
+    skos:notation "multiselect" ;
+    skos:inScheme form:FieldTypes .
+
+form:RadioGroup a skos:Concept ;
+    skos:prefLabel "Radio Group"@en ;
+    skos:notation "radio" ;
+    skos:inScheme form:FieldTypes .
+
+form:CheckboxGroup a skos:Concept ;
+    skos:prefLabel "Checkbox Group"@en ;
+    skos:notation "checkbox" ;
+    skos:inScheme form:FieldTypes .
+
+form:Toggle a skos:Concept ;
+    skos:prefLabel "Toggle Switch"@en ;
+    skos:notation "toggle" ;
+    skos:inScheme form:FieldTypes .
+
+form:HierarchicalSelect a skos:Concept ;
+    skos:prefLabel "Hierarchical Select"@en ;
+    skos:notation "hierarchical" ;
+    skos:inScheme form:FieldTypes ;
+    rdfs:comment "Multi-level cascading select for hierarchical data" .
+
+# Properties
+
+# Form Properties
+form:formId a owl:DatatypeProperty ;
+    rdfs:label "form ID" ;
+    rdfs:domain form:Form ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Unique identifier for the form" .
+
+form:formTitle a owl:DatatypeProperty ;
+    rdfs:label "form title" ;
+    rdfs:domain form:Form ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Display title for the form" .
+
+form:formDescription a owl:DatatypeProperty ;
+    rdfs:label "form description" ;
+    rdfs:domain form:Form ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Description of the form's purpose" .
+
+form:hasFieldGroup a owl:ObjectProperty ;
+    rdfs:label "has field group" ;
+    rdfs:domain form:Form ;
+    rdfs:range form:FieldGroup ;
+    rdfs:comment "Links a form to its field groups" .
+
+form:hasField a owl:ObjectProperty ;
+    rdfs:label "has field" ;
+    rdfs:comment "Links a form or field group to its fields" .
+
+# Field Group Properties
+form:groupId a owl:DatatypeProperty ;
+    rdfs:label "group ID" ;
+    rdfs:domain form:FieldGroup ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Unique identifier for the field group" .
+
+form:groupLabel a owl:DatatypeProperty ;
+    rdfs:label "group label" ;
+    rdfs:domain form:FieldGroup ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Display label for the field group" .
+
+form:groupDescription a owl:DatatypeProperty ;
+    rdfs:label "group description" ;
+    rdfs:domain form:FieldGroup ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Description of the field group" .
+
+form:groupOrder a owl:DatatypeProperty ;
+    rdfs:label "group order" ;
+    rdfs:domain form:FieldGroup ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Display order of the group within the form" .
+
+form:isRepeatable a owl:DatatypeProperty ;
+    rdfs:label "is repeatable" ;
+    rdfs:domain form:FieldGroup ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether this group can be repeated (e.g., add multiple drivers)" .
+
+form:minOccurs a owl:DatatypeProperty ;
+    rdfs:label "minimum occurrences" ;
+    rdfs:domain form:FieldGroup ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Minimum number of times this group must appear (default: 1)" .
+
+form:maxOccurs a owl:DatatypeProperty ;
+    rdfs:label "maximum occurrences" ;
+    rdfs:domain form:FieldGroup ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Maximum number of times this group can appear (0 = unlimited)" .
+
+form:addButtonLabel a owl:DatatypeProperty ;
+    rdfs:label "add button label" ;
+    rdfs:domain form:FieldGroup ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Label for the 'Add Another' button (e.g., 'Add Another Driver')" .
+
+form:removeButtonLabel a owl:DatatypeProperty ;
+    rdfs:label "remove button label" ;
+    rdfs:domain form:FieldGroup ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Label for the 'Remove' button" .
+
+form:groupCollapsible a owl:DatatypeProperty ;
+    rdfs:label "group collapsible" ;
+    rdfs:domain form:FieldGroup ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether the group can be collapsed/expanded" .
+
+form:groupDefaultCollapsed a owl:DatatypeProperty ;
+    rdfs:label "group default collapsed" ;
+    rdfs:domain form:FieldGroup ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether the group starts collapsed" .
+
+form:triggeredBy a owl:ObjectProperty ;
+    rdfs:label "triggered by" ;
+    rdfs:domain form:Form ;
+    rdfs:range :Question ;
+    rdfs:comment "Links form to the question that triggers it" .
+
+form:triggerCondition a owl:DatatypeProperty ;
+    rdfs:label "trigger condition" ;
+    rdfs:domain form:Form ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Condition that triggers the form (e.g., 'answer=yes')" .
+
+# Field Properties
+form:fieldId a owl:DatatypeProperty ;
+    rdfs:label "field ID" ;
+    rdfs:domain form:FormField ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Unique identifier for the field" .
+
+form:fieldLabel a owl:DatatypeProperty ;
+    rdfs:label "field label" ;
+    rdfs:domain form:FormField ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Display label for the field" .
+
+form:fieldType a owl:ObjectProperty ;
+    rdfs:label "field type" ;
+    rdfs:domain form:FormField ;
+    rdfs:range skos:Concept ;
+    rdfs:comment "Type of the field (from FieldTypes scheme)" .
+
+form:fieldOrder a owl:DatatypeProperty ;
+    rdfs:label "field order" ;
+    rdfs:domain form:FormField ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Display order of the field" .
+
+form:required a owl:DatatypeProperty ;
+    rdfs:label "required" ;
+    rdfs:domain form:FormField ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether the field is required" .
+
+form:placeholder a owl:DatatypeProperty ;
+    rdfs:label "placeholder" ;
+    rdfs:domain form:FormField ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Placeholder text for the field" .
+
+form:helpText a owl:DatatypeProperty ;
+    rdfs:label "help text" ;
+    rdfs:domain form:FormField ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Help text displayed below the field" .
+
+form:defaultValue a owl:DatatypeProperty ;
+    rdfs:label "default value" ;
+    rdfs:domain form:FormField ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Default value for the field" .
+
+form:hasOption a owl:ObjectProperty ;
+    rdfs:label "has option" ;
+    rdfs:domain form:FormField ;
+    rdfs:range form:FieldOption ;
+    rdfs:comment "Options for select/radio/checkbox fields" .
+
+form:hasValidation a owl:ObjectProperty ;
+    rdfs:label "has validation" ;
+    rdfs:domain form:FormField ;
+    rdfs:range form:ValidationRule ;
+    rdfs:comment "Validation rules for the field" .
+
+form:hasConditional a owl:ObjectProperty ;
+    rdfs:label "has conditional" ;
+    rdfs:domain form:FormField ;
+    rdfs:range form:ConditionalLogic ;
+    rdfs:comment "Conditional logic for showing/hiding the field" .
+
+# Field Option Properties
+form:optionValue a owl:DatatypeProperty ;
+    rdfs:label "option value" ;
+    rdfs:domain form:FieldOption ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Value of the option" .
+
+form:optionLabel a owl:DatatypeProperty ;
+    rdfs:label "option label" ;
+    rdfs:domain form:FieldOption ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Display label for the option" .
+
+form:optionOrder a owl:DatatypeProperty ;
+    rdfs:label "option order" ;
+    rdfs:domain form:FieldOption ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Display order of the option" .
+
+form:parentOption a owl:ObjectProperty ;
+    rdfs:label "parent option" ;
+    rdfs:domain form:FieldOption ;
+    rdfs:range form:FieldOption ;
+    rdfs:comment "Parent option for hierarchical selects" .
+
+form:optionLevel a owl:DatatypeProperty ;
+    rdfs:label "option level" ;
+    rdfs:domain form:FieldOption ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Level in the hierarchy (1 = top level)" .
+
+form:triggersSubform a owl:ObjectProperty ;
+    rdfs:label "triggers subform" ;
+    rdfs:domain form:FieldOption ;
+    rdfs:range form:Form ;
+    rdfs:comment "Subform to display when this option is selected" .
+
+# Conditional Logic Properties
+form:condition a owl:DatatypeProperty ;
+    rdfs:label "condition" ;
+    rdfs:domain form:ConditionalLogic ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Boolean expression for the condition (e.g., 'field1=value1 AND field2=value2')" .
+
+form:action a owl:DatatypeProperty ;
+    rdfs:label "action" ;
+    rdfs:domain form:ConditionalLogic ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Action to take when condition is met: 'show', 'hide', 'enable', 'disable', 'require'" .
+
+# Validation Properties
+form:validationType a owl:DatatypeProperty ;
+    rdfs:label "validation type" ;
+    rdfs:domain form:ValidationRule ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Type of validation: 'required', 'minLength', 'maxLength', 'pattern', 'min', 'max', 'email', 'url'" .
+
+form:validationValue a owl:DatatypeProperty ;
+    rdfs:label "validation value" ;
+    rdfs:domain form:ValidationRule ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Value for the validation (e.g., regex pattern, min/max number)" .
+
+form:validationMessage a owl:DatatypeProperty ;
+    rdfs:label "validation message" ;
+    rdfs:domain form:ValidationRule ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Error message to display when validation fails" .
+
+# Error Handling and Response Properties
+form:errorMessage a owl:DatatypeProperty ;
+    rdfs:label "error message" ;
+    rdfs:comment "Custom error message for validation failures" ;
+    rdfs:range xsd:string .
+
+form:successMessage a owl:DatatypeProperty ;
+    rdfs:label "success message" ;
+    rdfs:domain form:Form ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Message displayed after successful form submission" .
+
+form:onSubmitAction a owl:DatatypeProperty ;
+    rdfs:label "on submit action" ;
+    rdfs:domain form:Form ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Action to take on submit: 'close_modal', 'next_question', 'custom_endpoint'" .
+
+form:submitEndpoint a owl:DatatypeProperty ;
+    rdfs:label "submit endpoint" ;
+    rdfs:domain form:Form ;
+    rdfs:range xsd:string ;
+    rdfs:comment "API endpoint for form submission" .
+
+form:loadingMessage a owl:DatatypeProperty ;
+    rdfs:label "loading message" ;
+    rdfs:domain form:Form ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Message displayed while form is submitting" .
+
+# Hierarchy Relationships
+# Questions → Forms → FieldGroups → Fields
+# All maintained via OWL properties and queryable via SPARQL
+
+:hasForm a owl:ObjectProperty ;
+    rdfs:label "has form" ;
+    rdfs:domain :Question ;
+    rdfs:range form:Form ;
+    rdfs:comment "Links a question to a dynamic form that can be triggered" .
+
+:formTriggerValue a owl:DatatypeProperty ;
+    rdfs:label "form trigger value" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Answer value that triggers the form (e.g., 'yes', 'true')" .
+
+# Drag-Drop UI Properties
+form:dragHandleEnabled a owl:DatatypeProperty ;
+    rdfs:label "drag handle enabled" ;
+    rdfs:comment "Whether fields/groups can be reordered via drag-drop in the UI" ;
+    rdfs:range xsd:boolean .
+
+form:uiHint a owl:DatatypeProperty ;
+    rdfs:label "UI hint" ;
+    rdfs:comment "Hint for the UI builder (e.g., 'full-width', 'two-column', 'inline')" ;
+    rdfs:range xsd:string .
+
+form:cssClass a owl:DatatypeProperty ;
+    rdfs:label "CSS class" ;
+    rdfs:comment "Custom CSS classes for styling" ;
+    rdfs:range xsd:string .
+
+form:icon a owl:DatatypeProperty ;
+    rdfs:label "icon" ;
+    rdfs:comment "Icon identifier (e.g., 'user', 'car', 'document')" ;
+    rdfs:range xsd:string .
+
+# ====================
+# EXAMPLE: Additional Drivers Form with Repeatable Groups
+# ====================
+
+:AdditionalDriversForm a form:Form ;
+    form:formId "additional_drivers_form" ;
+    form:formTitle "Additional Drivers" ;
+    form:formDescription "Add details for all additional drivers on this policy" ;
+    form:successMessage "Additional drivers have been added successfully" ;
+    form:onSubmitAction "close_modal" ;
+    form:hasFieldGroup :DriverDetailsGroup .
+
+:DriverDetailsGroup a form:FieldGroup ;
+    form:groupId "driver_details_group" ;
+    form:groupLabel "Driver {index}" ;
+    form:groupDescription "Details for additional driver" ;
+    form:groupOrder 1 ;
+    form:isRepeatable true ;
+    form:minOccurs 1 ;
+    form:maxOccurs 4 ;
+    form:addButtonLabel "Add Another Driver" ;
+    form:removeButtonLabel "Remove Driver" ;
+    form:groupCollapsible true ;
+    form:groupDefaultCollapsed false ;
+    form:icon "user" ;
+    form:hasField :DriverFirstNameField, :DriverLastNameField, :DriverDOBField, 
+                   :DriverLicenceField, :DriverRelationshipField .
+
+:DriverFirstNameField a form:FormField ;
+    form:fieldId "driver_first_name" ;
+    form:fieldLabel "First Name" ;
+    form:fieldType form:TextInput ;
+    form:fieldOrder 1 ;
+    form:required true ;
+    form:placeholder "Enter first name" ;
+    form:uiHint "half-width" .
+
+:DriverLastNameField a form:FormField ;
+    form:fieldId "driver_last_name" ;
+    form:fieldLabel "Last Name" ;
+    form:fieldType form:TextInput ;
+    form:fieldOrder 2 ;
+    form:required true ;
+    form:placeholder "Enter last name" ;
+    form:uiHint "half-width" .
+
+:DriverDOBField a form:FormField ;
+    form:fieldId "driver_dob" ;
+    form:fieldLabel "Date of Birth" ;
+    form:fieldType form:DateInput ;
+    form:fieldOrder 3 ;
+    form:required true ;
+    form:helpText "Driver must be 17 or older" ;
+    form:uiHint "half-width" .
+
+:DriverLicenceField a form:FormField ;
+    form:fieldId "driver_licence_number" ;
+    form:fieldLabel "Driving Licence Number" ;
+    form:fieldType form:TextInput ;
+    form:fieldOrder 4 ;
+    form:required true ;
+    form:placeholder "e.g., JONES061102W97YT" ;
+    form:uiHint "half-width" .
+
+:DriverRelationshipField a form:FormField ;
+    form:fieldId "driver_relationship" ;
+    form:fieldLabel "Relationship to Policyholder" ;
+    form:fieldType form:SelectDropdown ;
+    form:fieldOrder 5 ;
+    form:required true ;
+    form:uiHint "half-width" ;
+    form:hasOption :RelationshipSpouse, :RelationshipPartner, :RelationshipChild,
+                    :RelationshipParent, :RelationshipSibling, :RelationshipFriend, :RelationshipOther .
+
+:RelationshipSpouse a form:FieldOption ;
+    form:optionValue "spouse" ;
+    form:optionLabel "Spouse" ;
+    form:optionOrder 1 .
+
+:RelationshipPartner a form:FieldOption ;
+    form:optionValue "partner" ;
+    form:optionLabel "Partner" ;
+    form:optionOrder 2 .
+
+:RelationshipChild a form:FieldOption ;
+    form:optionValue "child" ;
+    form:optionLabel "Child" ;
+    form:optionOrder 3 .
+
+:RelationshipParent a form:FieldOption ;
+    form:optionValue "parent" ;
+    form:optionLabel "Parent" ;
+    form:optionOrder 4 .
+
+:RelationshipSibling a form:FieldOption ;
+    form:optionValue "sibling" ;
+    form:optionLabel "Sibling" ;
+    form:optionOrder 5 .
+
+:RelationshipFriend a form:FieldOption ;
+    form:optionValue "friend" ;
+    form:optionLabel "Friend" ;
+    form:optionOrder 6 .
+
+:RelationshipOther a form:FieldOption ;
+    form:optionValue "other" ;
+    form:optionLabel "Other" ;
+    form:optionOrder 7 .
+

@@ -35,6 +35,11 @@
     rdfs:label "Conditional Branch" ;
     rdfs:comment "A branching point based on conditions" .
 
+:Section a owl:Class ;
+    rdfs:subClassOf :DialogNode ;
+    rdfs:label "Section" ;
+    rdfs:comment "A grouping of related questions in the dialog" .
+
 # Properties
 :hasNode a owl:ObjectProperty ;
     rdfs:label "has node" ;
@@ -55,6 +60,24 @@
     rdfs:label "branch condition" ;
     rdfs:domain :ConditionalBranch ;
     rdfs:range xsd:string .
+
+:sectionTitle a owl:DatatypeProperty ;
+    rdfs:label "section title" ;
+    rdfs:domain :Section ;
+    rdfs:range xsd:string ;
+    rdfs:comment "The display title of the section" .
+
+:sectionDescription a owl:DatatypeProperty ;
+    rdfs:label "section description" ;
+    rdfs:domain :Section ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Description of what the section collects" .
+
+:inSection a owl:ObjectProperty ;
+    rdfs:label "in section" ;
+    rdfs:domain :Question ;
+    rdfs:range :Section ;
+    rdfs:comment "The section this question belongs to" .
 
 :questionText a owl:DatatypeProperty ;
     rdfs:label "question text" ;
@@ -125,33 +148,78 @@
 
 # Example Dialog Instance
 :InsuranceQuoteDialog a :Dialog ;
-    rdfs:label "Insurance Quote Dialog" ;
-    dcterms:description "Dialog for collecting car insurance quote information" ;
-    :hasNode :WelcomeNode, :NameQuestionMM, :VehicleRegQuestionMM, :CarMakeQuestion, :SummaryNode .
+    rdfs:label "Car Insurance Quote Dialog" ;
+    dcterms:description "Comprehensive dialog for collecting car insurance quote information" ;
+    :hasNode :WelcomeNode, :DriversSection, :VehicleSection, :PolicySection, :ClaimsSection, :PaymentSection, :ExtrasSection, :MarketingSection, :SummaryNode ;
+    :hasQuestion :FirstNameQuestion, :LastNameQuestion, :DOBQuestion, :EmailQuestion, :PhoneQuestion, :AddressQuestion, :PostcodeQuestion, :LicenceTypeQuestion, :LicenceNumberQuestion, :YearsHeldQuestion,
+                 :VehicleRegQuestion, :CarMakeQuestion, :CarModelQuestion, :CarYearQuestion, :MileageQuestion, :VehicleValueQuestion, :OvernightLocationQuestion, :HasModificationsQuestion,
+                 :CoverTypeQuestion, :StartDateQuestion, :VoluntaryExcessQuestion, :NCDYearsQuestion, :ProtectNCDQuestion,
+                 :HasClaimsQuestion, :HasConvictionsQuestion,
+                 :PaymentFrequencyQuestion, :PaymentMethodQuestion,
+                 :BreakdownCoverQuestion, :LegalExpensesQuestion, :CourtesyCarQuestion,
+                 :EmailMarketingQuestion, :SMSMarketingQuestion, :PostMarketingQuestion .
 
 :WelcomeNode a :DialogNode ;
     rdfs:label "Welcome" ;
     :order 1 ;
-    :nextNode :NameQuestionMM .
+    :nextNode :DriversSection .
 
-:NameQuestion a :Question ;
-    rdfs:label "Full Name Question" ;
-    :questionId "q_name" ;
-    :questionText "What is your full name?" ;
-    :slotName "customer_name" ;
-    :required true ;
+# Section 1: Drivers (drivers) - 👤
+:DriversSection a :Section ;
+    rdfs:label "Drivers" ;
+    :sectionTitle "👤 Driver Information" ;
+    :sectionDescription "Driver information and details" ;
     :order 2 ;
-    :nextNode :VehicleRegQuestion .
+    :nextNode :VehicleSection .
 
-:VehicleRegQuestion a :Question ;
-    rdfs:label "Vehicle Registration Question" ;
-    :questionId "q_vehicle_reg" ;
-    :questionText "What is your vehicle registration number?" ;
-    :slotName "vehicle_registration" ;
-    :required true ;
+# Section 2: Vehicle (vehicle) - 🚗
+:VehicleSection a :Section ;
+    rdfs:label "Vehicle" ;
+    :sectionTitle "🚗 Vehicle Details" ;
+    :sectionDescription "Vehicle details and specifications" ;
     :order 3 ;
+    :nextNode :PolicySection .
+
+# Section 3: Policy (policy) - 📄
+:PolicySection a :Section ;
+    rdfs:label "Policy" ;
+    :sectionTitle "📄 Policy Coverage" ;
+    :sectionDescription "Policy coverage details" ;
+    :order 4 ;
+    :nextNode :ClaimsSection .
+
+# Section 4: Claims (claims) - 📋
+:ClaimsSection a :Section ;
+    rdfs:label "Claims" ;
+    :sectionTitle "📋 Claims & Convictions" ;
+    :sectionDescription "Claims and conviction history" ;
+    :order 5 ;
+    :nextNode :PaymentSection .
+
+# Section 5: Payment (payment) - 💳
+:PaymentSection a :Section ;
+    rdfs:label "Payment" ;
+    :sectionTitle "💳 Payment Preferences" ;
+    :sectionDescription "Payment preferences" ;
+    :order 6 ;
+    :nextNode :ExtrasSection .
+
+# Section 6: Extras (extras) - ➕
+:ExtrasSection a :Section ;
+    rdfs:label "Extras" ;
+    :sectionTitle "➕ Optional Extras" ;
+    :sectionDescription "Optional extras and add-ons" ;
+    :order 7 ;
+    :nextNode :MarketingSection .
+
+# Section 7: Marketing (marketing) - 📧
+:MarketingSection a :Section ;
+    rdfs:label "Marketing" ;
+    :sectionTitle "📧 Marketing Preferences" ;
+    :sectionDescription "Marketing preferences" ;
+    :order 8 ;
     :nextNode :SummaryNode .
 
 :SummaryNode a :DialogNode ;
     rdfs:label "Summary" ;
-    :order 4 .
+    :order 9 .

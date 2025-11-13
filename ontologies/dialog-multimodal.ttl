@@ -187,6 +187,7 @@ mm:PhoneticVoice a mm:TTSPrompt ;
     :spellingRequired true ;
     :order 2 ;
     :nextNode :VehicleRegQuestionMM ;
+    :inSection :PersonalDetailsSection ;
     :hasInputMode vocab:NameInputMode ;
     mm:hasTTSPrompt :NameTTS ;
     mm:hasFAQ :NameFAQ1, :NameFAQ2 .
@@ -220,6 +221,7 @@ mm:PhoneticVoice a mm:TTSPrompt ;
     :spellingRequired true ;
     :order 3 ;
     :nextNode :CarMakeQuestion ;
+    :inSection :VehicleDetailsSection ;
     :hasInputMode vocab:VehicleRegInputMode ;
     mm:hasTTSPrompt :VehicleRegTTS ;
     mm:hasVisualComponent :VehicleRegVisual ;
@@ -300,6 +302,7 @@ mm:ExampleComponent a mm:VisualComponent ;
     :slotName "vehicle_make" ;
     :required true ;
     :order 4 ;
+    :inSection :VehicleDetailsSection ;
     mm:hasTTSPrompt :CarMakeTTS ;
     mm:hasOption :MakeToyota, :MakeVolkswagen, :MakeFord, :MakeBMW, :MakeMercedes,
                  :MakeAudi, :MakeHonda, :MakeNissan, :MakePeugeot, :MakeRenault,

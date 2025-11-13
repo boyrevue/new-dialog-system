@@ -1,0 +1,201 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix doc: <http://diggi.io/ontology/documents#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+# Document Ontology
+<http://diggi.io/ontology/documents> a owl:Ontology ;
+    rdfs:label "Document Types Ontology" ;
+    rdfs:comment "Ontology for identity and verification documents" ;
+    owl:versionInfo "1.0" .
+
+# Classes
+doc:Document a owl:Class ;
+    rdfs:label "Document" ;
+    rdfs:comment "A physical or digital document that can provide verification data" .
+
+doc:IdentityDocument a owl:Class ;
+    rdfs:subClassOf doc:Document ;
+    rdfs:label "Identity Document" ;
+    rdfs:comment "Document that verifies identity" .
+
+doc:AddressDocument a owl:Class ;
+    rdfs:subClassOf doc:Document ;
+    rdfs:label "Address Document" ;
+    rdfs:comment "Document that verifies address" .
+
+doc:VehicleDocument a owl:Class ;
+    rdfs:subClassOf doc:Document ;
+    rdfs:label "Vehicle Document" ;
+    rdfs:comment "Document related to vehicle ownership or registration" .
+
+# Properties
+doc:canExtractField a owl:ObjectProperty ;
+    rdfs:label "can extract field" ;
+    rdfs:domain doc:Document ;
+    rdfs:comment "Links a document to fields it can provide" .
+
+doc:extractionConfidence a owl:DatatypeProperty ;
+    rdfs:label "extraction confidence" ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Confidence level for automated extraction (0.0-1.0)" .
+
+doc:requiresOCR a owl:DatatypeProperty ;
+    rdfs:label "requires OCR" ;
+    rdfs:domain doc:Document ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether OCR is needed to extract data" .
+
+# Question Properties
+:extractableFrom a owl:ObjectProperty ;
+    rdfs:label "extractable from" ;
+    rdfs:domain :Question ;
+    rdfs:range doc:Document ;
+    rdfs:comment "Documents that can provide this field's data" .
+
+:inputType a owl:DatatypeProperty ;
+    rdfs:label "input type" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Type of input: 'spelling' (letter-by-letter) or 'word' (spoken as word)" .
+
+:dataType a owl:DatatypeProperty ;
+    rdfs:label "data type" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Data type: 'alphanumeric', 'numeric', 'alpha', 'date', 'email', 'phone'" .
+
+:mandatoryField a owl:DatatypeProperty ;
+    rdfs:label "mandatory field" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether this field is legally or business-mandated (vs just required for quote)" .
+
+# Document Instances
+
+# Identity Documents
+doc:Passport a doc:IdentityDocument ;
+    rdfs:label "Passport" ;
+    skos:prefLabel "Passport"@en ;
+    skos:altLabel "UK Passport"@en, "Biometric Passport"@en ;
+    doc:requiresOCR false ;
+    rdfs:comment "UK Passport - contains full name, date of birth, photo, passport number" .
+
+doc:DrivingLicence a doc:IdentityDocument ;
+    rdfs:label "Driving Licence" ;
+    skos:prefLabel "Driving Licence"@en ;
+    skos:altLabel "Driver's License"@en, "UK Driving Licence"@en, "Photocard Licence"@en ;
+    doc:requiresOCR false ;
+    rdfs:comment "UK Photocard Driving Licence - contains name, DOB, address, licence number, photo" .
+
+doc:NationalIDCard a doc:IdentityDocument ;
+    rdfs:label "National ID Card" ;
+    skos:prefLabel "National ID Card"@en ;
+    skos:altLabel "Identity Card"@en, "ID Card"@en ;
+    doc:requiresOCR false ;
+    rdfs:comment "National Identity Card" .
+
+doc:BirthCertificate a doc:IdentityDocument ;
+    rdfs:label "Birth Certificate" ;
+    skos:prefLabel "Birth Certificate"@en ;
+    skos:altLabel "Certificate of Birth"@en ;
+    doc:requiresOCR true ;
+    rdfs:comment "Birth Certificate - contains full name, date of birth, place of birth" .
+
+# Address Documents
+doc:UtilityBill a doc:AddressDocument ;
+    rdfs:label "Utility Bill" ;
+    skos:prefLabel "Utility Bill"@en ;
+    skos:altLabel "Gas Bill"@en, "Electric Bill"@en, "Water Bill"@en ;
+    doc:requiresOCR true ;
+    rdfs:comment "Recent utility bill (gas, electric, water) - verifies address" .
+
+doc:BankStatement a doc:AddressDocument ;
+    rdfs:label "Bank Statement" ;
+    skos:prefLabel "Bank Statement"@en ;
+    skos:altLabel "Bank Letter"@en ;
+    doc:requiresOCR true ;
+    rdfs:comment "Bank statement or letter - verifies name and address" .
+
+doc:CouncilTaxBill a doc:AddressDocument ;
+    rdfs:label "Council Tax Bill" ;
+    skos:prefLabel "Council Tax Bill"@en ;
+    skos:altLabel "Council Tax Statement"@en ;
+    doc:requiresOCR true ;
+    rdfs:comment "Council tax bill - verifies address" .
+
+# Vehicle Documents
+doc:V5CLogBook a doc:VehicleDocument ;
+    rdfs:label "V5C Log Book" ;
+    skos:prefLabel "V5C Vehicle Registration Certificate"@en ;
+    skos:altLabel "Log Book"@en, "V5C"@en, "Registration Document"@en ;
+    doc:requiresOCR false ;
+    rdfs:comment "V5C Log Book - contains vehicle registration, make, model, owner details" .
+
+doc:InsuranceCertificate a doc:VehicleDocument ;
+    rdfs:label "Insurance Certificate" ;
+    skos:prefLabel "Insurance Certificate"@en ;
+    skos:altLabel "Certificate of Insurance"@en, "Cover Note"@en ;
+    doc:requiresOCR true ;
+    rdfs:comment "Previous insurance certificate - contains policy details, vehicle info" .
+
+doc:MOTCertificate a doc:VehicleDocument ;
+    rdfs:label "MOT Certificate" ;
+    skos:prefLabel "MOT Certificate"@en ;
+    skos:altLabel "MOT Test Certificate"@en ;
+    doc:requiresOCR false ;
+    rdfs:comment "MOT Certificate - contains vehicle registration, test date, mileage" .
+
+# Field to Document Mappings (examples)
+# These would be added to questions in dialog-insurance-questions.ttl
+
+# Example mapping concept scheme
+doc:FieldDocumentMappings a skos:ConceptScheme ;
+    skos:prefLabel "Field to Document Mappings"@en ;
+    skos:definition "Mappings between data fields and documents that can provide them"@en .
+
+# Field extraction capabilities
+doc:FirstNameExtraction a skos:Concept ;
+    skos:prefLabel "First Name Extraction"@en ;
+    skos:inScheme doc:FieldDocumentMappings ;
+    doc:canExtractField "firstName" ;
+    doc:extractionConfidence 0.95 ;
+    rdfs:comment "First name can be extracted from Passport, Driving Licence, ID Card with 95% confidence" .
+
+doc:LastNameExtraction a skos:Concept ;
+    skos:prefLabel "Last Name Extraction"@en ;
+    skos:inScheme doc:FieldDocumentMappings ;
+    doc:canExtractField "lastName" ;
+    doc:extractionConfidence 0.95 ;
+    rdfs:comment "Last name can be extracted from Passport, Driving Licence, ID Card with 95% confidence" .
+
+doc:DateOfBirthExtraction a skos:Concept ;
+    skos:prefLabel "Date of Birth Extraction"@en ;
+    skos:inScheme doc:FieldDocumentMappings ;
+    doc:canExtractField "dateOfBirth" ;
+    doc:extractionConfidence 0.98 ;
+    rdfs:comment "Date of birth can be extracted from Passport, Driving Licence, Birth Certificate with 98% confidence" .
+
+doc:AddressExtraction a skos:Concept ;
+    skos:prefLabel "Address Extraction"@en ;
+    skos:inScheme doc:FieldDocumentMappings ;
+    doc:canExtractField "address" ;
+    doc:extractionConfidence 0.90 ;
+    rdfs:comment "Address can be extracted from Driving Licence, Utility Bills, Bank Statements with 90% confidence" .
+
+doc:VehicleRegExtraction a skos:Concept ;
+    skos:prefLabel "Vehicle Registration Extraction"@en ;
+    skos:inScheme doc:FieldDocumentMappings ;
+    doc:canExtractField "vehicleRegistration" ;
+    doc:extractionConfidence 0.98 ;
+    rdfs:comment "Vehicle registration can be extracted from V5C, Insurance Certificate, MOT Certificate with 98% confidence" .
+
+doc:DrivingLicenceNumberExtraction a skos:Concept ;
+    skos:prefLabel "Driving Licence Number Extraction"@en ;
+    skos:inScheme doc:FieldDocumentMappings ;
+    doc:canExtractField "licenceNumber" ;
+    doc:extractionConfidence 0.95 ;
+    rdfs:comment "Licence number can be extracted from Driving Licence with 95% confidence" .
