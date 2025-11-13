@@ -6,7 +6,7 @@ Extracts questions from TTL, handles speech/text input, calculates confidence
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 import asyncio
 import json
 import logging
@@ -56,7 +56,7 @@ ANSWER_TTL = ttl_config["answer"]
 class DialogSession(BaseModel):
     session_id: str
     current_node_index: int = 0
-    answers: Dict[str, any] = Field(default_factory=dict)
+    answers: Dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.now)
     last_accessed: datetime = Field(default_factory=datetime.now)
     confidence_scores: Dict[str, float] = Field(default_factory=dict)
@@ -213,35 +213,41 @@ async def start_session(dialog_id: str = "InsuranceQuoteDialog"):
 async def get_current_question(session_id: str):
     """Get the current question for a session."""
     session = get_or_create_session(session_id)
-    
+
     # Load dialog flow
     flow = dialog_manager.get_dialog_flow("InsuranceQuoteDialog")
-    
-    if session.current_node_index >= len(flow):
-        return {"completed": True}
-    
-    current_node = flow[session.current_node_index]
-    
-    # Get multimodal features from TTL
-    if "question_id" in current_node:
-        question_id = current_node["question_id"]
-        features = dialog_manager.get_multimodal_features(question_id)
-        threshold, priority = dialog_manager.get_confidence_threshold(question_id)
-        
-        return {
-            "question_id": question_id,
-            "question_text": current_node["question_text"],
-            "slot_name": current_node["slot_name"],
-            "required": current_node["required"],
-            "tts": features["tts"],
-            "visual_components": features["visual_components"],
-            "select_options": features["select_options"],
-            "faqs": features["faqs"],
-            "confidence_threshold": threshold,
-            "priority": priority
-        }
-    
-    return {"error": "Current node is not a question"}
+
+    # Skip to next question node if current node is not a question
+    while session.current_node_index < len(flow):
+        current_node = flow[session.current_node_index]
+
+        # Check if current node is a question
+        if "question_id" in current_node:
+            question_id = current_node["question_id"]
+            features = dialog_manager.get_multimodal_features(question_id)
+            threshold, priority = dialog_manager.get_confidence_threshold(question_id)
+            input_mode = dialog_manager.get_input_mode(question_id)
+
+            return {
+                "question_id": question_id,
+                "question_text": current_node["question_text"],
+                "slot_name": current_node["slot_name"],
+                "required": current_node["required"],
+                "spelling_required": current_node.get("spelling_required", False),
+                "input_mode": input_mode,
+                "tts": features["tts"],
+                "visual_components": features["visual_components"],
+                "select_options": features["select_options"],
+                "faqs": features["faqs"],
+                "confidence_threshold": threshold,
+                "priority": priority
+            }
+
+        # If not a question, skip to next node
+        session.current_node_index += 1
+
+    # All nodes processed
+    return {"completed": True}
 
 
 @app.post("/api/answer/submit")

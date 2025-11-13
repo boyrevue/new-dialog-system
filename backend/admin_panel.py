@@ -477,7 +477,7 @@ async def get_operator_workload(operator_id: str):
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket connection for real-time operator notifications."""
     await manager.connect(websocket)
-    
+
     try:
         # Send initial queue state
         items = list(review_queue.values())
@@ -487,22 +487,434 @@ async def websocket_endpoint(websocket: WebSocket):
             "pending_items": len([i for i in items if i.status == ReviewStatus.PENDING]),
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Keep connection alive and handle incoming messages
         while True:
             data = await websocket.receive_json()
-            
+
             if data.get("type") == "ping":
                 await websocket.send_json({
                     "type": "pong",
                     "timestamp": datetime.now().isoformat()
                 })
-    
+
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(websocket)
+
+
+# Store active help sessions
+help_sessions = {}  # session_id -> {websocket, question_id, messages}
+
+
+@app.websocket("/ws/admin/help")
+async def help_websocket(websocket: WebSocket):
+    """WebSocket connection for user-operator help dialog."""
+    await websocket.accept()
+    session_id = None
+
+    try:
+        # Wait for initial help request
+        while True:
+            data = await websocket.receive_json()
+
+            if data.get("type") == "help_request":
+                session_id = data.get("session_id")
+                question_id = data.get("question_id")
+                question_text = data.get("question_text")
+
+                logger.info(f"Help request from session {session_id} for question {question_id}")
+
+                # Store help session
+                help_sessions[session_id] = {
+                    "websocket": websocket,
+                    "question_id": question_id,
+                    "question_text": question_text,
+                    "messages": []
+                }
+
+                # Send acknowledgment
+                await websocket.send_json({
+                    "type": "help_acknowledged",
+                    "message": "An operator will assist you shortly."
+                })
+
+                # In a real system, notify operators about help request
+                # For now, simulate an automated response
+                await websocket.send_json({
+                    "type": "operator_response",
+                    "text": f"Hello! I can help you with '{question_text}'. What information do you need?",
+                    "timestamp": datetime.now().isoformat()
+                })
+
+            elif data.get("type") == "user_message":
+                # Forward message to operator (simplified - auto-respond for demo)
+                message_text = data.get("text")
+                logger.info(f"User message in session {session_id}: {message_text}")
+
+                # Store message
+                if session_id in help_sessions:
+                    help_sessions[session_id]["messages"].append({
+                        "from": "user",
+                        "text": message_text,
+                        "timestamp": datetime.now().isoformat()
+                    })
+
+                # Auto-respond (in production, operator would respond)
+                await websocket.send_json({
+                    "type": "operator_response",
+                    "text": "Thank you for your question. Based on the dialog configuration, this field requires specific information. Please check the FAQ section for examples.",
+                    "timestamp": datetime.now().isoformat()
+                })
+
+            elif data.get("type") == "ping":
+                await websocket.send_json({
+                    "type": "pong",
+                    "timestamp": datetime.now().isoformat()
+                })
+
+    except WebSocketDisconnect:
+        logger.info(f"Help session disconnected: {session_id}")
+        if session_id and session_id in help_sessions:
+            del help_sessions[session_id]
+    except Exception as e:
+        logger.error(f"Help WebSocket error: {e}")
+        if session_id and session_id in help_sessions:
+            del help_sessions[session_id]
+
+
+# Session Management & Interventions
+active_sessions_cache = {}  # session_id -> session_data
+intervention_queue = {}  # intervention_id -> intervention_data
+operator_websockets = {}  # operator_id -> websocket
+
+
+class InterventionType(str, Enum):
+    """Types of operator interventions."""
+    HELP_REQUESTED = "HELP_REQUESTED"
+    LOW_CONFIDENCE = "LOW_CONFIDENCE"
+
+
+@app.get("/sessions/active")
+async def get_active_sessions():
+    """Get all active dialog sessions with current status."""
+    try:
+        # In production, fetch from multimodal_server via HTTP or shared Redis
+        # For now, return mock data structure
+        sessions = []
+        for session_id, session_data in active_sessions_cache.items():
+            sessions.append({
+                "session_id": session_id,
+                "current_question_index": session_data.get("current_question_index", 0),
+                "total_questions": session_data.get("total_questions", 0),
+                "current_question_text": session_data.get("current_question_text", ""),
+                "needs_help": session_data.get("needs_help", False),
+                "has_low_confidence": session_data.get("has_low_confidence", False),
+                "created_at": session_data.get("created_at", datetime.now().isoformat())
+            })
+
+        return {"sessions": sessions}
+    except Exception as e:
+        logger.error(f"Error fetching active sessions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/session/{session_id}/details")
+async def get_session_details(session_id: str):
+    """Get detailed session information including flow visualization data."""
+    try:
+        # Fetch from main server or cache
+        questions = dialog_manager.get_questions()
+
+        session_data = active_sessions_cache.get(session_id, {})
+        current_index = session_data.get("current_question_index", 0)
+        answers = session_data.get("answers", {})
+        confidence_scores = session_data.get("confidence_scores", {})
+
+        return {
+            "session_id": session_id,
+            "flow": {
+                "questions": questions,
+                "current_index": current_index,
+                "answers": answers
+            },
+            "confidence_scores": confidence_scores,
+            "created_at": session_data.get("created_at", datetime.now().isoformat()),
+            "last_activity": session_data.get("last_activity", datetime.now().isoformat())
+        }
+    except Exception as e:
+        logger.error(f"Error fetching session details: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/interventions/queue")
+async def get_intervention_queue():
+    """Get all pending interventions (help requests and low confidence)."""
+    try:
+        interventions = []
+        for intervention_id, intervention_data in intervention_queue.items():
+            if intervention_data.get("status") == "PENDING":
+                interventions.append({
+                    "id": intervention_id,
+                    "type": intervention_data.get("type"),
+                    "session_id": intervention_data.get("session_id"),
+                    "question_id": intervention_data.get("question_id"),
+                    "question_text": intervention_data.get("question_text"),
+                    "slot_name": intervention_data.get("slot_name"),
+                    "current_value": intervention_data.get("current_value"),
+                    "confidence": intervention_data.get("confidence"),
+                    "created_at": intervention_data.get("created_at")
+                })
+
+        # Sort by created_at descending
+        interventions.sort(key=lambda x: x["created_at"], reverse=True)
+        return {"interventions": interventions}
+    except Exception as e:
+        logger.error(f"Error fetching intervention queue: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class InterventionResponse(BaseModel):
+    intervention_id: str
+    session_id: str
+    operator_id: str
+    response_type: str
+    message: str
+
+
+@app.post("/intervention/respond")
+async def respond_to_intervention(response: InterventionResponse):
+    """Send help message to user in response to help request."""
+    try:
+        intervention = intervention_queue.get(response.intervention_id)
+        if not intervention:
+            raise HTTPException(status_code=404, detail="Intervention not found")
+
+        # Send message via help WebSocket
+        if response.session_id in help_sessions:
+            ws = help_sessions[response.session_id]["websocket"]
+            await ws.send_json({
+                "type": "operator_response",
+                "text": response.message,
+                "operator_id": response.operator_id,
+                "timestamp": datetime.now().isoformat()
+            })
+
+        # Update intervention status
+        intervention["status"] = "RESPONDED"
+        intervention["operator_id"] = response.operator_id
+        intervention["response"] = response.message
+        intervention["responded_at"] = datetime.now().isoformat()
+
+        return {"success": True, "message": "Help message sent"}
+    except Exception as e:
+        logger.error(f"Error responding to intervention: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class SlotFix(BaseModel):
+    intervention_id: str
+    session_id: str
+    question_id: str
+    slot_name: str
+    corrected_value: str
+    operator_confidence: float
+    operator_id: str
+    notes: Optional[str] = None
+
+
+@app.post("/intervention/fix-slot")
+async def fix_slot_value(fix: SlotFix):
+    """Fix a slot value with operator correction and continue dialog."""
+    try:
+        intervention = intervention_queue.get(fix.intervention_id)
+        if not intervention:
+            raise HTTPException(status_code=404, detail="Intervention not found")
+
+        # Update session with corrected value
+        if fix.session_id in active_sessions_cache:
+            session = active_sessions_cache[fix.session_id]
+            session["answers"][fix.slot_name] = fix.corrected_value
+            session["confidence_scores"][fix.slot_name] = fix.operator_confidence
+            session["has_low_confidence"] = False
+
+        # Mark intervention as resolved
+        intervention["status"] = "RESOLVED"
+        intervention["operator_id"] = fix.operator_id
+        intervention["corrected_value"] = fix.corrected_value
+        intervention["operator_confidence"] = fix.operator_confidence
+        intervention["notes"] = fix.notes
+        intervention["resolved_at"] = datetime.now().isoformat()
+
+        # Notify main server to continue dialog
+        # In production, send HTTP request to multimodal_server to update session
+
+        logger.info(f"Slot {fix.slot_name} fixed by operator {fix.operator_id}: {fix.corrected_value}")
+
+        return {"success": True, "message": "Slot value updated, dialog can continue"}
+    except Exception as e:
+        logger.error(f"Error fixing slot: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/stats")
+async def get_operator_stats():
+    """Get operator panel statistics."""
+    try:
+        active_count = len([s for s in active_sessions_cache.values() if s.get("active", True)])
+        pending_interventions = len([i for i in intervention_queue.values() if i.get("status") == "PENDING"])
+        pending_reviews = len([r for r in review_queue if r.get("status") == ReviewStatus.PENDING])
+        completed_today = len([r for r in review_queue if r.get("status") == ReviewStatus.VALIDATED
+                              and r.get("updated_at", "").startswith(datetime.now().strftime("%Y-%m-%d"))])
+
+        return {
+            "active_sessions": active_count,
+            "pending_interventions": pending_interventions,
+            "pending": pending_reviews,
+            "completed_today": completed_today
+        }
+    except Exception as e:
+        logger.error(f"Error fetching stats: {e}")
+        return {
+            "active_sessions": 0,
+            "pending_interventions": 0,
+            "pending": 0,
+            "completed_today": 0
+        }
+
+
+@app.websocket("/ws/operator/{operator_id}")
+async def operator_websocket(websocket: WebSocket, operator_id: str):
+    """WebSocket connection for real-time operator notifications."""
+    await websocket.accept()
+    operator_websockets[operator_id] = websocket
+    logger.info(f"Operator {operator_id} connected via WebSocket")
+
+    try:
+        while True:
+            # Keep connection alive and listen for messages
+            data = await websocket.receive_json()
+            logger.info(f"Operator {operator_id} message: {data}")
+
+    except WebSocketDisconnect:
+        logger.info(f"Operator {operator_id} disconnected")
+        if operator_id in operator_websockets:
+            del operator_websockets[operator_id]
+    except Exception as e:
+        logger.error(f"Operator WebSocket error: {e}")
+        if operator_id in operator_websockets:
+            del operator_websockets[operator_id]
+
+
+async def notify_operators(notification_type: str, data: dict):
+    """Send notification to all connected operators."""
+    disconnected = []
+    for operator_id, ws in operator_websockets.items():
+        try:
+            await ws.send_json({
+                "type": notification_type,
+                **data,
+                "timestamp": datetime.now().isoformat()
+            })
+        except Exception as e:
+            logger.error(f"Failed to notify operator {operator_id}: {e}")
+            disconnected.append(operator_id)
+
+    # Clean up disconnected websockets
+    for operator_id in disconnected:
+        del operator_websockets[operator_id]
+
+
+# Node-RED Export
+@app.get("/export/node-red")
+async def export_to_node_red():
+    """Export dialog flow as Node-RED JSON format."""
+    try:
+        questions = dialog_manager.get_questions()
+
+        nodes = []
+        x_pos = 100
+        y_pos = 100
+        y_spacing = 150
+
+        # Create start node
+        nodes.append({
+            "id": "start_node",
+            "type": "inject",
+            "name": "Start Dialog",
+            "topic": "",
+            "payload": "",
+            "payloadType": "date",
+            "repeat": "",
+            "crontab": "",
+            "once": False,
+            "x": x_pos,
+            "y": y_pos,
+            "wires": [[f"question_{questions[0]['question_id']}"] if questions else []]
+        })
+
+        # Create question nodes
+        prev_node_id = "start_node"
+        for idx, question in enumerate(questions):
+            node_id = f"question_{question['question_id']}"
+            nodes.append({
+                "id": node_id,
+                "type": "function",
+                "name": f"Q{idx+1}: {question['question_text'][:30]}...",
+                "func": f"""
+// Question: {question['question_text']}
+// Slot: {question['slot_name']}
+// Required: {question.get('required', False)}
+// Confidence Threshold: {question.get('confidence_threshold', 0.85)}
+
+msg.question_id = "{question['question_id']}";
+msg.slot_name = "{question['slot_name']}";
+msg.question_text = "{question['question_text']}";
+msg.required = {str(question.get('required', False)).lower()};
+msg.confidence_threshold = {question.get('confidence_threshold', 0.85)};
+
+return msg;
+""",
+                "outputs": 1,
+                "x": x_pos + 300,
+                "y": y_pos + (idx * y_spacing),
+                "wires": [[f"question_{questions[idx+1]['question_id']}" if idx < len(questions) - 1 else "complete_node"]]
+            })
+
+        # Create completion node
+        nodes.append({
+            "id": "complete_node",
+            "type": "debug",
+            "name": "Dialog Complete",
+            "active": True,
+            "console": False,
+            "complete": "payload",
+            "x": x_pos + 600,
+            "y": y_pos + (len(questions) * y_spacing // 2),
+            "wires": []
+        })
+
+        flow = [{
+            "id": "dialog_flow_tab",
+            "type": "tab",
+            "label": "Multimodal Dialog Flow",
+            "disabled": False,
+            "info": "Auto-generated from TTL ontology"
+        }] + [{"z": "dialog_flow_tab", **node} for node in nodes]
+
+        return {
+            "flow": flow,
+            "metadata": {
+                "generated_at": datetime.now().isoformat(),
+                "total_questions": len(questions),
+                "dialog_system": "Multimodal Dialog System v1.0"
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error exporting to Node-RED: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Cleanup expired recordings

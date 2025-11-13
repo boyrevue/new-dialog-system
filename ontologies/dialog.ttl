@@ -77,6 +77,17 @@
     rdfs:domain :Question ;
     rdfs:range xsd:boolean .
 
+:spellingRequired a owl:DatatypeProperty ;
+    rdfs:label "spelling required" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Indicates if this field requires precise spelling using phonetic alphabet" .
+
+:hasInputMode a owl:ObjectProperty ;
+    rdfs:label "has input mode" ;
+    rdfs:domain :Question ;
+    rdfs:comment "Links to SKOS InputMode configuration for this question" .
+
 :order a owl:DatatypeProperty ;
     rdfs:label "order" ;
     rdfs:domain :DialogNode ;
@@ -116,12 +127,12 @@
 :InsuranceQuoteDialog a :Dialog ;
     rdfs:label "Insurance Quote Dialog" ;
     dcterms:description "Dialog for collecting car insurance quote information" ;
-    :hasNode :WelcomeNode, :NameQuestion, :VehicleRegQuestion, :SummaryNode .
+    :hasNode :WelcomeNode, :NameQuestionMM, :VehicleRegQuestionMM, :CarMakeQuestion, :SummaryNode .
 
 :WelcomeNode a :DialogNode ;
     rdfs:label "Welcome" ;
     :order 1 ;
-    :nextNode :NameQuestion .
+    :nextNode :NameQuestionMM .
 
 :NameQuestion a :Question ;
     rdfs:label "Full Name Question" ;

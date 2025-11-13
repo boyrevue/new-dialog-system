@@ -256,3 +256,57 @@ vocab:Zulu a skos:Concept ;
     skos:prefLabel "Zulu"@en ;
     skos:notation "Z" ;
     skos:inScheme vocab:PhoneticAlphabet .
+
+# Input Mode Properties
+vocab:InputMode a owl:Class ;
+    rdfs:label "Input Mode" ;
+    rdfs:comment "Configuration for how input should be collected" .
+
+vocab:supportsLetterByLetterSpelling a owl:DatatypeProperty ;
+    rdfs:label "supports letter-by-letter spelling" ;
+    rdfs:domain vocab:InputMode ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether this field supports letter-by-letter spelling with space separation" .
+
+vocab:spellingTerminationKeyword a owl:DatatypeProperty ;
+    rdfs:label "spelling termination keyword" ;
+    rdfs:domain vocab:InputMode ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Keyword to signal completion of spelling (e.g., 'end', 'done', 'finish')" .
+
+vocab:spellingTimeout a owl:DatatypeProperty ;
+    rdfs:label "spelling timeout" ;
+    rdfs:domain vocab:InputMode ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Timeout in seconds after last letter before auto-completing" .
+
+vocab:usesSpaceSeparator a owl:DatatypeProperty ;
+    rdfs:label "uses space separator" ;
+    rdfs:domain vocab:InputMode ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether spaces separate letters in spelling mode" .
+
+# Input Mode Configurations
+vocab:NameInputMode a vocab:InputMode ;
+    rdfs:label "Name Input Mode" ;
+    vocab:supportsLetterByLetterSpelling true ;
+    vocab:spellingTerminationKeyword "end" ;
+    vocab:spellingTimeout 5 ;
+    vocab:usesSpaceSeparator true ;
+    rdfs:comment "Input configuration for customer name fields - supports letter-by-letter with space separation, say 'end' to finish or 5 second timeout" .
+
+vocab:EmailInputMode a vocab:InputMode ;
+    rdfs:label "Email Input Mode" ;
+    vocab:supportsLetterByLetterSpelling true ;
+    vocab:spellingTerminationKeyword "end" ;
+    vocab:spellingTimeout 5 ;
+    vocab:usesSpaceSeparator true ;
+    rdfs:comment "Input configuration for email addresses" .
+
+vocab:VehicleRegInputMode a vocab:InputMode ;
+    rdfs:label "Vehicle Registration Input Mode" ;
+    vocab:supportsLetterByLetterSpelling true ;
+    vocab:spellingTerminationKeyword "end" ;
+    vocab:spellingTimeout 5 ;
+    vocab:usesSpaceSeparator true ;
+    rdfs:comment "Input configuration for vehicle registration numbers" .

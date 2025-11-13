@@ -1,157 +1,153 @@
 /**
- * OperatorPanel Component
- * 
- * Operator interface for reviewing low-confidence answers:
- * - Real-time review queue with priority sorting
- * - Audio playback with waveform visualization
- * - Manual transcription interface
- * - Rephrase request system
- * - WebSocket notifications
+ * Enhanced Operator Panel Component
+ *
+ * Features:
+ * - Multi-session view with user switching
+ * - Flow visualization showing question progression
+ * - Intervention queue for help requests and confidence errors
+ * - Real-time WebSocket notifications
+ * - Operator response interface for fixing slot values
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import './OperatorPanel.css';
+import React, { useState, useEffect, useRef } from 'react';
+import { Card, Button, TextInput, Badge, Table, Textarea, Label, Select, Alert } from 'flowbite-react';
+import {
+  Play,
+  Pause,
+  CheckCircle,
+  XCircle,
+  MessageSquare,
+  Clock,
+  AlertTriangle,
+  User,
+  Filter,
+  Users,
+  HelpCircle,
+  Send,
+  RefreshCw,
+  CheckCircle2
+} from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8001/api/admin';
-const WS_URL = 'ws://localhost:8001/ws/admin';
+const API_BASE_URL = '/api/admin';
 
-const REPHRASE_TEMPLATES = {
-  phonetic: 'Phonetic Alphabet',
-  slow: 'Slow Repeat',
-  confirmation: 'Confirmation',
-  example: 'With Example'
+const PRIORITY_COLORS = {
+  CRITICAL: 'failure',
+  HIGH: 'warning',
+  MEDIUM: 'info',
+  LOW: 'gray'
+};
+
+const STATUS_COLORS = {
+  PENDING: 'warning',
+  IN_REVIEW: 'info',
+  TRANSCRIBED: 'success',
+  VALIDATED: 'success',
+  REJECTED: 'failure',
+  HELP_REQUESTED: 'purple',
+  LOW_CONFIDENCE: 'warning'
 };
 
 const OperatorPanel = () => {
   const [operatorId, setOperatorId] = useState(localStorage.getItem('operatorId') || '');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Session Management
+  const [activeSessions, setActiveSessions] = useState([]);
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [sessionDetails, setSessionDetails] = useState(null);
+
+  // Intervention Queue
+  const [interventionQueue, setInterventionQueue] = useState([]);
+  const [selectedIntervention, setSelectedIntervention] = useState(null);
+
+  // Review Queue (existing)
   const [reviewQueue, setReviewQueue] = useState([]);
   const [selectedReview, setSelectedReview] = useState(null);
+
+  // UI State
+  const [activeTab, setActiveTab] = useState('sessions'); // sessions, interventions, reviews
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState(null);
-  const [transcriptionText, setTranscriptionText] = useState('');
+  const [success, setSuccess] = useState(null);
+  const [stats, setStats] = useState({
+    active_sessions: 0,
+    pending_interventions: 0,
+    pending_reviews: 0,
+    completed_today: 0
+  });
+
+  // Operator Response
+  const [operatorResponse, setOperatorResponse] = useState('');
+  const [correctedValue, setCorrectedValue] = useState('');
   const [operatorConfidence, setOperatorConfidence] = useState(0.95);
   const [notes, setNotes] = useState('');
-  const [filterStatus, setFilterStatus] = useState('PENDING');
-  const [filterPriority, setFilterPriority] = useState(null);
-  const [audioPlayer, setAudioPlayer] = useState(null);
-  const [rephraseTemplate, setRephraseTemplate] = useState('phonetic');
-  
-  const wsRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const waveformCanvasRef = useRef(null);
 
-  // WebSocket connection
+  // WebSocket
+  const wsRef = useRef(null);
+
   useEffect(() => {
-    if (!isLoggedIn) return;
-    
-    const connectWebSocket = () => {
-      const ws = new WebSocket(WS_URL);
-      
-      ws.onopen = () => {
-        console.log('WebSocket connected');
-        ws.send(JSON.stringify({ type: 'ping' }));
+    if (isLoggedIn) {
+      loadStats();
+      loadActiveSessions();
+      loadInterventionQueue();
+      connectWebSocket();
+
+      const interval = setInterval(() => {
+        loadStats();
+        loadActiveSessions();
+        loadInterventionQueue();
+      }, 5000);
+
+      return () => {
+        clearInterval(interval);
+        if (wsRef.current) {
+          wsRef.current.close();
+        }
       };
-      
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        handleWebSocketMessage(data);
-      };
-      
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-      
-      ws.onclose = () => {
-        console.log('WebSocket closed, reconnecting...');
-        setTimeout(connectWebSocket, 3000);
-      };
-      
-      wsRef.current = ws;
-    };
-    
-    connectWebSocket();
-    
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
+    }
   }, [isLoggedIn]);
 
-  // Load review queue periodically
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    
-    loadReviewQueue();
-    loadStats();
-    
-    const interval = setInterval(() => {
-      loadReviewQueue();
-      loadStats();
-    }, 10000); // Refresh every 10 seconds
-    
-    return () => clearInterval(interval);
-  }, [isLoggedIn, filterStatus, filterPriority]);
+  const connectWebSocket = () => {
+    const wsUrl = `ws://localhost:8001/ws/operator/${operatorId}`;
+    wsRef.current = new WebSocket(wsUrl);
 
-  const handleWebSocketMessage = (data) => {
-    switch (data.type) {
-      case 'new_review_item':
-        // Play notification sound
-        playNotificationSound();
-        // Refresh queue
-        loadReviewQueue();
-        break;
-      
-      case 'status_change':
-        // Refresh queue
-        loadReviewQueue();
-        if (selectedReview && selectedReview.review_id === data.review_id) {
-          // Reload selected item
-          loadReviewDetail(data.review_id);
-        }
-        break;
-      
-      case 'pong':
-        // Connection alive
-        break;
-      
-      default:
-        console.log('Unknown WebSocket message:', data);
-    }
+    wsRef.current.onopen = () => {
+      console.log('Operator WebSocket connected');
+    };
+
+    wsRef.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Operator notification:', data);
+
+      if (data.type === 'help_request') {
+        setSuccess(`Help requested by session ${data.session_id}`);
+        loadInterventionQueue();
+        loadStats();
+      } else if (data.type === 'low_confidence') {
+        setSuccess(`Low confidence detected for session ${data.session_id}`);
+        loadInterventionQueue();
+        loadStats();
+      } else if (data.type === 'new_session') {
+        loadActiveSessions();
+        loadStats();
+      }
+    };
+
+    wsRef.current.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    wsRef.current.onclose = () => {
+      console.log('WebSocket closed, reconnecting in 3s...');
+      setTimeout(connectWebSocket, 3000);
+    };
   };
 
-  const playNotificationSound = () => {
-    // Simple beep notification
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = 800;
-    oscillator.type = 'sine';
-    
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
-  };
-
-  const loadReviewQueue = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (filterStatus) params.append('status', filterStatus);
-      if (filterPriority) params.append('priority_max', filterPriority);
-      
-      const response = await fetch(`${API_BASE_URL}/review/queue?${params}`);
-      const data = await response.json();
-      setReviewQueue(data.items);
-    } catch (err) {
-      console.error('Failed to load review queue:', err);
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (operatorId.trim()) {
+      localStorage.setItem('operatorId', operatorId);
+      setIsLoggedIn(true);
     }
   };
 
@@ -159,491 +155,561 @@ const OperatorPanel = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/stats`);
       const data = await response.json();
-      setStats(data);
+      setStats({
+        active_sessions: data.active_sessions || 0,
+        pending_interventions: data.pending_interventions || 0,
+        pending_reviews: data.pending || 0,
+        completed_today: data.completed_today || 0
+      });
     } catch (err) {
       console.error('Failed to load stats:', err);
     }
   };
 
-  const loadReviewDetail = async (reviewId) => {
+  const loadActiveSessions = async () => {
     try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/review/${reviewId}`);
+      const response = await fetch(`${API_BASE_URL}/sessions/active`);
       const data = await response.json();
-      setSelectedReview(data.review);
-      setTranscriptionText(data.review.original_transcription || '');
-      setError(null);
-      
-      // Load audio if available
-      if (data.review.audio_path) {
-        loadAudioFile(data.review.audio_path);
-      }
+      setActiveSessions(data.sessions || []);
     } catch (err) {
-      setError('Failed to load review details: ' + err.message);
+      console.error('Failed to load active sessions:', err);
+    }
+  };
+
+  const loadSessionDetails = async (sessionId) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/session/${sessionId}/details`);
+      const data = await response.json();
+      setSessionDetails(data);
+      setSelectedSession(sessionId);
+    } catch (err) {
+      setError('Failed to load session details: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadAudioFile = async (audioPath) => {
+  const loadInterventionQueue = async () => {
     try {
-      // In production, fetch the actual audio file
-      // For now, simulate audio loading
-      console.log('Loading audio from:', audioPath);
-      
-      // Initialize audio context for waveform visualization
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      
-      // Set audio player (in production, load actual file)
-      setAudioPlayer({ path: audioPath, duration: 5.0 });
-      
-      // Draw waveform
-      drawWaveform();
+      const response = await fetch(`${API_BASE_URL}/interventions/queue`);
+      const data = await response.json();
+      setInterventionQueue(data.interventions || []);
     } catch (err) {
-      console.error('Failed to load audio:', err);
+      console.error('Failed to load intervention queue:', err);
     }
   };
 
-  const drawWaveform = () => {
-    const canvas = waveformCanvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-    
-    // Clear canvas
-    ctx.fillStyle = '#f0f0f0';
-    ctx.fillRect(0, 0, width, height);
-    
-    // Draw simulated waveform (in production, use actual audio data)
-    ctx.strokeStyle = '#3b82f6';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    
-    const numPoints = 100;
-    for (let i = 0; i < numPoints; i++) {
-      const x = (i / numPoints) * width;
-      const amplitude = Math.sin(i * 0.5) * 0.3 + Math.random() * 0.2;
-      const y = height / 2 + amplitude * height / 2;
-      
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-    
-    ctx.stroke();
+  const handleSelectIntervention = async (intervention) => {
+    setSelectedIntervention(intervention);
+    setCorrectedValue(intervention.current_value || '');
+    setOperatorResponse('');
+    setNotes('');
+
+    // Load full session context
+    await loadSessionDetails(intervention.session_id);
   };
 
-  const claimReview = async (reviewId) => {
+  const handleSendHelp = async () => {
+    if (!selectedIntervention || !operatorResponse.trim()) return;
+
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/review/${reviewId}/claim`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ operator_id: operatorId })
-      });
-      
-      if (response.ok) {
-        await loadReviewDetail(reviewId);
-        await loadReviewQueue();
-      } else {
-        const data = await response.json();
-        setError(data.detail || 'Failed to claim review');
-      }
-    } catch (err) {
-      setError('Failed to claim review: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const submitTranscription = async () => {
-    if (!transcriptionText.trim()) {
-      setError('Please enter a transcription');
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/review/${selectedReview.review_id}/transcribe`, {
+      const response = await fetch(`${API_BASE_URL}/intervention/respond`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          review_id: selectedReview.review_id,
-          transcribed_text: transcriptionText,
+          intervention_id: selectedIntervention.id,
+          session_id: selectedIntervention.session_id,
+          operator_id: operatorId,
+          response_type: 'help',
+          message: operatorResponse
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to send help');
+
+      setSuccess('Help message sent to user');
+      setOperatorResponse('');
+      await loadInterventionQueue();
+    } catch (err) {
+      setError('Failed to send help: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFixSlot = async () => {
+    if (!selectedIntervention || !correctedValue.trim()) return;
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/intervention/fix-slot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          intervention_id: selectedIntervention.id,
+          session_id: selectedIntervention.session_id,
+          question_id: selectedIntervention.question_id,
+          slot_name: selectedIntervention.slot_name,
+          corrected_value: correctedValue,
           operator_confidence: operatorConfidence,
           operator_id: operatorId,
           notes: notes
         })
       });
-      
-      if (response.ok) {
-        setError(null);
-        alert('Transcription submitted successfully!');
-        setSelectedReview(null);
-        setTranscriptionText('');
-        setNotes('');
-        await loadReviewQueue();
-      } else {
-        const data = await response.json();
-        setError(data.detail || 'Failed to submit transcription');
-      }
+
+      if (!response.ok) throw new Error('Failed to fix slot');
+
+      setSuccess('Slot value corrected and session updated');
+      setSelectedIntervention(null);
+      setCorrectedValue('');
+      setNotes('');
+      await loadInterventionQueue();
+      await loadActiveSessions();
     } catch (err) {
-      setError('Failed to submit transcription: ' + err.message);
+      setError('Failed to fix slot: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const requestRephrase = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/review/${selectedReview.review_id}/rephrase`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          review_id: selectedReview.review_id,
-          operator_id: operatorId,
-          template_type: rephraseTemplate
-        })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        alert(`Rephrase request sent!\n\nMessage: ${data.rephrase_message}`);
-        setSelectedReview(null);
-        await loadReviewQueue();
-      } else {
-        const data = await response.json();
-        setError(data.detail || 'Failed to request rephrase');
-      }
-    } catch (err) {
-      setError('Failed to request rephrase: ' + err.message);
-    } finally {
-      setLoading(false);
+  const renderFlowVisualization = (session) => {
+    if (!sessionDetails || !sessionDetails.flow) {
+      return <p className="text-sm text-gray-500">Loading flow...</p>;
     }
-  };
 
-  const validateTranscription = async (approved) => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/review/${selectedReview.review_id}/validate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          review_id: selectedReview.review_id,
-          operator_id: operatorId,
-          approved: approved,
-          notes: notes
-        })
-      });
-      
-      if (response.ok) {
-        alert(`Transcription ${approved ? 'approved' : 'rejected'}!`);
-        setSelectedReview(null);
-        setNotes('');
-        await loadReviewQueue();
-      } else {
-        const data = await response.json();
-        setError(data.detail || 'Failed to validate transcription');
-      }
-    } catch (err) {
-      setError('Failed to validate transcription: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const { questions, current_index, answers } = sessionDetails.flow;
 
-  const handleLogin = () => {
-    if (operatorId.trim()) {
-      localStorage.setItem('operatorId', operatorId);
-      setIsLoggedIn(true);
-    }
-  };
+    return (
+      <div className="space-y-2">
+        {questions.map((question, index) => {
+          const isActive = index === current_index;
+          const isCompleted = index < current_index;
+          const answer = answers[question.slot_name];
+          const confidence = sessionDetails.confidence_scores?.[question.slot_name];
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setOperatorId('');
-    localStorage.removeItem('operatorId');
+          return (
+            <div
+              key={question.question_id}
+              className={`p-3 rounded-lg border-2 ${
+                isActive
+                  ? 'border-blue-500 bg-blue-50'
+                  : isCompleted
+                  ? 'border-green-300 bg-green-50'
+                  : 'border-gray-200 bg-gray-50'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm">
+                      {index + 1}. {question.question_text}
+                    </span>
+                    {isActive && (
+                      <Badge color="info" size="xs">Current</Badge>
+                    )}
+                    {isCompleted && (
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Slot: {question.slot_name}
+                    {question.required && <span className="text-red-600 ml-1">*</span>}
+                  </p>
+                  {answer && (
+                    <div className="mt-2 text-sm">
+                      <span className="font-medium">Answer:</span> {answer}
+                      {confidence !== undefined && (
+                        <Badge
+                          color={confidence < 0.7 ? 'failure' : confidence < 0.85 ? 'warning' : 'success'}
+                          size="xs"
+                          className="ml-2"
+                        >
+                          {(confidence * 100).toFixed(0)}%
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   if (!isLoggedIn) {
     return (
-      <div className="operator-panel login-screen">
-        <div className="login-container">
-          <h2>Operator Login</h2>
-          <input
-            type="text"
-            value={operatorId}
-            onChange={(e) => setOperatorId(e.target.value)}
-            placeholder="Enter Operator ID"
-            onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-          />
-          <button onClick={handleLogin} disabled={!operatorId.trim()}>
-            Login
-          </button>
-        </div>
+      <div className="max-w-md mx-auto mt-20">
+        <Card>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Operator Login</h2>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <Label htmlFor="operatorId">Operator ID</Label>
+              <TextInput
+                id="operatorId"
+                type="text"
+                value={operatorId}
+                onChange={(e) => setOperatorId(e.target.value)}
+                placeholder="Enter your operator ID"
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full">
+              <User className="w-4 h-4 mr-2" />
+              Login
+            </Button>
+          </form>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="operator-panel">
-      <div className="panel-header">
-        <h1>Review Queue - Operator Panel</h1>
-        <div className="operator-info">
-          <span>👤 {operatorId}</span>
-          <button onClick={handleLogout} className="logout-button">Logout</button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Operator Panel</h1>
+          <p className="text-gray-600 mt-1">Logged in as: {operatorId}</p>
         </div>
+        <Button color="light" onClick={() => {
+          loadStats();
+          loadActiveSessions();
+          loadInterventionQueue();
+        }}>
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
-      {stats && (
-        <div className="stats-bar">
-          <div className="stat-item">
-            <span className="stat-label">Total:</span>
-            <span className="stat-value">{stats.total_items}</span>
+      {/* Alerts */}
+      {error && (
+        <Alert color="failure" onDismiss={() => setError(null)}>
+          <AlertTriangle className="w-5 h-5 mr-2" />
+          {error}
+        </Alert>
+      )}
+
+      {success && (
+        <Alert color="success" onDismiss={() => setSuccess(null)}>
+          <CheckCircle className="w-5 h-5 mr-2" />
+          {success}
+        </Alert>
+      )}
+
+      {/* Stats Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Active Sessions</p>
+              <p className="text-2xl font-bold text-blue-600">{stats.active_sessions}</p>
+            </div>
+            <Users className="w-8 h-8 text-blue-600" />
           </div>
-          <div className="stat-item">
-            <span className="stat-label">Pending:</span>
-            <span className="stat-value pending">{stats.status_distribution.PENDING || 0}</span>
+        </Card>
+        <Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Pending Help</p>
+              <p className="text-2xl font-bold text-purple-600">{stats.pending_interventions}</p>
+            </div>
+            <HelpCircle className="w-8 h-8 text-purple-600" />
           </div>
-          <div className="stat-item">
-            <span className="stat-label">In Review:</span>
-            <span className="stat-value in-review">{stats.status_distribution.IN_REVIEW || 0}</span>
+        </Card>
+        <Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Low Confidence</p>
+              <p className="text-2xl font-bold text-yellow-600">{stats.pending_reviews}</p>
+            </div>
+            <AlertTriangle className="w-8 h-8 text-yellow-600" />
           </div>
-          <div className="stat-item">
-            <span className="stat-label">High Priority:</span>
-            <span className="stat-value high-priority">{stats.pending_high_priority || 0}</span>
+        </Card>
+        <Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Completed Today</p>
+              <p className="text-2xl font-bold text-green-600">{stats.completed_today}</p>
+            </div>
+            <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
+        </Card>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex gap-2 border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab('sessions')}
+          className={`px-4 py-2 font-medium ${
+            activeTab === 'sessions'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Users className="w-4 h-4 inline mr-2" />
+          Active Sessions ({activeSessions.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('interventions')}
+          className={`px-4 py-2 font-medium ${
+            activeTab === 'interventions'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <HelpCircle className="w-4 h-4 inline mr-2" />
+          Interventions ({interventionQueue.length})
+        </button>
+      </div>
+
+      {/* Sessions Tab */}
+      {activeTab === 'sessions' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Session List */}
+          <Card>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Active Sessions</h3>
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              {activeSessions.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No active sessions</p>
+              ) : (
+                activeSessions.map((session) => (
+                  <div
+                    key={session.session_id}
+                    onClick={() => loadSessionDetails(session.session_id)}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                      selectedSession === session.session_id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">Session {session.session_id.substring(0, 8)}</span>
+                          {session.needs_help && (
+                            <Badge color="purple" size="xs">Help Requested</Badge>
+                          )}
+                          {session.has_low_confidence && (
+                            <Badge color="warning" size="xs">Low Confidence</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Progress: {session.current_question_index + 1} of {session.total_questions}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Current: {session.current_question_text?.substring(0, 50)}...
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Started: {new Date(session.created_at).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+
+          {/* Session Flow Visualization */}
+          <Card>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Session Flow</h3>
+            {!selectedSession ? (
+              <div className="text-center text-gray-500 py-12">
+                Select a session to view flow visualization
+              </div>
+            ) : sessionDetails ? (
+              <div className="max-h-[600px] overflow-y-auto">
+                {renderFlowVisualization(sessionDetails)}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-12">
+                Loading session details...
+              </div>
+            )}
+          </Card>
         </div>
       )}
 
-      <div className="panel-content">
-        <div className="queue-sidebar">
-          <div className="queue-filters">
-            <h3>Filters</h3>
-            <div className="filter-group">
-              <label>Status:</label>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                <option value="">All</option>
-                <option value="PENDING">Pending</option>
-                <option value="IN_REVIEW">In Review</option>
-                <option value="TRANSCRIBED">Transcribed</option>
-              </select>
-            </div>
-            <div className="filter-group">
-              <label>Max Priority:</label>
-              <select value={filterPriority || ''} onChange={(e) => setFilterPriority(e.target.value || null)}>
-                <option value="">All</option>
-                <option value="1">1 (Highest)</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="review-queue-list">
-            <h3>Queue ({reviewQueue.length})</h3>
-            {reviewQueue.map((item) => (
-              <div
-                key={item.review_id}
-                className={`queue-item priority-${item.priority} ${selectedReview?.review_id === item.review_id ? 'selected' : ''}`}
-                onClick={() => loadReviewDetail(item.review_id)}
-              >
-                <div className="queue-item-header">
-                  <span className="priority-badge">P{item.priority}</span>
-                  <span className="status-badge">{item.status}</span>
-                </div>
-                <div className="queue-item-content">
-                  <p className="question-text">{item.question_text}</p>
-                  <p className="confidence-score">
-                    Confidence: {(item.confidence_score * 100).toFixed(0)}%
-                  </p>
-                  <p className="timestamp">{new Date(item.created_at).toLocaleString()}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="review-details">
-          {selectedReview ? (
-            <>
-              <div className="review-header">
-                <h2>Review Details</h2>
-                <div className="review-meta">
-                  <span className={`priority-badge-large priority-${selectedReview.priority}`}>
-                    Priority {selectedReview.priority}
-                  </span>
-                  <span className="status-badge-large">{selectedReview.status}</span>
-                </div>
-              </div>
-
-              <div className="question-section">
-                <h3>Question</h3>
-                <p className="question-text-large">{selectedReview.question_text}</p>
-                <p className="slot-name">Slot: <code>{selectedReview.slot_name}</code></p>
-              </div>
-
-              {selectedReview.original_transcription && (
-                <div className="original-transcription">
-                  <h3>Original Recognition</h3>
-                  <p>{selectedReview.original_transcription}</p>
-                  <p className="confidence-info">
-                    Confidence: {(selectedReview.confidence_score * 100).toFixed(0)}% 
-                    (Threshold: {(selectedReview.threshold * 100).toFixed(0)}%)
-                  </p>
-                </div>
-              )}
-
-              {audioPlayer && (
-                <div className="audio-section">
-                  <h3>Audio Recording</h3>
-                  <canvas
-                    ref={waveformCanvasRef}
-                    width={600}
-                    height={120}
-                    className="waveform-canvas"
-                  />
-                  <div className="audio-controls">
-                    <button>▶️ Play</button>
-                    <button>⏸️ Pause</button>
-                    <button>⏮️ Rewind</button>
-                    <span className="audio-duration">{audioPlayer.duration}s</span>
-                  </div>
-                </div>
-              )}
-
-              {selectedReview.status === 'IN_REVIEW' && (
-                <div className="transcription-section">
-                  <h3>Manual Transcription</h3>
-                  <textarea
-                    value={transcriptionText}
-                    onChange={(e) => setTranscriptionText(e.target.value)}
-                    placeholder="Enter the transcribed text..."
-                    rows={4}
-                  />
-                  
-                  <div className="confidence-slider">
-                    <label>Operator Confidence: {(operatorConfidence * 100).toFixed(0)}%</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.05"
-                      value={operatorConfidence}
-                      onChange={(e) => setOperatorConfidence(parseFloat(e.target.value))}
-                    />
-                  </div>
-
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Notes (optional)..."
-                    rows={2}
-                  />
-
-                  <div className="action-buttons">
-                    <button
-                      className="primary-button"
-                      onClick={submitTranscription}
-                      disabled={loading || !transcriptionText.trim()}
-                    >
-                      ✓ Submit Transcription
-                    </button>
-                    
-                    <div className="rephrase-section">
-                      <select
-                        value={rephraseTemplate}
-                        onChange={(e) => setRephraseTemplate(e.target.value)}
-                      >
-                        {Object.entries(REPHRASE_TEMPLATES).map(([key, label]) => (
-                          <option key={key} value={key}>{label}</option>
-                        ))}
-                      </select>
-                      <button
-                        className="secondary-button"
-                        onClick={requestRephrase}
-                        disabled={loading}
-                      >
-                        ↩️ Request Rephrase
-                      </button>
+      {/* Interventions Tab */}
+      {activeTab === 'interventions' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Intervention Queue */}
+          <Card>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Intervention Queue</h3>
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              {interventionQueue.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No pending interventions</p>
+              ) : (
+                interventionQueue.map((intervention) => (
+                  <div
+                    key={intervention.id}
+                    onClick={() => handleSelectIntervention(intervention)}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                      selectedIntervention?.id === intervention.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Badge color={STATUS_COLORS[intervention.type]} size="xs">
+                            {intervention.type === 'HELP_REQUESTED' ? 'Help' : 'Low Confidence'}
+                          </Badge>
+                          <span className="text-sm font-semibold">
+                            Session {intervention.session_id.substring(0, 8)}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium mt-2">{intervention.question_text}</p>
+                        {intervention.current_value && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            Answer: {intervention.current_value}
+                          </p>
+                        )}
+                        {intervention.confidence && (
+                          <Badge
+                            color={intervention.confidence < 0.7 ? 'failure' : 'warning'}
+                            size="xs"
+                            className="mt-2"
+                          >
+                            Confidence: {(intervention.confidence * 100).toFixed(0)}%
+                          </Badge>
+                        )}
+                        <p className="text-xs text-gray-400 mt-2">
+                          {new Date(intervention.created_at).toLocaleTimeString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ))
               )}
-
-              {selectedReview.status === 'PENDING' && (
-                <div className="action-buttons">
-                  <button
-                    className="primary-button"
-                    onClick={() => claimReview(selectedReview.review_id)}
-                    disabled={loading}
-                  >
-                    📋 Claim for Review
-                  </button>
-                </div>
-              )}
-
-              {selectedReview.status === 'TRANSCRIBED' && (
-                <div className="validation-section">
-                  <h3>Transcription</h3>
-                  <p className="transcribed-text">{selectedReview.transcribed_text}</p>
-                  <p className="operator-confidence">
-                    Operator Confidence: {(selectedReview.operator_confidence * 100).toFixed(0)}%
-                  </p>
-                  
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Validation notes (optional)..."
-                    rows={2}
-                  />
-
-                  <div className="action-buttons">
-                    <button
-                      className="approve-button"
-                      onClick={() => validateTranscription(true)}
-                      disabled={loading}
-                    >
-                      ✓ Approve
-                    </button>
-                    <button
-                      className="reject-button"
-                      onClick={() => validateTranscription(false)}
-                      disabled={loading}
-                    >
-                      ✗ Reject
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="no-selection">
-              <p>Select an item from the queue to review</p>
             </div>
-          )}
-        </div>
-      </div>
+          </Card>
 
-      {error && (
-        <div className="error-toast">
-          {error}
-          <button onClick={() => setError(null)}>×</button>
+          {/* Intervention Detail */}
+          <Card>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Intervention Detail</h3>
+            {!selectedIntervention ? (
+              <div className="text-center text-gray-500 py-12">
+                Select an intervention to respond
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-semibold">Session ID</Label>
+                  <p className="text-gray-700 mt-1">{selectedIntervention.session_id}</p>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-semibold">Question</Label>
+                  <p className="text-gray-700 mt-1">{selectedIntervention.question_text}</p>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-semibold">Slot</Label>
+                  <p className="text-gray-700 mt-1">{selectedIntervention.slot_name}</p>
+                </div>
+
+                {selectedIntervention.current_value && (
+                  <div>
+                    <Label className="text-sm font-semibold">Current Answer</Label>
+                    <p className="text-gray-700 mt-1 bg-gray-100 p-2 rounded">
+                      {selectedIntervention.current_value}
+                    </p>
+                    {selectedIntervention.confidence && (
+                      <Badge
+                        color={selectedIntervention.confidence < 0.7 ? 'failure' : 'warning'}
+                        size="xs"
+                        className="mt-2"
+                      >
+                        Confidence: {(selectedIntervention.confidence * 100).toFixed(0)}%
+                      </Badge>
+                    )}
+                  </div>
+                )}
+
+                {selectedIntervention.type === 'HELP_REQUESTED' && (
+                  <div>
+                    <Label htmlFor="help-response">Send Help Message</Label>
+                    <Textarea
+                      id="help-response"
+                      value={operatorResponse}
+                      onChange={(e) => setOperatorResponse(e.target.value)}
+                      rows={4}
+                      placeholder="Type your help message to the user..."
+                    />
+                    <Button
+                      color="blue"
+                      onClick={handleSendHelp}
+                      disabled={!operatorResponse.trim() || loading}
+                      className="mt-2 w-full"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Help Message
+                    </Button>
+                  </div>
+                )}
+
+                {selectedIntervention.type === 'LOW_CONFIDENCE' && (
+                  <>
+                    <div>
+                      <Label htmlFor="corrected-value">Corrected Value</Label>
+                      <TextInput
+                        id="corrected-value"
+                        value={correctedValue}
+                        onChange={(e) => setCorrectedValue(e.target.value)}
+                        placeholder="Enter the correct value..."
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="op-confidence">Operator Confidence</Label>
+                      <div className="flex items-center gap-4 mt-2">
+                        <input
+                          type="range"
+                          id="op-confidence"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={operatorConfidence}
+                          onChange={(e) => setOperatorConfidence(parseFloat(e.target.value))}
+                          className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                        />
+                        <Badge color="info">{(operatorConfidence * 100).toFixed(0)}%</Badge>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="notes">Notes (Optional)</Label>
+                      <Textarea
+                        id="notes"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        rows={2}
+                        placeholder="Add any notes..."
+                      />
+                    </div>
+
+                    <Button
+                      color="success"
+                      onClick={handleFixSlot}
+                      disabled={!correctedValue.trim() || loading}
+                      className="w-full"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Fix Slot & Continue Dialog
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
+          </Card>
         </div>
       )}
     </div>

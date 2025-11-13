@@ -1,5 +1,6 @@
 @prefix : <http://diggi.io/ontology/dialog#> .
 @prefix mm: <http://diggi.io/ontology/multimodal#> .
+@prefix vocab: <http://diggi.io/ontology/vocabularies#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
@@ -53,6 +54,30 @@ mm:ttsText a owl:DatatypeProperty ;
     rdfs:domain mm:TTSPrompt ;
     rdfs:range xsd:string .
 
+mm:ttsVariant1 a owl:DatatypeProperty ;
+    rdfs:label "TTS variant 1" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string ;
+    rdfs:comment "First rephrase variant of the TTS prompt" .
+
+mm:ttsVariant2 a owl:DatatypeProperty ;
+    rdfs:label "TTS variant 2" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Second rephrase variant of the TTS prompt" .
+
+mm:ttsVariant3 a owl:DatatypeProperty ;
+    rdfs:label "TTS variant 3" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Third rephrase variant of the TTS prompt" .
+
+mm:ttsVariant4 a owl:DatatypeProperty ;
+    rdfs:label "TTS variant 4" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Fourth rephrase variant of the TTS prompt" .
+
 mm:ttsVoice a owl:DatatypeProperty ;
     rdfs:label "TTS voice" ;
     rdfs:domain mm:TTSPrompt ;
@@ -104,6 +129,18 @@ mm:optionDescription a owl:DatatypeProperty ;
     rdfs:domain mm:SelectOption ;
     rdfs:range xsd:string .
 
+mm:optionAlias a owl:DatatypeProperty ;
+    rdfs:label "option alias" ;
+    rdfs:domain mm:SelectOption ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Semantic equivalent or alternate name for ASR matching" .
+
+mm:optionPhonetic a owl:DatatypeProperty ;
+    rdfs:label "option phonetic" ;
+    rdfs:domain mm:SelectOption ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Phonetic spelling variant for speech recognition" .
+
 mm:faqQuestion a owl:DatatypeProperty ;
     rdfs:label "FAQ question" ;
     rdfs:domain mm:FAQ ;
@@ -147,11 +184,19 @@ mm:PhoneticVoice a mm:TTSPrompt ;
     :questionText "What is your full name?" ;
     :slotName "customer_name" ;
     :required true ;
+    :spellingRequired true ;
+    :order 2 ;
+    :nextNode :VehicleRegQuestionMM ;
+    :hasInputMode vocab:NameInputMode ;
     mm:hasTTSPrompt :NameTTS ;
     mm:hasFAQ :NameFAQ1, :NameFAQ2 .
 
 :NameTTS a mm:TTSPrompt ;
     mm:ttsText "Please tell me your full name, including both first name and surname." ;
+    mm:ttsVariant1 "Could you tell me your full name, including first and last name, please?" ;
+    mm:ttsVariant2 "Please provide your complete name with first name and surname." ;
+    mm:ttsVariant3 "I need your full name - both first name and surname." ;
+    mm:ttsVariant4 "What's your full name? Please include both first and last name." ;
     mm:ttsVoice "en-GB-Neural2-A" ;
     mm:ttsRate 1.0 ;
     mm:ttsPitch 1.0 .
@@ -172,12 +217,20 @@ mm:PhoneticVoice a mm:TTSPrompt ;
     :questionText "What is your vehicle registration number?" ;
     :slotName "vehicle_registration" ;
     :required true ;
+    :spellingRequired true ;
+    :order 3 ;
+    :nextNode :CarMakeQuestion ;
+    :hasInputMode vocab:VehicleRegInputMode ;
     mm:hasTTSPrompt :VehicleRegTTS ;
     mm:hasVisualComponent :VehicleRegVisual ;
     mm:hasFAQ :VehicleRegFAQ1 .
 
 :VehicleRegTTS a mm:TTSPrompt ;
     mm:ttsText "Please provide your vehicle registration number. You can spell it out using the phonetic alphabet if needed." ;
+    mm:ttsVariant1 "What's your vehicle registration number? Feel free to use the phonetic alphabet to spell it." ;
+    mm:ttsVariant2 "I need your car registration number. You may spell it out if that's easier." ;
+    mm:ttsVariant3 "Could you tell me your vehicle reg number? You can use Alpha, Bravo, Charlie to spell it clearly." ;
+    mm:ttsVariant4 "Please give me your vehicle registration. Spelling it out with the phonetic alphabet helps ensure accuracy." ;
     mm:ttsVoice "en-GB-Neural2-B" ;
     mm:ttsRate 0.9 ;
     mm:ttsPitch 1.0 .
@@ -238,3 +291,187 @@ mm:DiagramComponent a mm:VisualComponent ;
 mm:ExampleComponent a mm:VisualComponent ;
     mm:componentType "example" ;
     rdfs:comment "Example display with formatting" .
+
+# Car Manufacturer Question with comprehensive select options
+:CarMakeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Make Selection" ;
+    :questionId "q_car_make" ;
+    :questionText "What make is your vehicle?" ;
+    :slotName "vehicle_make" ;
+    :required true ;
+    :order 4 ;
+    mm:hasTTSPrompt :CarMakeTTS ;
+    mm:hasOption :MakeToyota, :MakeVolkswagen, :MakeFord, :MakeBMW, :MakeMercedes,
+                 :MakeAudi, :MakeHonda, :MakeNissan, :MakePeugeot, :MakeRenault,
+                 :MakeCitroen, :MakeMazda, :MakeHyundai, :MakeKia, :MakeSeat,
+                 :MakeSkoda, :MakeVolvo, :MakeLandRover, :MakeJaguar, :MakeMini .
+
+:CarMakeTTS a mm:TTSPrompt ;
+    mm:ttsText "Which manufacturer made your vehicle? You can select from the list or speak the make name." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Toyota
+:MakeToyota a mm:SelectOption ;
+    mm:optionValue "toyota" ;
+    mm:optionLabel "Toyota" ;
+    mm:optionDescription "Japanese manufacturer" ;
+    mm:optionPhonetic "toy-ota" ;
+    mm:optionPhonetic "toyoda" .
+
+# Volkswagen
+:MakeVolkswagen a mm:SelectOption ;
+    mm:optionValue "volkswagen" ;
+    mm:optionLabel "Volkswagen" ;
+    mm:optionDescription "German manufacturer" ;
+    mm:optionAlias "VW" ;
+    mm:optionPhonetic "volks-wagen" ;
+    mm:optionPhonetic "folks-wagen" .
+
+# Ford
+:MakeFord a mm:SelectOption ;
+    mm:optionValue "ford" ;
+    mm:optionLabel "Ford" ;
+    mm:optionDescription "American manufacturer" ;
+    mm:optionPhonetic "ford" .
+
+# BMW
+:MakeBMW a mm:SelectOption ;
+    mm:optionValue "bmw" ;
+    mm:optionLabel "BMW" ;
+    mm:optionDescription "German manufacturer" ;
+    mm:optionAlias "Bayerische Motoren Werke" ;
+    mm:optionPhonetic "bee-em-double-you" ;
+    mm:optionPhonetic "beamer" ;
+    mm:optionPhonetic "bimmer" .
+
+# Mercedes
+:MakeMercedes a mm:SelectOption ;
+    mm:optionValue "mercedes" ;
+    mm:optionLabel "Mercedes-Benz" ;
+    mm:optionDescription "German manufacturer" ;
+    mm:optionAlias "Mercedes" ;
+    mm:optionAlias "Benz" ;
+    mm:optionPhonetic "mer-say-deez" ;
+    mm:optionPhonetic "mer-suh-deez" ;
+    mm:optionPhonetic "merc" .
+
+# Audi
+:MakeAudi a mm:SelectOption ;
+    mm:optionValue "audi" ;
+    mm:optionLabel "Audi" ;
+    mm:optionDescription "German manufacturer" ;
+    mm:optionPhonetic "ow-dee" ;
+    mm:optionPhonetic "au-di" .
+
+# Honda
+:MakeHonda a mm:SelectOption ;
+    mm:optionValue "honda" ;
+    mm:optionLabel "Honda" ;
+    mm:optionDescription "Japanese manufacturer" ;
+    mm:optionPhonetic "hon-da" .
+
+# Nissan
+:MakeNissan a mm:SelectOption ;
+    mm:optionValue "nissan" ;
+    mm:optionLabel "Nissan" ;
+    mm:optionDescription "Japanese manufacturer" ;
+    mm:optionAlias "Datsun" ;
+    mm:optionPhonetic "nee-san" ;
+    mm:optionPhonetic "nis-san" .
+
+# Peugeot
+:MakePeugeot a mm:SelectOption ;
+    mm:optionValue "peugeot" ;
+    mm:optionLabel "Peugeot" ;
+    mm:optionDescription "French manufacturer" ;
+    mm:optionPhonetic "puh-zho" ;
+    mm:optionPhonetic "per-zho" ;
+    mm:optionPhonetic "poo-joe" .
+
+# Renault
+:MakeRenault a mm:SelectOption ;
+    mm:optionValue "renault" ;
+    mm:optionLabel "Renault" ;
+    mm:optionDescription "French manufacturer" ;
+    mm:optionPhonetic "ren-oh" ;
+    mm:optionPhonetic "ruh-no" .
+
+# Citroen
+:MakeCitroen a mm:SelectOption ;
+    mm:optionValue "citroen" ;
+    mm:optionLabel "Citroën" ;
+    mm:optionDescription "French manufacturer" ;
+    mm:optionPhonetic "sit-ro-en" ;
+    mm:optionPhonetic "sit-ren" .
+
+# Mazda
+:MakeMazda a mm:SelectOption ;
+    mm:optionValue "mazda" ;
+    mm:optionLabel "Mazda" ;
+    mm:optionDescription "Japanese manufacturer" ;
+    mm:optionPhonetic "maz-da" .
+
+# Hyundai
+:MakeHyundai a mm:SelectOption ;
+    mm:optionValue "hyundai" ;
+    mm:optionLabel "Hyundai" ;
+    mm:optionDescription "South Korean manufacturer" ;
+    mm:optionPhonetic "hun-day" ;
+    mm:optionPhonetic "hi-un-die" ;
+    mm:optionPhonetic "hy-un-day" .
+
+# Kia
+:MakeKia a mm:SelectOption ;
+    mm:optionValue "kia" ;
+    mm:optionLabel "Kia" ;
+    mm:optionDescription "South Korean manufacturer" ;
+    mm:optionPhonetic "kee-a" .
+
+# Seat
+:MakeSeat a mm:SelectOption ;
+    mm:optionValue "seat" ;
+    mm:optionLabel "Seat" ;
+    mm:optionDescription "Spanish manufacturer" ;
+    mm:optionPhonetic "say-at" .
+
+# Skoda
+:MakeSkoda a mm:SelectOption ;
+    mm:optionValue "skoda" ;
+    mm:optionLabel "Škoda" ;
+    mm:optionDescription "Czech manufacturer" ;
+    mm:optionPhonetic "sko-da" ;
+    mm:optionPhonetic "shko-da" .
+
+# Volvo
+:MakeVolvo a mm:SelectOption ;
+    mm:optionValue "volvo" ;
+    mm:optionLabel "Volvo" ;
+    mm:optionDescription "Swedish manufacturer" ;
+    mm:optionPhonetic "vol-vo" .
+
+# Land Rover
+:MakeLandRover a mm:SelectOption ;
+    mm:optionValue "land_rover" ;
+    mm:optionLabel "Land Rover" ;
+    mm:optionDescription "British manufacturer" ;
+    mm:optionAlias "Landrover" ;
+    mm:optionPhonetic "land rover" .
+
+# Jaguar
+:MakeJaguar a mm:SelectOption ;
+    mm:optionValue "jaguar" ;
+    mm:optionLabel "Jaguar" ;
+    mm:optionDescription "British manufacturer" ;
+    mm:optionPhonetic "jag-you-are" ;
+    mm:optionPhonetic "jag-war" ;
+    mm:optionAlias "Jag" .
+
+# Mini
+:MakeMini a mm:SelectOption ;
+    mm:optionValue "mini" ;
+    mm:optionLabel "Mini" ;
+    mm:optionDescription "British manufacturer" ;
+    mm:optionAlias "Mini Cooper" ;
+    mm:optionPhonetic "mini" .

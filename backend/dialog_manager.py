@@ -121,23 +121,24 @@ class DialogManager:
         Returns ordered list of dialog nodes.
         """
         query = prepareQuery("""
-            SELECT ?node ?nodeType ?questionId ?questionText ?slotName ?required ?order
+            SELECT ?node ?nodeType ?questionId ?questionText ?slotName ?required ?spellingRequired ?order
             WHERE {
                 ?dialog a dialog:Dialog ;
                         dialog:hasNode ?node .
-                
+
                 ?node dialog:order ?order .
-                
+
                 OPTIONAL {
                     ?node a ?nodeType .
                     FILTER(?nodeType = dialog:Question || ?nodeType = mm:MultimodalQuestion)
                 }
-                
+
                 OPTIONAL {
                     ?node dialog:questionId ?questionId ;
                           dialog:questionText ?questionText ;
                           dialog:slotName ?slotName ;
                           dialog:required ?required .
+                    OPTIONAL { ?node dialog:spellingRequired ?spellingRequired . }
                 }
             }
             ORDER BY ?order
@@ -158,7 +159,8 @@ class DialogManager:
                     "question_id": str(row.questionId),
                     "question_text": str(row.questionText),
                     "slot_name": str(row.slotName),
-                    "required": bool(row.required)
+                    "required": bool(row.required),
+                    "spelling_required": bool(row.spellingRequired) if row.spellingRequired else False
                 })
             
             nodes.append(node_data)
@@ -172,13 +174,14 @@ class DialogManager:
         """
         query = prepareQuery("""
             SELECT ?question ?ttsPrompt ?ttsText ?ttsVoice ?ttsRate ?ttsPitch ?ttsConfig
+                   ?ttsVariant1 ?ttsVariant2 ?ttsVariant3 ?ttsVariant4
                    ?visual ?componentType ?imageUrl ?componentData
                    ?option ?optionValue ?optionLabel ?optionDesc
                    ?faq ?faqQuestion ?faqAnswer ?faqCategory
             WHERE {
                 ?question dialog:questionId ?qid .
                 FILTER(str(?qid) = ?questionIdLiteral)
-                
+
                 OPTIONAL {
                     ?question mm:hasTTSPrompt ?ttsPrompt .
                     ?ttsPrompt mm:ttsText ?ttsText .
@@ -186,6 +189,10 @@ class DialogManager:
                     OPTIONAL { ?ttsPrompt mm:ttsRate ?ttsRate . }
                     OPTIONAL { ?ttsPrompt mm:ttsPitch ?ttsPitch . }
                     OPTIONAL { ?ttsPrompt mm:ttsConfig ?ttsConfig . }
+                    OPTIONAL { ?ttsPrompt mm:ttsVariant1 ?ttsVariant1 . }
+                    OPTIONAL { ?ttsPrompt mm:ttsVariant2 ?ttsVariant2 . }
+                    OPTIONAL { ?ttsPrompt mm:ttsVariant3 ?ttsVariant3 . }
+                    OPTIONAL { ?ttsPrompt mm:ttsVariant4 ?ttsVariant4 . }
                 }
                 
                 OPTIONAL {
@@ -200,6 +207,8 @@ class DialogManager:
                     ?option mm:optionValue ?optionValue ;
                             mm:optionLabel ?optionLabel .
                     OPTIONAL { ?option mm:optionDescription ?optionDesc . }
+                    OPTIONAL { ?option mm:optionAlias ?optionAlias . }
+                    OPTIONAL { ?option mm:optionPhonetic ?optionPhonetic . }
                 }
                 
                 OPTIONAL {
@@ -230,6 +239,15 @@ class DialogManager:
                     "pitch": float(row.ttsPitch) if row.ttsPitch else 1.0,
                     "config": str(row.ttsConfig) if row.ttsConfig else "standard"
                 }
+                # Add variants if they exist
+                if row.ttsVariant1:
+                    features["tts"]["variant1"] = str(row.ttsVariant1)
+                if row.ttsVariant2:
+                    features["tts"]["variant2"] = str(row.ttsVariant2)
+                if row.ttsVariant3:
+                    features["tts"]["variant3"] = str(row.ttsVariant3)
+                if row.ttsVariant4:
+                    features["tts"]["variant4"] = str(row.ttsVariant4)
             
             # Visual Components
             if row.visual:
@@ -244,17 +262,37 @@ class DialogManager:
                 if visual not in features["visual_components"]:
                     features["visual_components"].append(visual)
             
-            # Select Options
+            # Select Options (collect with aliases and phonetics)
             if row.option:
-                option = {
-                    "value": str(row.optionValue),
-                    "label": str(row.optionLabel),
-                }
-                if row.optionDesc:
-                    option["description"] = str(row.optionDesc)
-                
-                if option not in features["select_options"]:
-                    features["select_options"].append(option)
+                option_id = str(row.option)
+                # Find existing option or create new
+                existing_option = next(
+                    (opt for opt in features["select_options"] if opt.get("_id") == option_id),
+                    None
+                )
+
+                if not existing_option:
+                    existing_option = {
+                        "_id": option_id,
+                        "value": str(row.optionValue),
+                        "label": str(row.optionLabel),
+                        "aliases": [],
+                        "phonetics": []
+                    }
+                    if row.optionDesc:
+                        existing_option["description"] = str(row.optionDesc)
+                    features["select_options"].append(existing_option)
+
+                # Add aliases and phonetics
+                if row.optionAlias:
+                    alias = str(row.optionAlias)
+                    if alias not in existing_option["aliases"]:
+                        existing_option["aliases"].append(alias)
+
+                if row.optionPhonetic:
+                    phonetic = str(row.optionPhonetic)
+                    if phonetic not in existing_option["phonetics"]:
+                        existing_option["phonetics"].append(phonetic)
             
             # FAQs
             if row.faq:
@@ -267,9 +305,47 @@ class DialogManager:
                 
                 if faq not in features["faqs"]:
                     features["faqs"].append(faq)
-        
+
+        # Clean up internal _id field from select options
+        for option in features["select_options"]:
+            option.pop("_id", None)
+
         return features
-    
+
+    def get_input_mode(self, question_id: str) -> Optional[Dict]:
+        """
+        Load input mode configuration from SKOS vocabulary.
+        Returns dict with spelling settings or None.
+        """
+        query = prepareQuery("""
+            SELECT ?inputMode ?supportsSpelling ?terminationKeyword ?timeout ?usesSeparator
+            WHERE {
+                ?question dialog:questionId ?qid .
+                FILTER(str(?qid) = ?questionIdLiteral)
+
+                OPTIONAL {
+                    ?question dialog:hasInputMode ?inputMode .
+                    OPTIONAL { ?inputMode vocab:supportsLetterByLetterSpelling ?supportsSpelling . }
+                    OPTIONAL { ?inputMode vocab:spellingTerminationKeyword ?terminationKeyword . }
+                    OPTIONAL { ?inputMode vocab:spellingTimeout ?timeout . }
+                    OPTIONAL { ?inputMode vocab:usesSpaceSeparator ?usesSeparator . }
+                }
+            }
+        """, initNs={"dialog": DIALOG, "vocab": VOCAB})
+
+        results = list(self.graph.query(query, initBindings={"questionIdLiteral": Literal(question_id)}))
+
+        if results and results[0].inputMode:
+            row = results[0]
+            return {
+                "supports_letter_by_letter": bool(row.supportsSpelling) if row.supportsSpelling else False,
+                "termination_keyword": str(row.terminationKeyword) if row.terminationKeyword else "end",
+                "timeout_seconds": int(row.timeout) if row.timeout else 5,
+                "uses_space_separator": bool(row.usesSeparator) if row.usesSeparator else True
+            }
+
+        return None
+
     def get_confidence_threshold(self, question_id: str) -> Tuple[float, int]:
         """
         Get confidence threshold and review priority for a question from ontology.
