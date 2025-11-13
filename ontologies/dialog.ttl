@@ -1,0 +1,146 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+# Ontology Metadata
+<http://diggi.io/ontology/dialog> a owl:Ontology ;
+    dcterms:title "Dialog System Core Ontology" ;
+    dcterms:description "Core ontology for multimodal dialog management with confidence scoring" ;
+    dcterms:created "2025-01-15"^^xsd:date ;
+    owl:versionInfo "1.0" .
+
+# Core Classes
+:Dialog a owl:Class ;
+    rdfs:label "Dialog" ;
+    rdfs:comment "A complete dialog session with a user" .
+
+:DialogNode a owl:Class ;
+    rdfs:label "Dialog Node" ;
+    rdfs:comment "A single node in the dialog flow" .
+
+:Question a owl:Class ;
+    rdfs:subClassOf :DialogNode ;
+    rdfs:label "Question" ;
+    rdfs:comment "A question node that requires user input" .
+
+:Answer a owl:Class ;
+    rdfs:label "Answer" ;
+    rdfs:comment "User's response to a question" .
+
+:ConditionalBranch a owl:Class ;
+    rdfs:subClassOf :DialogNode ;
+    rdfs:label "Conditional Branch" ;
+    rdfs:comment "A branching point based on conditions" .
+
+# Properties
+:hasNode a owl:ObjectProperty ;
+    rdfs:label "has node" ;
+    rdfs:domain :Dialog ;
+    rdfs:range :DialogNode .
+
+:hasQuestion a owl:ObjectProperty ;
+    rdfs:label "has question" ;
+    rdfs:domain :Dialog ;
+    rdfs:range :Question .
+
+:nextNode a owl:ObjectProperty ;
+    rdfs:label "next node" ;
+    rdfs:domain :DialogNode ;
+    rdfs:range :DialogNode .
+
+:branchCondition a owl:DatatypeProperty ;
+    rdfs:label "branch condition" ;
+    rdfs:domain :ConditionalBranch ;
+    rdfs:range xsd:string .
+
+:questionText a owl:DatatypeProperty ;
+    rdfs:label "question text" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:string .
+
+:questionId a owl:DatatypeProperty ;
+    rdfs:label "question ID" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:string .
+
+:slotName a owl:DatatypeProperty ;
+    rdfs:label "slot name" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:string ;
+    rdfs:comment "The slot this question fills in the data model" .
+
+:required a owl:DatatypeProperty ;
+    rdfs:label "required" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:boolean .
+
+:order a owl:DatatypeProperty ;
+    rdfs:label "order" ;
+    rdfs:domain :DialogNode ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "The sequence order of this node" .
+
+# TTL Configuration for Lifecycle Management
+:TTLConfiguration a owl:Class ;
+    rdfs:label "TTL Configuration" ;
+    rdfs:comment "Time-to-live configuration for dialog lifecycle" .
+
+:sessionTTL a owl:DatatypeProperty ;
+    rdfs:label "session TTL" ;
+    rdfs:domain :TTLConfiguration ;
+    rdfs:range xsd:duration ;
+    rdfs:comment "Time-to-live for dialog sessions" .
+
+:answerTTL a owl:DatatypeProperty ;
+    rdfs:label "answer TTL" ;
+    rdfs:domain :TTLConfiguration ;
+    rdfs:range xsd:duration ;
+    rdfs:comment "Time-to-live for cached answers" .
+
+:recordingTTL a owl:DatatypeProperty ;
+    rdfs:label "recording TTL" ;
+    rdfs:domain :TTLConfiguration ;
+    rdfs:range xsd:duration ;
+    rdfs:comment "Time-to-live for audio recordings" .
+
+# Default TTL Configuration Instance
+:DefaultTTL a :TTLConfiguration ;
+    :sessionTTL "PT30M"^^xsd:duration ;  # 30 minutes
+    :answerTTL "PT10M"^^xsd:duration ;   # 10 minutes
+    :recordingTTL "P7D"^^xsd:duration .  # 7 days
+
+# Example Dialog Instance
+:InsuranceQuoteDialog a :Dialog ;
+    rdfs:label "Insurance Quote Dialog" ;
+    dcterms:description "Dialog for collecting car insurance quote information" ;
+    :hasNode :WelcomeNode, :NameQuestion, :VehicleRegQuestion, :SummaryNode .
+
+:WelcomeNode a :DialogNode ;
+    rdfs:label "Welcome" ;
+    :order 1 ;
+    :nextNode :NameQuestion .
+
+:NameQuestion a :Question ;
+    rdfs:label "Full Name Question" ;
+    :questionId "q_name" ;
+    :questionText "What is your full name?" ;
+    :slotName "customer_name" ;
+    :required true ;
+    :order 2 ;
+    :nextNode :VehicleRegQuestion .
+
+:VehicleRegQuestion a :Question ;
+    rdfs:label "Vehicle Registration Question" ;
+    :questionId "q_vehicle_reg" ;
+    :questionText "What is your vehicle registration number?" ;
+    :slotName "vehicle_registration" ;
+    :required true ;
+    :order 3 ;
+    :nextNode :SummaryNode .
+
+:SummaryNode a :DialogNode ;
+    rdfs:label "Summary" ;
+    :order 4 .

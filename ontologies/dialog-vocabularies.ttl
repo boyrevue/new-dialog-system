@@ -1,0 +1,258 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix vocab: <http://diggi.io/ontology/vocabularies#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Vocabulary Ontology
+<http://diggi.io/ontology/vocabularies> a owl:Ontology ;
+    rdfs:label "Dialog Vocabularies" ;
+    rdfs:comment "SKOS controlled vocabularies for dialog system" ;
+    owl:versionInfo "1.0" .
+
+# Concept Schemes
+vocab:VehicleTypes a skos:ConceptScheme ;
+    skos:prefLabel "Vehicle Types"@en ;
+    skos:definition "Classification of vehicle types for insurance purposes"@en .
+
+vocab:CoverTypes a skos:ConceptScheme ;
+    skos:prefLabel "Insurance Cover Types"@en ;
+    skos:definition "Types of insurance coverage available"@en .
+
+vocab:YesNoValues a skos:ConceptScheme ;
+    skos:prefLabel "Yes/No Values"@en ;
+    skos:definition "Boolean values with multiple acceptable expressions"@en .
+
+vocab:UKRegions a skos:ConceptScheme ;
+    skos:prefLabel "UK Regions"@en ;
+    skos:definition "Regions of the United Kingdom"@en .
+
+# Vehicle Type Concepts
+vocab:Car a skos:Concept ;
+    skos:prefLabel "Car"@en ;
+    skos:altLabel "Motor Car"@en, "Automobile"@en, "Private Car"@en ;
+    skos:definition "Private passenger motor vehicle"@en ;
+    skos:inScheme vocab:VehicleTypes ;
+    skos:notation "CAR" .
+
+vocab:Van a skos:Concept ;
+    skos:prefLabel "Van"@en ;
+    skos:altLabel "Light Commercial Vehicle"@en, "LCV"@en ;
+    skos:definition "Light commercial vehicle or van"@en ;
+    skos:inScheme vocab:VehicleTypes ;
+    skos:notation "VAN" .
+
+vocab:Motorbike a skos:Concept ;
+    skos:prefLabel "Motorbike"@en ;
+    skos:altLabel "Motorcycle"@en, "Moped"@en, "Bike"@en ;
+    skos:definition "Two-wheeled motor vehicle"@en ;
+    skos:inScheme vocab:VehicleTypes ;
+    skos:notation "BIKE" .
+
+vocab:Taxi a skos:Concept ;
+    skos:prefLabel "Taxi"@en ;
+    skos:altLabel "Hackney Carriage"@en, "Private Hire"@en, "Cab"@en ;
+    skos:definition "Licensed passenger transport vehicle"@en ;
+    skos:inScheme vocab:VehicleTypes ;
+    skos:notation "TAXI" .
+
+# Cover Type Concepts
+vocab:ThirdParty a skos:Concept ;
+    skos:prefLabel "Third Party"@en ;
+    skos:altLabel "TP"@en, "Third Party Only"@en, "TPO"@en ;
+    skos:definition "Basic legal minimum coverage"@en ;
+    skos:inScheme vocab:CoverTypes ;
+    skos:notation "TP" .
+
+vocab:ThirdPartyFireTheft a skos:Concept ;
+    skos:prefLabel "Third Party, Fire and Theft"@en ;
+    skos:altLabel "TPFT"@en, "TP Fire & Theft"@en ;
+    skos:definition "Third party cover plus fire and theft protection"@en ;
+    skos:inScheme vocab:CoverTypes ;
+    skos:notation "TPFT" .
+
+vocab:Comprehensive a skos:Concept ;
+    skos:prefLabel "Comprehensive"@en ;
+    skos:altLabel "Fully Comprehensive"@en, "Comp"@en, "Full Cover"@en ;
+    skos:definition "Complete coverage including own vehicle damage"@en ;
+    skos:inScheme vocab:CoverTypes ;
+    skos:notation "COMP" .
+
+# Yes/No Value Concepts
+vocab:Yes a skos:Concept ;
+    skos:prefLabel "Yes"@en ;
+    skos:altLabel "Y"@en, "Yeah"@en, "Yep"@en, "Yup"@en, "Correct"@en, "True"@en, "Affirmative"@en ;
+    skos:definition "Positive or affirmative response"@en ;
+    skos:inScheme vocab:YesNoValues ;
+    skos:notation "YES" .
+
+vocab:No a skos:Concept ;
+    skos:prefLabel "No"@en ;
+    skos:altLabel "N"@en, "Nope"@en, "Nah"@en, "Negative"@en, "False"@en, "Incorrect"@en ;
+    skos:definition "Negative or denial response"@en ;
+    skos:inScheme vocab:YesNoValues ;
+    skos:notation "NO" .
+
+# UK Region Concepts
+vocab:England a skos:Concept ;
+    skos:prefLabel "England"@en ;
+    skos:definition "Country within the United Kingdom"@en ;
+    skos:inScheme vocab:UKRegions ;
+    skos:notation "ENG" .
+
+vocab:Scotland a skos:Concept ;
+    skos:prefLabel "Scotland"@en ;
+    skos:definition "Country within the United Kingdom"@en ;
+    skos:inScheme vocab:UKRegions ;
+    skos:notation "SCT" .
+
+vocab:Wales a skos:Concept ;
+    skos:prefLabel "Wales"@en ;
+    skos:altLabel "Cymru"@en ;
+    skos:definition "Country within the United Kingdom"@en ;
+    skos:inScheme vocab:UKRegions ;
+    skos:notation "WLS" .
+
+vocab:NorthernIreland a skos:Concept ;
+    skos:prefLabel "Northern Ireland"@en ;
+    skos:altLabel "NI"@en, "Ulster"@en ;
+    skos:definition "Country within the United Kingdom"@en ;
+    skos:inScheme vocab:UKRegions ;
+    skos:notation "NIR" .
+
+# Phonetic Alphabet (for spelling assistance)
+vocab:PhoneticAlphabet a skos:ConceptScheme ;
+    skos:prefLabel "NATO Phonetic Alphabet"@en ;
+    skos:definition "Standard phonetic alphabet for clear communication"@en .
+
+vocab:Alpha a skos:Concept ;
+    skos:prefLabel "Alpha"@en ;
+    skos:notation "A" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Bravo a skos:Concept ;
+    skos:prefLabel "Bravo"@en ;
+    skos:notation "B" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Charlie a skos:Concept ;
+    skos:prefLabel "Charlie"@en ;
+    skos:notation "C" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Delta a skos:Concept ;
+    skos:prefLabel "Delta"@en ;
+    skos:notation "D" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Echo a skos:Concept ;
+    skos:prefLabel "Echo"@en ;
+    skos:notation "E" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Foxtrot a skos:Concept ;
+    skos:prefLabel "Foxtrot"@en ;
+    skos:notation "F" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Golf a skos:Concept ;
+    skos:prefLabel "Golf"@en ;
+    skos:notation "G" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Hotel a skos:Concept ;
+    skos:prefLabel "Hotel"@en ;
+    skos:notation "H" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:India a skos:Concept ;
+    skos:prefLabel "India"@en ;
+    skos:notation "I" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Juliet a skos:Concept ;
+    skos:prefLabel "Juliet"@en ;
+    skos:notation "J" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Kilo a skos:Concept ;
+    skos:prefLabel "Kilo"@en ;
+    skos:notation "K" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Lima a skos:Concept ;
+    skos:prefLabel "Lima"@en ;
+    skos:notation "L" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Mike a skos:Concept ;
+    skos:prefLabel "Mike"@en ;
+    skos:notation "M" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:November a skos:Concept ;
+    skos:prefLabel "November"@en ;
+    skos:notation "N" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Oscar a skos:Concept ;
+    skos:prefLabel "Oscar"@en ;
+    skos:notation "O" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Papa a skos:Concept ;
+    skos:prefLabel "Papa"@en ;
+    skos:notation "P" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Quebec a skos:Concept ;
+    skos:prefLabel "Quebec"@en ;
+    skos:notation "Q" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Romeo a skos:Concept ;
+    skos:prefLabel "Romeo"@en ;
+    skos:notation "R" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Sierra a skos:Concept ;
+    skos:prefLabel "Sierra"@en ;
+    skos:notation "S" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Tango a skos:Concept ;
+    skos:prefLabel "Tango"@en ;
+    skos:notation "T" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Uniform a skos:Concept ;
+    skos:prefLabel "Uniform"@en ;
+    skos:notation "U" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Victor a skos:Concept ;
+    skos:prefLabel "Victor"@en ;
+    skos:notation "V" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Whiskey a skos:Concept ;
+    skos:prefLabel "Whiskey"@en ;
+    skos:notation "W" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Xray a skos:Concept ;
+    skos:prefLabel "X-ray"@en ;
+    skos:notation "X" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Yankee a skos:Concept ;
+    skos:prefLabel "Yankee"@en ;
+    skos:notation "Y" ;
+    skos:inScheme vocab:PhoneticAlphabet .
+
+vocab:Zulu a skos:Concept ;
+    skos:prefLabel "Zulu"@en ;
+    skos:notation "Z" ;
+    skos:inScheme vocab:PhoneticAlphabet .

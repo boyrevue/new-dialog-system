@@ -1,0 +1,33 @@
+# Dialog System Backend Requirements
+
+# Core Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+websockets==12.0
+
+# RDF/Ontology Processing
+rdflib==7.0.0
+rdflib-jsonld==0.6.2
+
+# Audio Processing
+soundfile==0.12.1
+numpy==1.24.3
+scipy==1.11.4
+
+# Data Validation
+pydantic==2.5.0
+
+# Utilities
+python-dotenv==1.0.0
+python-dateutil==2.8.2
+
+# Development/Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+
+# Optional: Database (if needed for production)
+# sqlalchemy==2.0.23
+# asyncpg==0.29.0
+# redis==5.0.1

@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # Dialog Server
+  dialog-server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DIALOG_API_PORT=8000
+      - ONTOLOGY_DIR=/app/ontologies
+      - AUDIO_STORAGE_DIR=/app/data/recordings
+    volumes:
+      - ./ontologies:/app/ontologies:ro
+      - ./data:/app/data
+      - ./backend:/app/backend
+    command: python multimodal_server.py
+    restart: unless-stopped
+    networks:
+      - dialog-network
+    depends_on:
+      - redis
+      - postgres
+
+  # Admin Panel Server
+  admin-server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - ADMIN_API_PORT=8001
+      - ONTOLOGY_DIR=/app/ontologies
+      - AUDIO_STORAGE_DIR=/app/data/recordings
+    volumes:
+      - ./ontologies:/app/ontologies:ro
+      - ./data:/app/data
+      - ./backend:/app/backend
+    command: python admin_panel.py
+    restart: unless-stopped
+    networks:
+      - dialog-network
+    depends_on:
+      - redis
+      - postgres
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+      - VITE_ADMIN_URL=http://localhost:8001/api/admin
+      - VITE_WS_URL=ws://localhost:8000/ws
+      - VITE_ADMIN_WS_URL=ws://localhost:8001/ws/admin
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+    restart: unless-stopped
+    networks:
+      - dialog-network
+    depends_on:
+      - dialog-server
+      - admin-server
+
+  # Redis (for session storage and caching)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - dialog-network
+
+  # PostgreSQL (for persistent data storage)
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=dialog_system
+      - POSTGRES_USER=dialog_user
+      - POSTGRES_PASSWORD=dialog_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - dialog-network
+
+  # Optional: Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    restart: unless-stopped
+    networks:
+      - dialog-network
+    depends_on:
+      - dialog-server
+      - admin-server
+      - frontend
+
+volumes:
+  redis-data:
+  postgres-data:
+
+networks:
+  dialog-network:
+    driver: bridge

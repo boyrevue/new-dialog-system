@@ -1,0 +1,240 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix mm: <http://diggi.io/ontology/multimodal#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Multimodal Extensions
+mm:MultimodalQuestion a owl:Class ;
+    rdfs:subClassOf :Question ;
+    rdfs:label "Multimodal Question" ;
+    rdfs:comment "Question with multiple input/output modalities" .
+
+mm:TTSPrompt a owl:Class ;
+    rdfs:label "Text-to-Speech Prompt" ;
+    rdfs:comment "Audio prompt configuration" .
+
+mm:VisualComponent a owl:Class ;
+    rdfs:label "Visual Component" ;
+    rdfs:comment "Visual aid or component for the question" .
+
+mm:SelectOption a owl:Class ;
+    rdfs:label "Select Option" ;
+    rdfs:comment "A selectable option for multiple choice questions" .
+
+mm:FAQ a owl:Class ;
+    rdfs:label "Frequently Asked Question" ;
+    rdfs:comment "Common question and answer pair" .
+
+# Properties
+mm:hasTTSPrompt a owl:ObjectProperty ;
+    rdfs:label "has TTS prompt" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range mm:TTSPrompt .
+
+mm:hasVisualComponent a owl:ObjectProperty ;
+    rdfs:label "has visual component" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range mm:VisualComponent .
+
+mm:hasOption a owl:ObjectProperty ;
+    rdfs:label "has option" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range mm:SelectOption .
+
+mm:hasFAQ a owl:ObjectProperty ;
+    rdfs:label "has FAQ" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range mm:FAQ .
+
+mm:ttsText a owl:DatatypeProperty ;
+    rdfs:label "TTS text" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string .
+
+mm:ttsVoice a owl:DatatypeProperty ;
+    rdfs:label "TTS voice" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string .
+
+mm:ttsRate a owl:DatatypeProperty ;
+    rdfs:label "TTS rate" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:decimal .
+
+mm:ttsPitch a owl:DatatypeProperty ;
+    rdfs:label "TTS pitch" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:decimal .
+
+mm:ttsConfig a owl:DatatypeProperty ;
+    rdfs:label "TTS config" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Named configuration preset (e.g., slow_clear_phonetic)" .
+
+mm:componentType a owl:DatatypeProperty ;
+    rdfs:label "component type" ;
+    rdfs:domain mm:VisualComponent ;
+    rdfs:range xsd:string .
+
+mm:componentData a owl:DatatypeProperty ;
+    rdfs:label "component data" ;
+    rdfs:domain mm:VisualComponent ;
+    rdfs:range xsd:string .
+
+mm:imageUrl a owl:DatatypeProperty ;
+    rdfs:label "image URL" ;
+    rdfs:domain mm:VisualComponent ;
+    rdfs:range xsd:anyURI .
+
+mm:optionValue a owl:DatatypeProperty ;
+    rdfs:label "option value" ;
+    rdfs:domain mm:SelectOption ;
+    rdfs:range xsd:string .
+
+mm:optionLabel a owl:DatatypeProperty ;
+    rdfs:label "option label" ;
+    rdfs:domain mm:SelectOption ;
+    rdfs:range xsd:string .
+
+mm:optionDescription a owl:DatatypeProperty ;
+    rdfs:label "option description" ;
+    rdfs:domain mm:SelectOption ;
+    rdfs:range xsd:string .
+
+mm:faqQuestion a owl:DatatypeProperty ;
+    rdfs:label "FAQ question" ;
+    rdfs:domain mm:FAQ ;
+    rdfs:range xsd:string .
+
+mm:faqAnswer a owl:DatatypeProperty ;
+    rdfs:label "FAQ answer" ;
+    rdfs:domain mm:FAQ ;
+    rdfs:range xsd:string .
+
+mm:faqCategory a owl:DatatypeProperty ;
+    rdfs:label "FAQ category" ;
+    rdfs:domain mm:FAQ ;
+    rdfs:range xsd:string .
+
+# TTS Voice Configurations
+mm:StandardVoice a mm:TTSPrompt ;
+    rdfs:label "Standard Voice" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+mm:SlowClearVoice a mm:TTSPrompt ;
+    rdfs:label "Slow Clear Voice" ;
+    mm:ttsVoice "en-GB-Neural2-B" ;
+    mm:ttsRate 0.85 ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsConfig "slow_clear" .
+
+mm:PhoneticVoice a mm:TTSPrompt ;
+    rdfs:label "Phonetic Spelling Voice" ;
+    mm:ttsVoice "en-GB-Neural2-C" ;
+    mm:ttsRate 0.7 ;
+    mm:ttsPitch 1.1 ;
+    mm:ttsConfig "slow_clear_phonetic" .
+
+# Example Multimodal Questions
+:NameQuestionMM a mm:MultimodalQuestion ;
+    rdfs:label "Full Name Question (Multimodal)" ;
+    :questionId "q_name_mm" ;
+    :questionText "What is your full name?" ;
+    :slotName "customer_name" ;
+    :required true ;
+    mm:hasTTSPrompt :NameTTS ;
+    mm:hasFAQ :NameFAQ1, :NameFAQ2 .
+
+:NameTTS a mm:TTSPrompt ;
+    mm:ttsText "Please tell me your full name, including both first name and surname." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:NameFAQ1 a mm:FAQ ;
+    mm:faqQuestion "Do I need to include my middle name?" ;
+    mm:faqAnswer "Only if it appears on your driving licence." ;
+    mm:faqCategory "name" .
+
+:NameFAQ2 a mm:FAQ ;
+    mm:faqQuestion "What if I have a hyphenated surname?" ;
+    mm:faqAnswer "Please include the full hyphenated surname exactly as it appears on your documents." ;
+    mm:faqCategory "name" .
+
+:VehicleRegQuestionMM a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Registration (Multimodal)" ;
+    :questionId "q_vehicle_reg_mm" ;
+    :questionText "What is your vehicle registration number?" ;
+    :slotName "vehicle_registration" ;
+    :required true ;
+    mm:hasTTSPrompt :VehicleRegTTS ;
+    mm:hasVisualComponent :VehicleRegVisual ;
+    mm:hasFAQ :VehicleRegFAQ1 .
+
+:VehicleRegTTS a mm:TTSPrompt ;
+    mm:ttsText "Please provide your vehicle registration number. You can spell it out using the phonetic alphabet if needed." ;
+    mm:ttsVoice "en-GB-Neural2-B" ;
+    mm:ttsRate 0.9 ;
+    mm:ttsPitch 1.0 .
+
+:VehicleRegVisual a mm:VisualComponent ;
+    mm:componentType "image" ;
+    mm:imageUrl "https://example.com/assets/uk-number-plate.png" ;
+    mm:componentData "Example UK number plate showing format: AB12 CDE" .
+
+:VehicleRegFAQ1 a mm:FAQ ;
+    mm:faqQuestion "Where can I find my registration number?" ;
+    mm:faqAnswer "Your vehicle registration number is on your number plates, V5C registration document, or insurance documents." ;
+    mm:faqCategory "vehicle_registration" .
+
+:VehicleTypeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Type Selection" ;
+    :questionId "q_vehicle_type" ;
+    :questionText "What type of vehicle do you have?" ;
+    :slotName "vehicle_type" ;
+    :required true ;
+    mm:hasTTSPrompt :VehicleTypeTTS ;
+    mm:hasOption :VehicleTypeCar, :VehicleTypeVan, :VehicleTypeMotorbike .
+
+:VehicleTypeTTS a mm:TTSPrompt ;
+    mm:ttsText "Please select your vehicle type from the available options." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:VehicleTypeCar a mm:SelectOption ;
+    mm:optionValue "car" ;
+    mm:optionLabel "Car" ;
+    mm:optionDescription "Personal motor car or estate" .
+
+:VehicleTypeVan a mm:SelectOption ;
+    mm:optionValue "van" ;
+    mm:optionLabel "Van" ;
+    mm:optionDescription "Light commercial vehicle or van" .
+
+:VehicleTypeMotorbike a mm:SelectOption ;
+    mm:optionValue "motorbike" ;
+    mm:optionLabel "Motorbike" ;
+    mm:optionDescription "Motorcycle or moped" .
+
+# Visual Component Types
+mm:ImageComponent a mm:VisualComponent ;
+    mm:componentType "image" ;
+    rdfs:comment "Static image display" .
+
+mm:VideoComponent a mm:VisualComponent ;
+    mm:componentType "video" ;
+    rdfs:comment "Video player component" .
+
+mm:DiagramComponent a mm:VisualComponent ;
+    mm:componentType "diagram" ;
+    rdfs:comment "Interactive diagram or illustration" .
+
+mm:ExampleComponent a mm:VisualComponent ;
+    mm:componentType "example" ;
+    rdfs:comment "Example display with formatting" .

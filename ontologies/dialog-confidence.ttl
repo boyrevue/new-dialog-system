@@ -1,0 +1,325 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix conf: <http://diggi.io/ontology/confidence#> .
+@prefix qc: <http://diggi.io/ontology/quality-control#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Confidence Ontology
+<http://diggi.io/ontology/confidence> a owl:Ontology ;
+    rdfs:label "Dialog Confidence Scoring Ontology" ;
+    rdfs:comment "Confidence scoring and quality control for dialog responses" ;
+    owl:versionInfo "1.0" .
+
+# Classes
+conf:ConfidenceScore a owl:Class ;
+    rdfs:label "Confidence Score" ;
+    rdfs:comment "Confidence score for a dialog answer" .
+
+conf:ConfidenceThreshold a owl:Class ;
+    rdfs:label "Confidence Threshold" ;
+    rdfs:comment "Threshold configuration for confidence-based actions" .
+
+conf:ConfidenceScoringRule a owl:Class ;
+    rdfs:label "Confidence Scoring Rule" ;
+    rdfs:comment "Rule for calculating confidence scores" .
+
+qc:RecordingConfiguration a owl:Class ;
+    rdfs:label "Recording Configuration" ;
+    rdfs:comment "Configuration for audio recording behavior" .
+
+qc:OperatorReview a owl:Class ;
+    rdfs:label "Operator Review" ;
+    rdfs:comment "Operator review record for low-confidence answers" .
+
+qc:ReviewQueue a owl:Class ;
+    rdfs:label "Review Queue" ;
+    rdfs:comment "Queue of items awaiting operator review" .
+
+qc:RephraseRequest a owl:Class ;
+    rdfs:label "Rephrase Request" ;
+    rdfs:comment "Request sent back to user to rephrase their answer" .
+
+# Properties
+conf:hasConfidenceScore a owl:ObjectProperty ;
+    rdfs:label "has confidence score" ;
+    rdfs:domain :Answer ;
+    rdfs:range conf:ConfidenceScore .
+
+conf:overallScore a owl:DatatypeProperty ;
+    rdfs:label "overall score" ;
+    rdfs:domain conf:ConfidenceScore ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Overall confidence score (0.0 to 1.0)" .
+
+conf:recognitionConfidence a owl:DatatypeProperty ;
+    rdfs:label "recognition confidence" ;
+    rdfs:domain conf:ConfidenceScore ;
+    rdfs:range xsd:decimal .
+
+conf:audioQuality a owl:DatatypeProperty ;
+    rdfs:label "audio quality" ;
+    rdfs:domain conf:ConfidenceScore ;
+    rdfs:range xsd:decimal .
+
+conf:grammarMatch a owl:DatatypeProperty ;
+    rdfs:label "grammar match" ;
+    rdfs:domain conf:ConfidenceScore ;
+    rdfs:range xsd:decimal .
+
+conf:vocabularyMatch a owl:DatatypeProperty ;
+    rdfs:label "vocabulary match" ;
+    rdfs:domain conf:ConfidenceScore ;
+    rdfs:range xsd:decimal .
+
+conf:contextMatch a owl:DatatypeProperty ;
+    rdfs:label "context match" ;
+    rdfs:domain conf:ConfidenceScore ;
+    rdfs:range xsd:decimal .
+
+conf:thresholdValue a owl:DatatypeProperty ;
+    rdfs:label "threshold value" ;
+    rdfs:domain conf:ConfidenceThreshold ;
+    rdfs:range xsd:decimal .
+
+conf:action a owl:DatatypeProperty ;
+    rdfs:label "action" ;
+    rdfs:domain conf:ConfidenceThreshold ;
+    rdfs:range xsd:string .
+
+qc:recordingRequired a owl:DatatypeProperty ;
+    rdfs:label "recording required" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:boolean .
+
+qc:recordingPath a owl:DatatypeProperty ;
+    rdfs:label "recording path" ;
+    rdfs:domain :Answer ;
+    rdfs:range xsd:string .
+
+qc:reviewStatus a owl:DatatypeProperty ;
+    rdfs:label "review status" ;
+    rdfs:domain qc:OperatorReview ;
+    rdfs:range xsd:string .
+
+qc:reviewPriority a owl:DatatypeProperty ;
+    rdfs:label "review priority" ;
+    rdfs:domain qc:OperatorReview ;
+    rdfs:range xsd:integer .
+
+qc:operatorId a owl:DatatypeProperty ;
+    rdfs:label "operator ID" ;
+    rdfs:domain qc:OperatorReview ;
+    rdfs:range xsd:string .
+
+qc:transcribedText a owl:DatatypeProperty ;
+    rdfs:label "transcribed text" ;
+    rdfs:domain qc:OperatorReview ;
+    rdfs:range xsd:string .
+
+qc:operatorConfidence a owl:DatatypeProperty ;
+    rdfs:label "operator confidence" ;
+    rdfs:domain qc:OperatorReview ;
+    rdfs:range xsd:decimal .
+
+# Confidence Scoring Rules (Golden Source - NO HARDCODED VALUES)
+:SpeechConfidenceRule a conf:ConfidenceScoringRule ;
+    rdfs:label "Speech Recognition Confidence Rule" ;
+    rdfs:comment "Multi-factor confidence calculation for speech input" ;
+    qc:factor "recognition_confidence" ; qc:weight 0.4 ;
+    qc:factor "audio_quality" ; qc:weight 0.2 ;
+    qc:factor "grammar_match" ; qc:weight 0.2 ;
+    qc:factor "vocabulary_match" ; qc:weight 0.2 .
+
+:TextConfidenceRule a conf:ConfidenceScoringRule ;
+    rdfs:label "Text Input Confidence Rule" ;
+    rdfs:comment "Confidence calculation for typed text input" ;
+    qc:factor "grammar_match" ; qc:weight 0.4 ;
+    qc:factor "vocabulary_match" ; qc:weight 0.3 ;
+    qc:factor "validation_pass" ; qc:weight 0.3 .
+
+# Question-Specific Thresholds
+:NameConfidenceThreshold a conf:ConfidenceThreshold ;
+    rdfs:label "Name Question Threshold" ;
+    :appliesTo :NameQuestion ;
+    conf:thresholdValue 0.75 ;
+    conf:action "record_and_review" ;
+    qc:reviewPriority 2 .
+
+:VehicleRegConfidenceThreshold a conf:ConfidenceThreshold ;
+    rdfs:label "Vehicle Registration Threshold" ;
+    :appliesTo :VehicleRegQuestion ;
+    conf:thresholdValue 0.90 ;
+    conf:action "record_and_review" ;
+    qc:reviewPriority 1 ;
+    rdfs:comment "High threshold due to critical nature of vehicle registration" .
+
+:PostcodeConfidenceThreshold a conf:ConfidenceThreshold ;
+    rdfs:label "Postcode Question Threshold" ;
+    :appliesTo :PostcodeQuestion ;
+    conf:thresholdValue 0.85 ;
+    conf:action "record_and_review" ;
+    qc:reviewPriority 2 .
+
+:PhoneConfidenceThreshold a conf:ConfidenceThreshold ;
+    rdfs:label "Phone Number Threshold" ;
+    :appliesTo :PhoneQuestion ;
+    conf:thresholdValue 0.80 ;
+    conf:action "record_and_review" ;
+    qc:reviewPriority 3 .
+
+:DrivingLicenseConfidenceThreshold a conf:ConfidenceThreshold ;
+    rdfs:label "Driving License Threshold" ;
+    :appliesTo :DrivingLicenseQuestion ;
+    conf:thresholdValue 0.95 ;
+    conf:action "record_and_review" ;
+    qc:reviewPriority 1 ;
+    rdfs:comment "Very high threshold - critical PII field" .
+
+# Audio Quality Thresholds
+qc:MinimumSNR a qc:RecordingConfiguration ;
+    rdfs:label "Minimum Signal-to-Noise Ratio" ;
+    qc:snrThreshold 20.0 ;
+    rdfs:comment "Minimum SNR in dB for acceptable audio quality" .
+
+qc:ClippingThreshold a qc:RecordingConfiguration ;
+    rdfs:label "Audio Clipping Threshold" ;
+    qc:clippingPercent 5.0 ;
+    rdfs:comment "Maximum percentage of clipped samples before flagging" .
+
+# Recording Configuration
+qc:DefaultRecordingConfig a qc:RecordingConfiguration ;
+    rdfs:label "Default Recording Configuration" ;
+    qc:sampleRate 16000 ;
+    qc:bitDepth 16 ;
+    qc:channels 1 ;
+    qc:format "wav" ;
+    qc:codec "pcm_s16le" .
+
+qc:HighQualityRecordingConfig a qc:RecordingConfiguration ;
+    rdfs:label "High Quality Recording Configuration" ;
+    qc:sampleRate 48000 ;
+    qc:bitDepth 24 ;
+    qc:channels 1 ;
+    qc:format "wav" ;
+    qc:codec "pcm_s24le" .
+
+# Review Status Values
+qc:PendingStatus a qc:ReviewStatus ;
+    rdfs:label "Pending" ;
+    qc:statusCode "PENDING" ;
+    qc:statusOrder 1 .
+
+qc:InReviewStatus a qc:ReviewStatus ;
+    rdfs:label "In Review" ;
+    qc:statusCode "IN_REVIEW" ;
+    qc:statusOrder 2 .
+
+qc:TranscribedStatus a qc:ReviewStatus ;
+    rdfs:label "Transcribed" ;
+    qc:statusCode "TRANSCRIBED" ;
+    qc:statusOrder 3 .
+
+qc:ValidatedStatus a qc:ReviewStatus ;
+    rdfs:label "Validated" ;
+    qc:statusCode "VALIDATED" ;
+    qc:statusOrder 4 .
+
+qc:RejectedStatus a qc:ReviewStatus ;
+    rdfs:label "Rejected" ;
+    qc:statusCode "REJECTED" ;
+    qc:statusOrder 5 .
+
+qc:RephraseRequestedStatus a qc:ReviewStatus ;
+    rdfs:label "Rephrase Requested" ;
+    qc:statusCode "REPHRASE_REQUESTED" ;
+    qc:statusOrder 6 .
+
+# Rephrase Templates (from TTL - NO HARDCODED)
+:PhoneticRephraseTemplate a qc:RephraseRequest ;
+    rdfs:label "Phonetic Spelling Request" ;
+    :appliesTo :VehicleRegQuestion, :DrivingLicenseQuestion ;
+    :suggestedRephrase "Could you spell out your {field_name} using the phonetic alphabet? For example, A as in Alpha, B as in Bravo." ;
+    :rephraseTTSConfig "slow_clear_phonetic" .
+
+:SlowRepeatTemplate a qc:RephraseRequest ;
+    rdfs:label "Slow Repeat Request" ;
+    :appliesTo :NameQuestion, :AddressQuestion ;
+    :suggestedRephrase "I didn't quite catch that. Could you please repeat your {field_name} slowly and clearly?" ;
+    :rephraseTTSConfig "slow_clear" .
+
+:ConfirmationRephraseTemplate a qc:RephraseRequest ;
+    rdfs:label "Confirmation Request" ;
+    :appliesTo :AllQuestions ;
+    :suggestedRephrase "Just to confirm, did you say {transcribed_value}? Please say yes or no." ;
+    :rephraseTTSConfig "standard" .
+
+:ExampleRephraseTemplate a qc:RephraseRequest ;
+    rdfs:label "Example-Based Request" ;
+    :appliesTo :PostcodeQuestion ;
+    :suggestedRephrase "Could you provide your postcode? For example, SW1A 1AA." ;
+    :rephraseTTSConfig "standard" .
+
+# Operator Role Configuration
+qc:OperatorRole a owl:Class ;
+    rdfs:label "Operator Role" ;
+    rdfs:comment "Role configuration for operators in the review system" .
+
+qc:JuniorOperator a qc:OperatorRole ;
+    rdfs:label "Junior Operator" ;
+    qc:maxPriority 3 ;
+    qc:requiresSupervisorApproval true ;
+    qc:canTranscribe true ;
+    qc:canValidate false .
+
+qc:SeniorOperator a qc:OperatorRole ;
+    rdfs:label "Senior Operator" ;
+    qc:maxPriority 1 ;
+    qc:requiresSupervisorApproval false ;
+    qc:canTranscribe true ;
+    qc:canValidate true .
+
+qc:Supervisor a qc:OperatorRole ;
+    rdfs:label "Supervisor" ;
+    qc:maxPriority 1 ;
+    qc:requiresSupervisorApproval false ;
+    qc:canTranscribe true ;
+    qc:canValidate true ;
+    qc:canApprove true .
+
+# Workflow State Machine
+qc:WorkflowState a owl:Class ;
+    rdfs:label "Workflow State" ;
+    rdfs:comment "State in the review workflow" .
+
+qc:allowedTransition a owl:ObjectProperty ;
+    rdfs:label "allowed transition" ;
+    rdfs:domain qc:WorkflowState ;
+    rdfs:range qc:WorkflowState .
+
+# Define workflow transitions
+qc:PendingState a qc:WorkflowState ;
+    rdfs:label "Pending State" ;
+    qc:allowedTransition qc:InReviewState, qc:RephraseRequestedState .
+
+qc:InReviewState a qc:WorkflowState ;
+    rdfs:label "In Review State" ;
+    qc:allowedTransition qc:TranscribedState, qc:RejectedState, qc:RephraseRequestedState .
+
+qc:TranscribedState a qc:WorkflowState ;
+    rdfs:label "Transcribed State" ;
+    qc:allowedTransition qc:ValidatedState, qc:RejectedState .
+
+qc:ValidatedState a qc:WorkflowState ;
+    rdfs:label "Validated State" ;
+    rdfs:comment "Final state - answer accepted" .
+
+qc:RejectedState a qc:WorkflowState ;
+    rdfs:label "Rejected State" ;
+    rdfs:comment "Final state - answer rejected" .
+
+qc:RephraseRequestedState a qc:WorkflowState ;
+    rdfs:label "Rephrase Requested State" ;
+    qc:allowedTransition qc:PendingState ;
+    rdfs:comment "Waiting for user to provide rephrased answer" .
