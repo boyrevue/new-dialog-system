@@ -38,7 +38,9 @@ app.add_middleware(
 ontology_paths = [
     "../ontologies/dialog.ttl",
     "../ontologies/dialog-multimodal.ttl",
+    "../ontologies/dialog-insurance-questions.ttl",
     "../ontologies/dialog-vocabularies.ttl",
+    "../ontologies/dialog-documents.ttl",
     "../ontologies/dialog-validation.ttl",
     "../ontologies/dialog-confidence.ttl"
 ]
@@ -227,6 +229,7 @@ async def get_current_question(session_id: str):
             features = dialog_manager.get_multimodal_features(question_id)
             threshold, priority = dialog_manager.get_confidence_threshold(question_id)
             input_mode = dialog_manager.get_input_mode(question_id)
+            section_info = dialog_manager.get_section_for_question(question_id)
 
             return {
                 "question_id": question_id,
@@ -235,6 +238,7 @@ async def get_current_question(session_id: str):
                 "required": current_node["required"],
                 "spelling_required": current_node.get("spelling_required", False),
                 "input_mode": input_mode,
+                "section": section_info,
                 "tts": features["tts"],
                 "visual_components": features["visual_components"],
                 "select_options": features["select_options"],

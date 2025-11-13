@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict
 import logging
 from pathlib import Path
+from tts_variant_generator import TTSVariantGenerator
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -31,7 +32,9 @@ ONTOLOGY_DIR = Path("../ontologies")
 ONTOLOGY_FILES = {
     "dialog": "dialog.ttl",
     "multimodal": "dialog-multimodal.ttl",
+    "insurance_questions": "dialog-insurance-questions.ttl",
     "vocabularies": "dialog-vocabularies.ttl",
+    "documents": "dialog-documents.ttl",
     "validation": "dialog-validation.ttl",
     "confidence": "dialog-confidence.ttl"
 }
@@ -209,6 +212,178 @@ async def update_asr_config(config: ASRConfig):
         "success": True,
         "config": config.dict()
     }
+
+
+class TTSVariantRequest(BaseModel):
+    """Request for TTS variant generation."""
+    question_text: str
+    question_id: str
+    slot_name: Optional[str] = None
+
+
+# Initialize TTS variant generator
+tts_generator = TTSVariantGenerator()
+
+
+@app.post("/api/config/generate-tts-variants")
+async def generate_tts_variants(request: TTSVariantRequest):
+    """Generate TTS variants using OpenAI."""
+    try:
+        question_data = {
+            'question_text': request.question_text,
+            'question_id': request.question_id,
+            'slot_name': request.slot_name
+        }
+
+        variants = tts_generator.generate_for_question(question_data)
+
+        return {
+            "success": True,
+            "variants": variants
+        }
+    except Exception as e:
+        logger.error(f"Error generating TTS variants: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/documents")
+async def get_all_documents():
+    """Get all available document types."""
+    from dialog_manager import DialogManager
+
+    ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
+    dialog_manager = DialogManager(ontology_paths)
+
+    try:
+        documents = dialog_manager.get_all_documents()
+        return {
+            "documents": documents,
+            "total": len(documents)
+        }
+    except Exception as e:
+        logger.error(f"Error fetching documents: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/document/{document_uri:path}")
+async def get_document_details(document_uri: str):
+    """Get detailed information about a specific document."""
+    from dialog_manager import DialogManager
+
+    ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
+    dialog_manager = DialogManager(ontology_paths)
+
+    try:
+        details = dialog_manager.get_document_details(document_uri)
+        if not details:
+            raise HTTPException(status_code=404, detail=f"Document not found: {document_uri}")
+
+        # Also get extractable fields
+        fields = dialog_manager.get_extractable_fields_for_document(document_uri)
+        details["extractable_fields"] = fields
+
+        return details
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching document details: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/question/{question_id}/metadata")
+async def get_question_metadata(question_id: str):
+    """Get comprehensive metadata for a question including document extraction info."""
+    from dialog_manager import DialogManager
+
+    ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
+    dialog_manager = DialogManager(ontology_paths)
+
+    try:
+        metadata = dialog_manager.get_question_metadata(question_id)
+        return {
+            "question_id": question_id,
+            **metadata
+        }
+    except Exception as e:
+        logger.error(f"Error fetching question metadata: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class QuestionMetadataUpdate(BaseModel):
+    """Request to update question metadata."""
+    mandatory_field: Optional[bool] = None
+    input_type: Optional[str] = None  # "spelling" or "word"
+    data_type: Optional[str] = None   # "alphanumeric", "numeric", "alpha", "date", "email", "phone"
+    extractable_from: Optional[List[str]] = None  # List of document URIs
+
+
+@app.post("/api/config/question/{question_id}/metadata")
+async def update_question_metadata(question_id: str, metadata: QuestionMetadataUpdate):
+    """Update question metadata in the ontology."""
+    # This would require modifying the TTL file
+    # For now, return a placeholder - full implementation would use RDFLib to update the graph
+    logger.info(f"Metadata update request for {question_id}: {metadata.dict()}")
+
+    return {
+        "success": True,
+        "message": "Metadata update endpoint - implementation pending",
+        "question_id": question_id,
+        "requested_updates": metadata.dict(exclude_none=True)
+    }
+
+
+@app.get("/api/config/shacl")
+async def get_shacl_rules():
+    """Get SHACL validation rules."""
+    validation_file = ONTOLOGY_DIR / ONTOLOGY_FILES["validation"]
+
+    if not validation_file.exists():
+        raise HTTPException(status_code=404, detail="SHACL validation file not found")
+
+    try:
+        content = validation_file.read_text(encoding='utf-8')
+        return {
+            "filename": ONTOLOGY_FILES["validation"],
+            "content": content,
+            "line_count": len(content.splitlines())
+        }
+    except Exception as e:
+        logger.error(f"Error reading SHACL rules: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class SHACLUpdate(BaseModel):
+    """SHACL rules update."""
+    content: str
+
+
+@app.post("/api/config/shacl")
+async def update_shacl_rules(data: SHACLUpdate):
+    """Update SHACL validation rules."""
+    validation_file = ONTOLOGY_DIR / ONTOLOGY_FILES["validation"]
+
+    try:
+        # Backup original file
+        backup_path = validation_file.with_suffix('.ttl.backup')
+        if validation_file.exists():
+            validation_file.rename(backup_path)
+
+        # Write new content
+        validation_file.write_text(data.content, encoding='utf-8')
+
+        logger.info("Updated SHACL validation rules")
+
+        return {
+            "success": True,
+            "filename": ONTOLOGY_FILES["validation"],
+            "backup_created": str(backup_path)
+        }
+    except Exception as e:
+        # Restore backup if update failed
+        if backup_path.exists():
+            backup_path.rename(validation_file)
+        logger.error(f"Error updating SHACL rules: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
