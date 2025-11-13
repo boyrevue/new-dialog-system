@@ -113,6 +113,8 @@
 :PreferredContactMethodQuestion :inSection :ContactDetailsSection .
 
 # Address Section Questions
+:AddressQuestion :inSection :AddressSection .
+:CityTownQuestion :inSection :AddressSection .
 :PostcodeQuestion :inSection :AddressSection .
 :AddressLine1Question :inSection :AddressSection .
 :AddressLine2Question :inSection :AddressSection .

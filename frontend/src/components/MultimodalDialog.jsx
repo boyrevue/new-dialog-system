@@ -822,42 +822,106 @@ const MultimodalDialog = () => {
                 </form>
               ) : (
                 <div className="space-y-4">
-                  <Button
-                    color={isRecording ? 'failure' : 'blue'}
-                    onClick={isRecording ? stopSpeechRecognition : startSpeechRecognition}
-                    disabled={loading}
-                    className="w-full"
-                  >
-                    {isRecording ? (
-                      <>
-                        <MicOff className="w-5 h-5 mr-2 animate-pulse" />
-                        Stop Recording (Listening...)
-                      </>
-                    ) : (
-                      <>
-                        <Mic className="w-5 h-5 mr-2" />
-                        Click to Start Speaking
-                      </>
-                    )}
-                  </Button>
+                  {/* Round Voice Button with Glow Effect */}
+                  <div className="flex flex-col items-center gap-4 py-6">
+                    <button
+                      onClick={isRecording ? stopSpeechRecognition : startSpeechRecognition}
+                      disabled={loading || !recognitionRef.current}
+                      className={`
+                        relative rounded-full w-32 h-32 flex items-center justify-center
+                        transition-all duration-300 transform hover:scale-105
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                        ${isRecording
+                          ? 'bg-red-500 shadow-lg shadow-red-500/50 animate-pulse'
+                          : 'bg-blue-500 hover:bg-blue-600 shadow-lg hover:shadow-blue-500/50'
+                        }
+                      `}
+                      aria-label={isRecording ? "Stop recording" : "Start recording"}
+                    >
+                      {/* Glow effect when recording */}
+                      {isRecording && (
+                        <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"></div>
+                      )}
+
+                      {/* Icon */}
+                      <div className="relative z-10">
+                        {isRecording ? (
+                          <MicOff className="w-12 h-12 text-white" />
+                        ) : (
+                          <Mic className="w-12 h-12 text-white" />
+                        )}
+                      </div>
+                    </button>
+
+                    <div className="text-center">
+                      <p className="text-lg font-semibold text-gray-900">
+                        {isRecording ? 'Listening...' : 'Tap to Speak'}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {isRecording ? 'Speak your answer now' : 'Click the microphone to start'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Recording Status */}
                   {isRecording && (
-                    <Alert color="warning">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                        <span className="font-semibold">Recording... Speak now!</span>
+                    <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-red-900">Recording Active</p>
+                          <p className="text-sm text-red-700">Speak clearly into your microphone</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recognized Text */}
+                  {userInput && !isRecording && (
+                    <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-green-900 mb-1">Recognized:</p>
+                          <p className="text-gray-900">{userInput}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ASR Grammar Info (if available) */}
+                  {currentQuestion?.input_mode?.asr_grammar && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-sm text-blue-900">
+                        <strong>Tip:</strong> Say your answer clearly.
+                        {currentQuestion.input_mode.supports_letter_by_letter &&
+                          ' You can also spell it letter by letter.'
+                        }
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Browser Not Supported */}
+                  {!recognitionRef.current && (
+                    <Alert color="failure">
+                      <AlertTriangle className="w-5 h-5 mr-2" />
+                      <div>
+                        <p className="font-semibold">Speech recognition not available</p>
+                        <p className="text-sm mt-1">Please use Chrome, Edge, or Safari for voice input.</p>
                       </div>
                     </Alert>
                   )}
-                  {userInput && (
-                    <Alert color="success">
-                      <span className="font-semibold">Recognized:</span> {userInput}
-                    </Alert>
-                  )}
-                  {!recognitionRef.current && (
-                    <Alert color="failure">
-                      <span className="font-semibold">Speech recognition not available!</span>
-                      <p className="text-sm mt-1">Your browser doesn't support speech recognition. Please use Chrome, Edge, or Safari.</p>
-                    </Alert>
+
+                  {/* Retry Button (shown after timeout or error) */}
+                  {!isRecording && error && error.includes('No speech') && (
+                    <Button
+                      color="blue"
+                      onClick={startSpeechRecognition}
+                      className="w-full"
+                    >
+                      <Mic className="w-5 h-5 mr-2" />
+                      Try Again
+                    </Button>
                   )}
                 </div>
               )}

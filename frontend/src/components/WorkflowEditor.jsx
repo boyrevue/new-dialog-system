@@ -32,17 +32,17 @@ import {
   X
 } from 'lucide-react';
 
-// Custom Node Types
+// Custom Node Types - Node-RED style
 const QuestionNode = ({ data }) => {
   return (
-    <div className="px-4 py-2 shadow-lg rounded-lg bg-white border-2 border-blue-500">
+    <div className="px-4 py-2 rounded-md bg-[#c7e9c0] border border-[#8bc98a] shadow-md min-w-[150px]">
       <div className="flex items-center gap-2">
-        <div className="rounded-full w-8 h-8 flex items-center justify-center bg-blue-100">
-          <MessageSquare className="w-5 h-5 text-blue-600" />
+        <div className="rounded-full w-8 h-8 flex items-center justify-center bg-[#5a8a5a]">
+          <MessageSquare className="w-5 h-5 text-white" />
         </div>
         <div>
-          <div className="text-xs font-medium text-gray-500">Question</div>
-          <div className="text-sm font-bold">{data.label}</div>
+          <div className="text-xs font-medium text-gray-700">Question</div>
+          <div className="text-sm font-bold text-gray-900">{data.label}</div>
         </div>
       </div>
       {data.required && (
@@ -54,17 +54,17 @@ const QuestionNode = ({ data }) => {
 
 const ConditionNode = ({ data }) => {
   return (
-    <div className="px-4 py-2 shadow-lg rounded-lg bg-white border-2 border-amber-500">
+    <div className="px-4 py-2 rounded-md bg-[#f9e79f] border border-[#f5b041] shadow-md min-w-[150px]">
       <div className="flex items-center gap-2">
-        <div className="rounded-full w-8 h-8 flex items-center justify-center bg-amber-100">
-          <GitBranch className="w-5 h-5 text-amber-600" />
+        <div className="rounded-full w-8 h-8 flex items-center justify-center bg-[#d68910]">
+          <GitBranch className="w-5 h-5 text-white" />
         </div>
         <div>
-          <div className="text-xs font-medium text-gray-500">Condition</div>
-          <div className="text-sm font-bold">{data.label}</div>
+          <div className="text-xs font-medium text-gray-700">Condition</div>
+          <div className="text-sm font-bold text-gray-900">{data.label}</div>
         </div>
       </div>
-      <div className="mt-2 text-xs text-gray-600">
+      <div className="mt-2 text-xs text-gray-700">
         If: {data.condition || 'Not set'}
       </div>
     </div>
@@ -73,14 +73,14 @@ const ConditionNode = ({ data }) => {
 
 const ActionNode = ({ data }) => {
   return (
-    <div className="px-4 py-2 shadow-lg rounded-lg bg-white border-2 border-green-500">
+    <div className="px-4 py-2 rounded-md bg-[#aed6f1] border border-[#5dade2] shadow-md min-w-[150px]">
       <div className="flex items-center gap-2">
-        <div className="rounded-full w-8 h-8 flex items-center justify-center bg-green-100">
-          <Play className="w-5 h-5 text-green-600" />
+        <div className="rounded-full w-8 h-8 flex items-center justify-center bg-[#2874a6]">
+          <Play className="w-5 h-5 text-white" />
         </div>
         <div>
-          <div className="text-xs font-medium text-gray-500">Action</div>
-          <div className="text-sm font-bold">{data.label}</div>
+          <div className="text-xs font-medium text-gray-700">Action</div>
+          <div className="text-sm font-bold text-gray-900">{data.label}</div>
         </div>
       </div>
     </div>
@@ -93,16 +93,16 @@ const nodeTypes = {
   action: ActionNode,
 };
 
-const WorkflowEditor = ({ questions = [] }) => {
-  // Initial nodes - convert questions to nodes
-  const initialNodes = questions.slice(0, 5).map((q, index) => ({
-    id: q.question_id,
+const WorkflowEditor = ({ droppedFields = [] }) => {
+  // Initial nodes - convert dropped form fields to nodes
+  const initialNodes = droppedFields.map((field, index) => ({
+    id: field.id,
     type: 'question',
     position: { x: 50, y: index * 150 },
     data: {
-      label: q.question_text.substring(0, 30) + '...',
-      required: q.required,
-      questionId: q.question_id
+      label: field.label || field.type,
+      required: field.required || false,
+      fieldType: field.type
     },
   }));
 
@@ -116,7 +116,7 @@ const WorkflowEditor = ({ questions = [] }) => {
     (params) => setEdges((eds) => addEdge({
       ...params,
       animated: true,
-      style: { stroke: '#3b82f6' }
+      style: { stroke: '#999', strokeWidth: 2 }
     }, eds)),
     [setEdges],
   );
@@ -185,7 +185,10 @@ const WorkflowEditor = ({ questions = [] }) => {
           onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           fitView
-          className="bg-gray-50"
+          className="bg-[#1a1a1a]"
+          style={{
+            background: 'linear-gradient(to bottom, #1a1a1a 0%, #2d2d2d 100%)'
+          }}
         >
           <Controls />
           <MiniMap
@@ -202,43 +205,48 @@ const WorkflowEditor = ({ questions = [] }) => {
               }
             }}
           />
-          <Background variant="dots" gap={12} size={1} />
+          <Background
+            variant="dots"
+            gap={16}
+            size={1}
+            color="#444"
+            style={{ backgroundColor: '#1a1a1a' }}
+          />
 
-          {/* Toolbar Panel */}
+          {/* Toolbar Panel - Compact with tooltip on hover */}
           <Panel position="top-left" className="space-y-2">
-            <Card className="p-4">
-              <div className="text-sm font-bold mb-3 flex items-center gap-2">
-                <Settings className="w-4 h-4" />
-                Add Nodes
-              </div>
-              <div className="space-y-2">
-                <Button
-                  size="sm"
-                  color="blue"
+            <Card className="p-2">
+              <div className="flex flex-col gap-2">
+                <button
                   onClick={addQuestionNode}
-                  className="w-full"
+                  className="group relative p-2 rounded-lg bg-[#c7e9c0] hover:bg-[#b0d9a7] border border-[#8bc98a] transition-all"
+                  title="Add Question Node"
                 >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Question
-                </Button>
-                <Button
-                  size="sm"
-                  color="warning"
+                  <MessageSquare className="w-5 h-5 text-[#5a8a5a]" />
+                  <span className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Question
+                  </span>
+                </button>
+                <button
                   onClick={addConditionNode}
-                  className="w-full"
+                  className="group relative p-2 rounded-lg bg-[#f9e79f] hover:bg-[#f5d76e] border border-[#f5b041] transition-all"
+                  title="Add Condition Node"
                 >
-                  <GitBranch className="w-4 h-4 mr-2" />
-                  Condition
-                </Button>
-                <Button
-                  size="sm"
-                  color="success"
+                  <GitBranch className="w-5 h-5 text-[#d68910]" />
+                  <span className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Condition
+                  </span>
+                </button>
+                <button
                   onClick={addActionNode}
-                  className="w-full"
+                  className="group relative p-2 rounded-lg bg-[#aed6f1] hover:bg-[#85c1e9] border border-[#5dade2] transition-all"
+                  title="Add Action Node"
                 >
-                  <Play className="w-4 h-4 mr-2" />
-                  Action
-                </Button>
+                  <Play className="w-5 h-5 text-[#2874a6]" />
+                  <span className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Action
+                  </span>
+                </button>
               </div>
             </Card>
           </Panel>

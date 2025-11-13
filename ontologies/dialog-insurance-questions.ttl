@@ -122,20 +122,20 @@
     mm:ttsRate 1.0 ;
     mm:ttsPitch 1.0 .
 
-# Q6: Address
+# Q6: Street Address (Part 1 of Address - before postcode)
 :AddressQuestion a mm:MultimodalQuestion ;
-    rdfs:label "Address" ;
-    :questionId "q_address" ;
-    :questionText "What is your address?" ;
-    :slotName "address" ;
+    rdfs:label "Street Address" ;
+    :questionId "q_street_address" ;
+    :questionText "What is your street address?" ;
+    :slotName "street_address" ;
     :required true ;
-    :order 15 ;
-    :inSection :DriversSection ;
+    :order 14 ;
+    :inSection :AddressSection ;
     mm:hasTTSPrompt :AddressTTS .
 
 :AddressTTS a mm:TTSPrompt ;
-    mm:ttsText "Please tell me your full address, including house number and street name." ;
-    mm:ttsVariant1 "Please tell me your full address, including house number and street name." ;
+    mm:ttsText "Please tell me your street address, including house number and street name." ;
+    mm:ttsVariant1 "What's your street address? Include the house number and street name." ;
     mm:ttsVariant2 "What's your home address? Include the house number and street." ;
     mm:ttsVariant3 "Could you provide your full address, please?" ;
     mm:ttsVariant4 "I need your complete address." ;
@@ -143,7 +143,28 @@
     mm:ttsRate 1.0 ;
     mm:ttsPitch 1.0 .
 
-# Q7: Postcode
+# Q6.5: City/Town (Part 2 of Address - before postcode)
+:CityTownQuestion a mm:MultimodalQuestion ;
+    rdfs:label "City or Town" ;
+    :questionId "q_city_town" ;
+    :questionText "What is your city or town?" ;
+    :slotName "city_town" ;
+    :required true ;
+    :order 15 ;
+    :inSection :AddressSection ;
+    mm:hasTTSPrompt :CityTownTTS .
+
+:CityTownTTS a mm:TTSPrompt ;
+    mm:ttsText "What city or town do you live in?" ;
+    mm:ttsVariant1 "What city or town do you live in?" ;
+    mm:ttsVariant2 "Which city or town is your address in?" ;
+    mm:ttsVariant3 "Please tell me your city or town." ;
+    mm:ttsVariant4 "What's your city or town?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q7: Postcode (Part 3 of Address - after street and city)
 :PostcodeQuestion a mm:MultimodalQuestion ;
     rdfs:label "Postcode" ;
     :questionId "q_postcode" ;
@@ -152,7 +173,7 @@
     :required true ;
     :spellingRequired true ;
     :order 16 ;
-    :inSection :DriversSection ;
+    :inSection :AddressSection ;
     :hasInputMode vocab:PostcodeInputMode ;
     mm:hasTTSPrompt :PostcodeTTS .
 

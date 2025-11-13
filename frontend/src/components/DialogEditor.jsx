@@ -68,6 +68,10 @@ const DialogEditor = () => {
   // TTS Variants
   const [ttsVariants, setTtsVariants] = useState(['', '', '', '']);
 
+  // Form Builder - Dropped Fields
+  const [droppedFields, setDroppedFields] = useState([]);
+  const [draggedField, setDraggedField] = useState(null);
+
   useEffect(() => {
     loadQuestions();
   }, []);
@@ -338,25 +342,32 @@ const DialogEditor = () => {
 
   const renderFormsEditor = () => {
     const formFields = [
-      { id: 'text', label: 'Text Input', icon: Type, color: 'bg-blue-500', desc: 'Single line text' },
-      { id: 'textarea', label: 'Text Area', icon: AlignLeft, color: 'bg-blue-600', desc: 'Multi-line text' },
-      { id: 'number', label: 'Number', icon: Hash, color: 'bg-green-500', desc: 'Numeric input' },
-      { id: 'email', label: 'Email', icon: Mail, color: 'bg-purple-500', desc: 'Email address' },
-      { id: 'phone', label: 'Phone', icon: Phone, color: 'bg-purple-600', desc: 'Phone number' },
-      { id: 'date', label: 'Date', icon: Calendar, color: 'bg-indigo-500', desc: 'Date picker' },
-      { id: 'time', label: 'Time', icon: Clock, color: 'bg-indigo-600', desc: 'Time picker' },
-      { id: 'toggle', label: 'Toggle', icon: ToggleLeft, color: 'bg-amber-500', desc: 'On/off switch' },
-      { id: 'checkbox', label: 'Checkbox', icon: CheckSquare, color: 'bg-amber-600', desc: 'Multiple choice' },
-      { id: 'radio', label: 'Radio', icon: Circle, color: 'bg-orange-500', desc: 'Single choice' },
-      { id: 'select', label: 'Dropdown', icon: ChevronDown, color: 'bg-cyan-500', desc: 'Select menu' },
-      { id: 'multiselect', label: 'Multi-Select', icon: ListIcon, color: 'bg-cyan-600', desc: 'Multiple options' },
-      { id: 'url', label: 'URL', icon: Link, color: 'bg-rose-500', desc: 'Web address' },
-      { id: 'file', label: 'File Upload', icon: File, color: 'bg-rose-600', desc: 'File picker' },
-      { id: 'image', label: 'Image', icon: Image, color: 'bg-pink-500', desc: 'Image upload' },
-      { id: 'address', label: 'Address', icon: MapPin, color: 'bg-teal-500', desc: 'Location input' },
-      { id: 'currency', label: 'Currency', icon: DollarSign, color: 'bg-emerald-500', desc: 'Money amount' },
-      { id: 'percentage', label: 'Percentage', icon: Percent, color: 'bg-emerald-600', desc: 'Percent value' },
+      { id: 'text', label: 'Text Input', icon: Type, iconName: 'Type', color: 'bg-blue-500', desc: 'Single line text' },
+      { id: 'textarea', label: 'Text Area', icon: AlignLeft, iconName: 'AlignLeft', color: 'bg-blue-600', desc: 'Multi-line text' },
+      { id: 'number', label: 'Number', icon: Hash, iconName: 'Hash', color: 'bg-green-500', desc: 'Numeric input' },
+      { id: 'email', label: 'Email', icon: Mail, iconName: 'Mail', color: 'bg-purple-500', desc: 'Email address' },
+      { id: 'phone', label: 'Phone', icon: Phone, iconName: 'Phone', color: 'bg-purple-600', desc: 'Phone number' },
+      { id: 'date', label: 'Date', icon: Calendar, iconName: 'Calendar', color: 'bg-indigo-500', desc: 'Date picker' },
+      { id: 'time', label: 'Time', icon: Clock, iconName: 'Clock', color: 'bg-indigo-600', desc: 'Time picker' },
+      { id: 'toggle', label: 'Toggle', icon: ToggleLeft, iconName: 'ToggleLeft', color: 'bg-amber-500', desc: 'On/off switch' },
+      { id: 'checkbox', label: 'Checkbox', icon: CheckSquare, iconName: 'CheckSquare', color: 'bg-amber-600', desc: 'Multiple choice' },
+      { id: 'radio', label: 'Radio', icon: Circle, iconName: 'Circle', color: 'bg-orange-500', desc: 'Single choice' },
+      { id: 'select', label: 'Dropdown', icon: ChevronDown, iconName: 'ChevronDown', color: 'bg-cyan-500', desc: 'Select menu' },
+      { id: 'multiselect', label: 'Multi-Select', icon: ListIcon, iconName: 'ListIcon', color: 'bg-cyan-600', desc: 'Multiple options' },
+      { id: 'url', label: 'URL', icon: Link, iconName: 'Link', color: 'bg-rose-500', desc: 'Web address' },
+      { id: 'file', label: 'File Upload', icon: File, iconName: 'File', color: 'bg-rose-600', desc: 'File picker' },
+      { id: 'image', label: 'Image', icon: Image, iconName: 'Image', color: 'bg-pink-500', desc: 'Image upload' },
+      { id: 'address', label: 'Address', icon: MapPin, iconName: 'MapPin', color: 'bg-teal-500', desc: 'Location input' },
+      { id: 'currency', label: 'Currency', icon: DollarSign, iconName: 'DollarSign', color: 'bg-emerald-500', desc: 'Money amount' },
+      { id: 'percentage', label: 'Percentage', icon: Percent, iconName: 'Percent', color: 'bg-emerald-600', desc: 'Percent value' },
     ];
+
+    // Icon map for rendering dropped fields
+    const iconMap = {
+      Type, AlignLeft, Hash, Mail, Phone, Calendar, Clock, ToggleLeft,
+      CheckSquare, Circle, ChevronDown, ListIcon, Link, File, Image,
+      MapPin, DollarSign, Percent
+    };
 
     return (
       <div className="space-y-6">
@@ -393,17 +404,30 @@ const DialogEditor = () => {
                   return (
                     <div
                       key={field.id}
-                      className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-move bg-white"
+                      className="group relative p-3 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-move bg-white"
                       draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('field', JSON.stringify(field));
+                        e.dataTransfer.effectAllowed = 'copy';
+                        setDraggedField(field);
+                      }}
+                      onDragEnd={() => setDraggedField(null)}
+                      title={`${field.label} - ${field.desc}`}
                     >
-                      <div className={`${field.color} p-2 rounded-lg flex-shrink-0`}>
-                        <Icon className="w-5 h-5 text-white" />
+                      {/* Icon Only */}
+                      <div className="flex items-center justify-center">
+                        <div className={`${field.color} p-3 rounded-lg`}>
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm text-gray-900">{field.label}</div>
-                        <div className="text-xs text-gray-500 truncate">{field.desc}</div>
+
+                      {/* Tooltip on Hover */}
+                      <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                        <div className="font-semibold">{field.label}</div>
+                        <div className="text-gray-300 text-xs mt-0.5">{field.desc}</div>
+                        {/* Arrow */}
+                        <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
                       </div>
-                      <Move className="w-4 h-4 text-gray-400 flex-shrink-0" />
                     </div>
                   );
                 })}
@@ -411,94 +435,163 @@ const DialogEditor = () => {
             </Card>
           </div>
 
-          {/* Center Panel - Form Canvas */}
+          {/* Center Panel - Form Canvas (Node-RED Style) */}
           <div className="col-span-6">
-            <Card>
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-bold text-lg text-gray-800">Form Canvas</h4>
+            <div className="rounded-lg overflow-hidden shadow-lg border border-gray-700">
+              {/* Header with dark background */}
+              <div className="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-gray-700">
+                <h4 className="font-bold text-lg text-gray-200">Form Canvas</h4>
                 <div className="flex gap-2">
-                  <Button size="sm" color="light">
+                  <Button size="sm" color="dark">
                     <Copy className="w-4 h-4 mr-1" />
                     Duplicate
                   </Button>
-                  <Button size="sm" color="light">
+                  <Button size="sm" color="dark">
                     <Settings className="w-4 h-4 mr-1" />
                     Settings
                   </Button>
                 </div>
               </div>
 
-              <div className="min-h-[600px] border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-                <div className="text-center py-20">
-                  <LayoutGrid className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 text-lg font-medium mb-2">Drop fields here</p>
-                  <p className="text-gray-400 text-sm">Drag fields from the palette to build your form</p>
-                </div>
+              {/* Canvas Area with Grid Pattern */}
+              <div
+                className="min-h-[600px] p-6 relative overflow-hidden"
+                style={{
+                  background: 'linear-gradient(to bottom, #1a1a1a 0%, #2d2d2d 100%)',
+                  backgroundImage: `
+                    radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
+                  `,
+                  backgroundSize: '20px 20px',
+                  backgroundPosition: '0 0'
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'copy';
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const fieldData = e.dataTransfer.getData('field');
+                  if (fieldData) {
+                    const field = JSON.parse(fieldData);
+                    const newField = {
+                      ...field,
+                      id: `${field.id}-${Date.now()}`,
+                      label: field.label,
+                      required: false
+                    };
+                    setDroppedFields([...droppedFields, newField]);
+                  }
+                }}
+              >
+                {droppedFields.length === 0 ? (
+                  <div className="text-center py-20">
+                    <LayoutGrid className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400 text-lg font-medium mb-2">Drop fields here</p>
+                    <p className="text-gray-500 text-sm">Drag fields from the palette to build your form</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {droppedFields.map((field, index) => {
+                      const Icon = iconMap[field.iconName] || Type;
+                      return (
+                        <div
+                          key={field.id}
+                          className="flex items-center gap-3 p-4 rounded-md bg-[#3a3a3a] border border-[#555] shadow-lg hover:border-[#777] transition-colors"
+                        >
+                          <div className={`${field.color} p-2 rounded-lg flex-shrink-0`}>
+                            <Icon className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm text-gray-100">{field.label}</div>
+                            <div className="text-xs text-gray-400">{field.id}</div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setDroppedFields(droppedFields.filter((_, i) => i !== index));
+                            }}
+                            className="p-2 hover:bg-red-900/30 rounded transition-colors"
+                            title="Remove field"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-400 hover:text-red-300" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </Card>
+            </div>
           </div>
 
           {/* Right Panel - Properties & Features */}
           <div className="col-span-3">
             <div className="space-y-4 sticky top-4">
               {/* Workflow Editor */}
-              <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+              <Card className="group relative bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200 hover:shadow-lg transition-shadow">
                 <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-purple-900">
                   <GitBranch className="w-5 h-5 text-purple-600" />
                   Workflow Editor
                 </h4>
-                <p className="text-xs text-purple-700 mb-3">
-                  Define conditional logic and field dependencies
-                </p>
                 <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700">
                   <Plus className="w-3 h-3 mr-1" />
                   Add Condition
                 </Button>
+                {/* Tooltip */}
+                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                  Define conditional logic and field dependencies
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+                </div>
               </Card>
 
               {/* Field Groups */}
-              <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+              <Card className="group relative bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 hover:shadow-lg transition-shadow">
                 <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-blue-900">
                   <Layers className="w-5 h-5 text-blue-600" />
                   Field Groups
                 </h4>
-                <p className="text-xs text-blue-700 mb-3">
-                  Create repeatable groups (e.g., additional drivers)
-                </p>
                 <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
                   <Plus className="w-3 h-3 mr-1" />
                   New Group
                 </Button>
+                {/* Tooltip */}
+                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                  Create repeatable groups (e.g., additional drivers)
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+                </div>
               </Card>
 
               {/* Validation Rules */}
-              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+              <Card className="group relative bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-lg transition-shadow">
                 <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-green-900">
                   <CheckCircle className="w-5 h-5 text-green-600" />
                   Validation Rules
                 </h4>
-                <p className="text-xs text-green-700 mb-3">
-                  SHACL-based validation for form fields
-                </p>
                 <Button size="sm" className="w-full bg-green-600 hover:bg-green-700">
                   <Plus className="w-3 h-3 mr-1" />
                   Add Rule
                 </Button>
+                {/* Tooltip */}
+                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                  SHACL-based validation for form fields
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+                </div>
               </Card>
 
               {/* Hierarchical Selects */}
-              <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+              <Card className="group relative bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 hover:shadow-lg transition-shadow">
                 <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-amber-900">
                   <GitBranch className="w-5 h-5 text-amber-600" />
                   Hierarchical Selects
                 </h4>
-                <p className="text-xs text-amber-700 mb-3">
-                  Multi-level cascading dropdowns
-                </p>
                 <Button size="sm" className="w-full bg-amber-600 hover:bg-amber-700">
                   <Plus className="w-3 h-3 mr-1" />
                   Configure
                 </Button>
+                {/* Tooltip */}
+                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                  Multi-level cascading dropdowns
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+                </div>
               </Card>
             </div>
           </div>
@@ -753,7 +846,7 @@ const DialogEditor = () => {
 
         {activeTab === 'workflow' && (
           <div className="pt-4" style={{ height: '800px' }}>
-            <WorkflowEditor questions={questions} />
+            <WorkflowEditor droppedFields={droppedFields} />
           </div>
         )}
 
