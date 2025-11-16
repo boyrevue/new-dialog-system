@@ -50,7 +50,7 @@
     :required true ;
     :spellingRequired true ;
     :order 11 ;
-    :inSection :DriversSection ;
+    :inSection :PersonalInfoSection ;
     :hasInputMode vocab:NameInputMode ;
     mm:hasTTSPrompt :LastNameTTS .
 
