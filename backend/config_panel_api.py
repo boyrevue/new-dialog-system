@@ -14,6 +14,9 @@ import json
 import os
 from datetime import datetime
 from dotenv import load_dotenv
+from dialog_manager import DialogManager
+from csv_select_parser import CSVSelectParser
+from flow_converter import TTLToFlowConverter, FlowToTTLConverter
 
 # Load environment variables from .env file
 load_dotenv()
@@ -898,6 +901,461 @@ Return ONLY a JSON array of strings, no other text. Example: ["alias 1", "alias 
     except Exception as e:
         logger.error(f"Error generating aliases: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate aliases: {str(e)}")
+
+
+# ============================================================================
+# Select List Management Endpoints
+# ============================================================================
+
+from fastapi import UploadFile, File
+from csv_select_parser import CSVSelectParser, SelectOption
+
+
+class CSVUploadRequest(BaseModel):
+    """Request to upload CSV for select options."""
+    csv_content: str
+    question_id: str
+    list_type: str  # "1d" or "2d"
+
+
+@app.post("/api/config/select-list/upload-csv")
+async def upload_select_list_csv(request: CSVUploadRequest):
+    """
+    Upload CSV to generate select list options.
+    Parses CSV and returns options for preview before saving to TTL.
+    """
+    try:
+        parser = CSVSelectParser()
+
+        if request.list_type == "1d":
+            options, errors = parser.parse_1d_csv(request.csv_content)
+
+            if errors:
+                return {
+                    "success": False,
+                    "errors": errors,
+                    "options": []
+                }
+
+            # Generate TTL preview
+            ttl_preview = parser.generate_ttl_1d(options, request.question_id)
+
+            return {
+                "success": True,
+                "list_type": "1d",
+                "options": [
+                    {
+                        "label": opt.label,
+                        "value": opt.value,
+                        "aliases": opt.aliases,
+                        "phonetics": opt.phonetics
+                    }
+                    for opt in options
+                ],
+                "ttl_preview": ttl_preview,
+                "count": len(options)
+            }
+
+        elif request.list_type == "2d":
+            hierarchical_options, errors = parser.parse_2d_csv(request.csv_content)
+
+            if errors:
+                return {
+                    "success": False,
+                    "errors": errors,
+                    "options": {}
+                }
+
+            # Generate TTL preview
+            ttl_preview = parser.generate_ttl_2d(hierarchical_options, request.question_id)
+
+            # Convert to serializable format
+            options_dict = {}
+            for category, opts in hierarchical_options.items():
+                options_dict[category] = [
+                    {
+                        "label": opt.label,
+                        "value": opt.value,
+                        "aliases": opt.aliases,
+                        "phonetics": opt.phonetics,
+                        "category": opt.category
+                    }
+                    for opt in opts
+                ]
+
+            return {
+                "success": True,
+                "list_type": "2d",
+                "options": options_dict,
+                "ttl_preview": ttl_preview,
+                "category_count": len(hierarchical_options),
+                "total_options": sum(len(opts) for opts in hierarchical_options.values())
+            }
+
+        else:
+            raise HTTPException(status_code=400, detail=f"Invalid list_type: {request.list_type}")
+
+    except Exception as e:
+        logger.error(f"Error uploading CSV: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/select-list/csv-template/{list_type}")
+async def get_csv_template(list_type: str):
+    """
+    Get CSV template for select list creation.
+    Returns example CSV content for 1D or 2D lists.
+    """
+    parser = CSVSelectParser()
+
+    if list_type == "1d":
+        template = parser.generate_example_csv_1d()
+        description = "1D Select List - Flat dropdown (label, value, aliases, phonetics)"
+    elif list_type == "2d":
+        template = parser.generate_example_csv_2d()
+        description = "2D Select List - Hierarchical dropdown (category, label, value, aliases, phonetics)"
+    else:
+        raise HTTPException(status_code=400, detail=f"Invalid list_type: {list_type}")
+
+    return {
+        "list_type": list_type,
+        "description": description,
+        "template": template,
+        "example_use_cases": {
+            "1d": ["Cover types", "Payment frequencies", "Yes/No options", "Single-tier lists"],
+            "2d": ["Car manufacturer & model", "Country & city", "Category & subcategory", "Two-tier hierarchies"]
+        }
+    }
+
+
+class SelectListSaveRequest(BaseModel):
+    """Request to save select list to TTL ontology."""
+    question_id: str
+    list_type: str  # "1d" or "2d"
+    ttl_content: str
+    ontology_file: str = "insurance_questions"  # Which TTL file to update
+
+
+@app.post("/api/config/select-list/save")
+async def save_select_list_to_ttl(request: SelectListSaveRequest):
+    """
+    Save select list options to TTL ontology file.
+    Appends the generated TTL to the specified ontology file.
+    """
+    try:
+        if request.ontology_file not in ONTOLOGY_FILES:
+            raise HTTPException(status_code=400, detail=f"Invalid ontology file: {request.ontology_file}")
+
+        ontology_path = ONTOLOGY_DIR / ONTOLOGY_FILES[request.ontology_file]
+
+        if not ontology_path.exists():
+            raise HTTPException(status_code=404, detail=f"Ontology file not found: {ontology_path}")
+
+        # Backup the original file
+        backup_path = ontology_path.with_suffix('.ttl.backup')
+        ontology_path.rename(backup_path)
+
+        try:
+            # Read existing content
+            with open(backup_path, 'r', encoding='utf-8') as f:
+                existing_content = f.read()
+
+            # Append new TTL content
+            updated_content = existing_content.rstrip() + "\n\n" + request.ttl_content + "\n"
+
+            # Write updated content
+            with open(ontology_path, 'w', encoding='utf-8') as f:
+                f.write(updated_content)
+
+            logger.info(f"Saved select list for {request.question_id} to {request.ontology_file}")
+
+            return {
+                "success": True,
+                "question_id": request.question_id,
+                "ontology_file": request.ontology_file,
+                "backup_created": str(backup_path),
+                "message": f"Select list saved successfully for {request.question_id}"
+            }
+
+        except Exception as e:
+            # Restore backup if save failed
+            if backup_path.exists():
+                backup_path.rename(ontology_path)
+            raise e
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error saving select list: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/select-list/{question_id}")
+async def get_select_list_options(question_id: str):
+    """
+    Get existing select list options for a question from the ontology.
+    Returns parsed options from TTL.
+    """
+    from dialog_manager import DialogManager
+
+    try:
+        ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
+        dialog_manager = DialogManager(ontology_paths)
+
+        # Query for select options
+        options = dialog_manager.get_select_options_for_question(question_id)
+
+        if not options:
+            return {
+                "question_id": question_id,
+                "has_options": False,
+                "options": [],
+                "message": "No select options found for this question"
+            }
+
+        return {
+            "question_id": question_id,
+            "has_options": True,
+            "options": options,
+            "count": len(options)
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching select options: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# Section Management Endpoints
+# ============================================================================
+
+class SectionSaveRequest(BaseModel):
+    section_id: str
+    title: str
+    description: Optional[str] = ""
+    icon: Optional[str] = ""
+    aliases: List[str] = []
+    phonetics: List[str] = []
+    order: int = 1
+    ttl_content: str
+
+
+@app.get("/api/config/section/{section_id}")
+async def get_section(section_id: str):
+    """
+    Get section data including aliases and phonetics
+    """
+    try:
+        ontology_paths = [
+            os.path.join(ONTOLOGY_DIR, "dialog.ttl"),
+            os.path.join(ONTOLOGY_DIR, "dialog-insurance-questions.ttl")
+        ]
+
+        dialog_manager = DialogManager(ontology_paths)
+
+        # Query for section data
+        query = f"""
+        PREFIX : <http://diggi.io/ontology/dialog#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+        SELECT ?title ?description ?icon ?alias ?phonetic ?order
+        WHERE {{
+            :{section_id} a :Section ;
+                :sectionTitle ?title ;
+                :order ?order .
+
+            OPTIONAL {{ :{section_id} :sectionDescription ?description }}
+            OPTIONAL {{ :{section_id} :sectionIcon ?icon }}
+            OPTIONAL {{ :{section_id} :sectionAlias ?alias }}
+            OPTIONAL {{ :{section_id} :sectionPhonetic ?phonetic }}
+        }}
+        """
+
+        results = dialog_manager.graph.query(query)
+
+        if not results:
+            return {
+                "section_id": section_id,
+                "section": None,
+                "message": "Section not found"
+            }
+
+        # Aggregate aliases and phonetics
+        section_data = {
+            "section_id": section_id,
+            "title": "",
+            "description": "",
+            "icon": "",
+            "aliases": [],
+            "phonetics": [],
+            "order": 1
+        }
+
+        for row in results:
+            if not section_data["title"]:
+                section_data["title"] = str(row.title).replace(str(row.icon) + " " if row.icon else "", "").strip()
+            if row.description and not section_data["description"]:
+                section_data["description"] = str(row.description)
+            if row.icon and not section_data["icon"]:
+                section_data["icon"] = str(row.icon)
+            if row.order and not section_data["order"]:
+                section_data["order"] = int(row.order)
+            if row.alias and str(row.alias) not in section_data["aliases"]:
+                section_data["aliases"].append(str(row.alias))
+            if row.phonetic and str(row.phonetic) not in section_data["phonetics"]:
+                section_data["phonetics"].append(str(row.phonetic))
+
+        return {
+            "section_id": section_id,
+            "section": section_data
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching section: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/config/section/save")
+async def save_section(request: SectionSaveRequest):
+    """
+    Save section data with aliases and phonetics to TTL ontology
+    """
+    try:
+        # Target ontology file (always dialog.ttl for sections)
+        ontology_file = os.path.join(ONTOLOGY_DIR, "dialog.ttl")
+
+        if not os.path.exists(ontology_file):
+            raise HTTPException(
+                status_code=404,
+                detail=f"Ontology file not found: dialog.ttl"
+            )
+
+        # Read existing ontology
+        with open(ontology_file, 'r') as f:
+            existing_content = f.read()
+
+        # Create backup
+        backup_file = f"{ontology_file}.backup"
+        with open(backup_file, 'w') as f:
+            f.write(existing_content)
+
+        # Check if section already exists
+        section_pattern = f":{request.section_id} a :Section"
+        section_exists = section_pattern in existing_content
+
+        if section_exists:
+            # Remove existing section definition
+            # Find the section block and remove it
+            import re
+            pattern = rf"# Section \d+:.*?\n:{request.section_id} a :Section ;.*?(?=\n\n|\n#|$)"
+            existing_content = re.sub(pattern, "", existing_content, flags=re.DOTALL)
+
+        # Append new section definition
+        section_ttl = f"\n# Section: {request.title}\n{request.ttl_content}\n"
+
+        # Write updated ontology
+        with open(ontology_file, 'w') as f:
+            f.write(existing_content + section_ttl)
+
+        logger.info(f"Section {request.section_id} saved successfully")
+
+        return {
+            "success": True,
+            "section_id": request.section_id,
+            "ontology_file": "dialog.ttl",
+            "backup_created": backup_file,
+            "message": f"Section {request.section_id} saved successfully"
+        }
+
+    except Exception as e:
+        logger.error(f"Error saving section: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/sections")
+async def get_all_sections():
+    """
+    Get all sections in the dialog
+    """
+    try:
+        ontology_paths = [
+            os.path.join(ONTOLOGY_DIR, "dialog.ttl"),
+            os.path.join(ONTOLOGY_DIR, "dialog-insurance-questions.ttl")
+        ]
+
+        dialog_manager = DialogManager(ontology_paths)
+
+        # Query for all sections
+        query = """
+        PREFIX : <http://diggi.io/ontology/dialog#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+        SELECT ?section ?title ?description ?icon ?order
+        WHERE {
+            ?section a :Section ;
+                rdfs:label ?label ;
+                :sectionTitle ?title ;
+                :order ?order .
+
+            OPTIONAL { ?section :sectionDescription ?description }
+            OPTIONAL { ?section :sectionIcon ?icon }
+        }
+        ORDER BY ?order
+        """
+
+        results = dialog_manager.graph.query(query)
+
+        sections = []
+        for row in results:
+            section_id = str(row.section).split('#')[-1]
+            sections.append({
+                "section_id": section_id,
+                "title": str(row.title),
+                "description": str(row.description) if row.description else "",
+                "icon": str(row.icon) if row.icon else "",
+                "order": int(row.order)
+            })
+
+        return {
+            "sections": sections,
+            "count": len(sections)
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching sections: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# Flow Editor Endpoints
+# ============================================================================
+
+@app.get("/api/flow/load")
+async def load_flow():
+    """
+    Load dialog flow from TTL and convert to Flow JSON format for React Flow editor
+    """
+    try:
+        ontology_paths = [
+            os.path.join(ONTOLOGY_DIR, "dialog.ttl"),
+            os.path.join(ONTOLOGY_DIR, "dialog-insurance-questions.ttl")
+        ]
+
+        dialog_manager = DialogManager(ontology_paths)
+        converter = TTLToFlowConverter(dialog_manager)
+
+        flow_data = converter.convert()
+
+        return {
+            "success": True,
+            "flow": flow_data,
+            "node_count": len(flow_data["nodes"]),
+            "edge_count": len(flow_data["edges"])
+        }
+
+    except Exception as e:
+        logger.error(f"Error loading flow: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

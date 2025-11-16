@@ -35,6 +35,11 @@
     rdfs:label "Conditional Branch" ;
     rdfs:comment "A branching point based on conditions" .
 
+:SubQuestion a owl:Class ;
+    rdfs:subClassOf :Question ;
+    rdfs:label "Sub Question" ;
+    rdfs:comment "A nested question that appears conditionally based on parent answer" .
+
 :Section a owl:Class ;
     rdfs:subClassOf :DialogNode ;
     rdfs:label "Section" ;
@@ -61,6 +66,43 @@
     rdfs:domain :ConditionalBranch ;
     rdfs:range xsd:string .
 
+# Conditional Logic Properties
+:hasSubQuestion a owl:ObjectProperty ;
+    rdfs:label "has sub question" ;
+    rdfs:domain :Question ;
+    rdfs:range :SubQuestion ;
+    rdfs:comment "Links a question to its conditional sub-questions" .
+
+:parentQuestion a owl:ObjectProperty ;
+    rdfs:label "parent question" ;
+    rdfs:domain :SubQuestion ;
+    rdfs:range :Question ;
+    rdfs:comment "The parent question this sub-question belongs to" .
+
+:showIf a owl:DatatypeProperty ;
+    rdfs:label "show if" ;
+    rdfs:domain :SubQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Condition for showing this sub-question (e.g., 'answer == yes')" .
+
+:conditionOperator a owl:DatatypeProperty ;
+    rdfs:label "condition operator" ;
+    rdfs:domain :SubQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Operator for condition: equals, not_equals, contains, greater_than, less_than, in, not_in" .
+
+:conditionValue a owl:DatatypeProperty ;
+    rdfs:label "condition value" ;
+    rdfs:domain :SubQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Value to compare against for the condition" .
+
+:conditionField a owl:DatatypeProperty ;
+    rdfs:label "condition field" ;
+    rdfs:domain :SubQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Which field/answer to check (defaults to parent question)" .
+
 :sectionTitle a owl:DatatypeProperty ;
     rdfs:label "section title" ;
     rdfs:domain :Section ;
@@ -72,6 +114,24 @@
     rdfs:domain :Section ;
     rdfs:range xsd:string ;
     rdfs:comment "Description of what the section collects" .
+
+:sectionAlias a owl:DatatypeProperty ;
+    rdfs:label "section alias" ;
+    rdfs:domain :Section ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Alternative names for the section for voice recognition and natural language understanding" .
+
+:sectionPhonetic a owl:DatatypeProperty ;
+    rdfs:label "section phonetic" ;
+    rdfs:domain :Section ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Phonetic spellings of section name for ASR" .
+
+:sectionIcon a owl:DatatypeProperty ;
+    rdfs:label "section icon" ;
+    rdfs:domain :Section ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Icon/emoji representing the section" .
 
 :inSection a owl:ObjectProperty ;
     rdfs:label "in section" ;
@@ -169,6 +229,9 @@
     rdfs:label "Drivers" ;
     :sectionTitle "👤 Driver Information" ;
     :sectionDescription "Driver information and details" ;
+    :sectionAlias "Driver Info", "Driver Details", "About the Driver", "Personal Information", "Who's Driving" ;
+    :sectionPhonetic "Driver Information", "Dryver Info" ;
+    :sectionIcon "👤" ;
     :order 2 ;
     :nextNode :VehicleSection .
 
@@ -177,6 +240,9 @@
     rdfs:label "Vehicle" ;
     :sectionTitle "🚗 Vehicle Details" ;
     :sectionDescription "Vehicle details and specifications" ;
+    :sectionAlias "Car Details", "Vehicle Info", "About the Car", "Car Information", "My Vehicle" ;
+    :sectionPhonetic "Vee Hickle Details", "Car Details" ;
+    :sectionIcon "🚗" ;
     :order 3 ;
     :nextNode :PolicySection .
 
@@ -223,3 +289,128 @@
 :SummaryNode a :DialogNode ;
     rdfs:label "Summary" ;
     :order 9 .
+
+# Example: Conditional Logic - Claims Questions
+# Parent question with sub-questions that appear based on answer
+
+:HasClaimsQuestion a :Question ;
+    rdfs:label "Has Claims Question" ;
+    :questionId "has_claims" ;
+    :questionText "Have you had any claims in the last 5 years?" ;
+    :slotName "has_claims" ;
+    :inputType "select" ;
+    :required true ;
+    :inSection :ClaimsSection ;
+    :order 1 ;
+    :hasOption :HasClaimsYes, :HasClaimsNo ;
+    :hasSubQuestion :ClaimTypeSubQuestion, :ClaimDateSubQuestion, :ClaimAmountSubQuestion, :ClaimDescriptionSubQuestion .
+
+:HasClaimsYes a :SelectOption ;
+    rdfs:label "Yes" ;
+    :optionValue "yes" ;
+    :optionLabel "Yes" ;
+    :forQuestion :HasClaimsQuestion .
+
+:HasClaimsNo a :SelectOption ;
+    rdfs:label "No" ;
+    :optionValue "no" ;
+    :optionLabel "No" ;
+    :forQuestion :HasClaimsQuestion .
+
+# Sub-Question 1: Claim Type (appears if has_claims == "yes")
+:ClaimTypeSubQuestion a :SubQuestion ;
+    rdfs:label "Claim Type" ;
+    :questionId "claim_type" ;
+    :questionText "What type of claim was it?" ;
+    :slotName "claim_type" ;
+    :inputType "select" ;
+    :required true ;
+    :parentQuestion :HasClaimsQuestion ;
+    :conditionOperator "equals" ;
+    :conditionValue "yes" ;
+    :conditionField "has_claims" ;
+    :showIf "has_claims == yes" ;
+    :order 2 ;
+    :hasOption :ClaimTypeAccident, :ClaimTypeTheft, :ClaimTypeVandalism, :ClaimTypeWindscreen, :ClaimTypeOther .
+
+:ClaimTypeAccident a :SelectOption ;
+    rdfs:label "Accident" ;
+    :optionValue "accident" ;
+    :optionLabel "Accident" ;
+    :optionAlias "Collision", "Crash", "Accident Damage" ;
+    :forQuestion :ClaimTypeSubQuestion .
+
+:ClaimTypeTheft a :SelectOption ;
+    rdfs:label "Theft" ;
+    :optionValue "theft" ;
+    :optionLabel "Theft" ;
+    :optionAlias "Stolen", "Theft of Vehicle", "Car Theft" ;
+    :forQuestion :ClaimTypeSubQuestion .
+
+:ClaimTypeVandalism a :SelectOption ;
+    rdfs:label "Vandalism" ;
+    :optionValue "vandalism" ;
+    :optionLabel "Vandalism" ;
+    :optionAlias "Damage", "Criminal Damage", "Malicious Damage" ;
+    :forQuestion :ClaimTypeSubQuestion .
+
+:ClaimTypeWindscreen a :SelectOption ;
+    rdfs:label "Windscreen" ;
+    :optionValue "windscreen" ;
+    :optionLabel "Windscreen" ;
+    :optionAlias "Glass", "Windshield", "Window", "Windscreen Damage" ;
+    :forQuestion :ClaimTypeSubQuestion .
+
+:ClaimTypeOther a :SelectOption ;
+    rdfs:label "Other" ;
+    :optionValue "other" ;
+    :optionLabel "Other" ;
+    :forQuestion :ClaimTypeSubQuestion .
+
+# Sub-Question 2: Claim Date (appears if has_claims == "yes")
+:ClaimDateSubQuestion a :SubQuestion ;
+    rdfs:label "Claim Date" ;
+    :questionId "claim_date" ;
+    :questionText "When did the claim occur?" ;
+    :slotName "claim_date" ;
+    :inputType "date" ;
+    :required true ;
+    :parentQuestion :HasClaimsQuestion ;
+    :conditionOperator "equals" ;
+    :conditionValue "yes" ;
+    :conditionField "has_claims" ;
+    :showIf "has_claims == yes" ;
+    :order 3 .
+
+# Sub-Question 3: Claim Amount (appears if has_claims == "yes")
+:ClaimAmountSubQuestion a :SubQuestion ;
+    rdfs:label "Claim Amount" ;
+    :questionId "claim_amount" ;
+    :questionText "What was the approximate claim amount?" ;
+    :slotName "claim_amount" ;
+    :inputType "number" ;
+    :required true ;
+    :parentQuestion :HasClaimsQuestion ;
+    :conditionOperator "equals" ;
+    :conditionValue "yes" ;
+    :conditionField "has_claims" ;
+    :showIf "has_claims == yes" ;
+    :order 4 ;
+    :validationMin "0" ;
+    :validationMax "100000" .
+
+# Sub-Question 4: Claim Description (appears if has_claims == "yes")
+:ClaimDescriptionSubQuestion a :SubQuestion ;
+    rdfs:label "Claim Description" ;
+    :questionId "claim_description" ;
+    :questionText "Please provide a brief description of the claim" ;
+    :slotName "claim_description" ;
+    :inputType "textarea" ;
+    :required false ;
+    :parentQuestion :HasClaimsQuestion ;
+    :conditionOperator "equals" ;
+    :conditionValue "yes" ;
+    :conditionField "has_claims" ;
+    :showIf "has_claims == yes" ;
+    :order 5 ;
+    :validationMaxLength "500" .

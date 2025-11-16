@@ -1,0 +1,10 @@
+category,label,value,aliases,phonetics
+Toyota,Corolla,toyota_corolla,"Toyota Corolla|Corolla",""
+Toyota,Camry,toyota_camry,"Toyota Camry|Camry",""
+Toyota,RAV4,toyota_rav4,"Toyota RAV4|RAV4|RAV Four","Are Ay Vee Four"
+BMW,3 Series,bmw_3_series,"BMW 3|3 Series|BMW Three Series","Bee Em Double You Three"
+BMW,5 Series,bmw_5_series,"BMW 5|5 Series|BMW Five Series","Bee Em Double You Five"
+BMW,X5,bmw_x5,"BMW X5|X Five","Bee Em Double You Ex Five"
+Mercedes,C-Class,mercedes_c_class,"Mercedes C|C-Class|C Class","Mercedes See Class"
+Mercedes,E-Class,mercedes_e_class,"Mercedes E|E-Class|E Class","Mercedes Ee Class"
+Mercedes,GLC,mercedes_glc,"Mercedes GLC|GLC|G L C","Mercedes Gee El See"
