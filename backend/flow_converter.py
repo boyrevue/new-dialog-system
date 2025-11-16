@@ -246,43 +246,63 @@ class TTLToFlowConverter:
 
     def get_questions_in_section(self, section_uri: str) -> List[Dict]:
         """
-        Get all questions - section filtering disabled due to section name mismatch between
-        dialog-sections.ttl and dialog-insurance-questions.ttl
+        Get all questions for a specific section by matching the section URI
+        Includes both :Question and mm:MultimodalQuestion types
         """
-        query = """
+        # Build the full section URI for filtering
+        section_full_uri = f"http://diggi.io/ontology/dialog#{section_uri}"
+
+        query = f"""
         PREFIX : <http://diggi.io/ontology/dialog#>
+        PREFIX mm: <http://diggi.io/ontology/multimodal#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-        SELECT ?question ?questionId ?questionText ?slotName ?inputType ?required ?order ?sectionRef
-        WHERE {
-            ?question a :Question ;
-                :inSection ?sectionRef .
+        SELECT DISTINCT ?question ?questionId ?questionText ?slotName ?inputType ?required ?order ?sectionRef
+        WHERE {{
+            ?question :inSection ?sectionRef .
 
-            OPTIONAL { ?question :questionId ?questionId }
-            OPTIONAL { ?question :questionText ?questionText }
-            OPTIONAL { ?question :slotName ?slotName }
-            OPTIONAL { ?question :order ?order }
-            OPTIONAL { ?question :inputType ?inputType }
-            OPTIONAL { ?question :required ?required }
+            # Match both Question and MultimodalQuestion types
+            {{
+                ?question a :Question .
+            }} UNION {{
+                ?question a mm:MultimodalQuestion .
+            }}
+
+            OPTIONAL {{ ?question :questionId ?questionId }}
+            OPTIONAL {{ ?question :questionText ?questionText }}
+            OPTIONAL {{ ?question :slotName ?slotName }}
+            OPTIONAL {{ ?question :order ?order }}
+            OPTIONAL {{ ?question :inputType ?inputType }}
+            OPTIONAL {{ ?question :required ?required }}
 
             # Exclude SubQuestions
-            FILTER NOT EXISTS { ?question a :SubQuestion }
-        }
+            FILTER NOT EXISTS {{ ?question a :SubQuestion }}
+
+            # Filter by section URI
+            FILTER (?sectionRef = <{section_full_uri}>)
+        }}
         ORDER BY ?order
         """
 
         results = self.dm.graph.query(query)
 
         questions = []
+        seen_question_ids = set()
+
         for row in results:
-            # Skip if missing critical fields
+            # Skip if missing critical fields or duplicate
             if not row.questionId:
                 continue
 
+            question_id = str(row.questionId)
+            if question_id in seen_question_ids:
+                continue
+            seen_question_ids.add(question_id)
+
             questions.append({
-                "question_id": str(row.questionId),
-                "question_text": str(row.questionText) if row.questionText else str(row.questionId),
-                "slot_name": str(row.slotName) if row.slotName else str(row.questionId),
+                "question_id": question_id,
+                "question_text": str(row.questionText) if row.questionText else question_id,
+                "slot_name": str(row.slotName) if row.slotName else question_id,
                 "input_type": str(row.inputType) if row.inputType else "text",
                 "required": bool(row.required) if row.required else False,
                 "order": int(row.order) if row.order else 999,
