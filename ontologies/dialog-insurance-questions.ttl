@@ -617,93 +617,97 @@
     mm:optionDescription "One thousand pounds excess" .
 
 # Q22: NCD Years
-:NCDYearsQuestion a mm:MultimodalQuestion ;
-    rdfs:label "No Claims Discount" ;
-    :questionId "q_ncd_years" ;
-    :questionText "How many years of no claims discount do you have?" ;
-    :slotName "ncdYears" ;
-    :required true ;
-    :order 33 ;
-    :inSection :PolicySection ;
-    mm:hasTTSPrompt :NCDYearsTTS .
-
-:NCDYearsTTS a mm:TTSPrompt ;
-    mm:ttsText "How many years of no claims discount do you have? This is the number of claim-free years." ;
-    mm:ttsVariant1 "How many years of no claims discount do you have? This is the number of claim-free years." ;
-    mm:ttsVariant2 "What's your no claims bonus in years?" ;
-    mm:ttsVariant3 "How many years NCD?" ;
-    mm:ttsVariant4 "Tell me your no claims years." ;
-    mm:ttsVoice "en-GB-Neural2-A" ;
-    mm:ttsRate 1.0 ;
-    mm:ttsPitch 1.0 .
-
-# Q23: Protect NCD
-:ProtectNCDQuestion a mm:MultimodalQuestion ;
-    rdfs:label "Protect No Claims" ;
-    :questionId "q_protect_ncd" ;
-    :questionText "Would you like to protect your no claims discount?" ;
-    :slotName "protectNCD" ;
-    :required false ;
-    :order 34 ;
-    :inSection :PolicySection ;
-    mm:hasTTSPrompt :ProtectNCDTTS ;
-    mm:hasOption :ProtectYes, :ProtectNo .
-
-:ProtectNCDTTS a mm:TTSPrompt ;
-    mm:ttsText "Would you like to protect your no claims discount for an additional fee?" ;
-    mm:ttsVariant1 "Would you like to protect your no claims discount for an additional fee?" ;
-    mm:ttsVariant2 "Do you want NCD protection?" ;
-    mm:ttsVariant3 "Protect your no claims bonus?" ;
-    mm:ttsVariant4 "NCD protection - yes or no?" ;
-    mm:ttsVoice "en-GB-Neural2-A" ;
-    mm:ttsRate 1.0 ;
-    mm:ttsPitch 1.0 .
-
-:ProtectYes a mm:SelectOption ;
-    mm:optionValue "YES" ;
-    mm:optionLabel "Yes" ;
-    mm:optionDescription "Protect my NCD" .
-
-:ProtectNo a mm:SelectOption ;
-    mm:optionValue "NO" ;
-    mm:optionLabel "No" ;
-    mm:optionDescription "Don't protect NCD" .
+# Q22: No Claims Discount - DUPLICATE REMOVED
+# This question is now defined in dialog-sections.ttl
+# :NCDYearsQuestion a mm:MultimodalQuestion ;
+#     rdfs:label "No Claims Discount" ;
+#     :questionId "q_ncd_years" ;
+#     :questionText "How many years of no claims discount do you have?" ;
+#     :slotName "ncdYears" ;
+#     :required true ;
+#     :order 33 ;
+#     :inSection :PolicySection ;
+#     mm:hasTTSPrompt :NCDYearsTTS .
+# 
+# :NCDYearsTTS a mm:TTSPrompt ;
+#     mm:ttsText "How many years of no claims discount do you have? This is the number of claim-free years." ;
+#     mm:ttsVariant1 "How many years of no claims discount do you have? This is the number of claim-free years." ;
+#     mm:ttsVariant2 "What's your no claims bonus in years?" ;
+#     mm:ttsVariant3 "How many years NCD?" ;
+#     mm:ttsVariant4 "Tell me your no claims years." ;
+#     mm:ttsVoice "en-GB-Neural2-A" ;
+#     mm:ttsRate 1.0 ;
+#     mm:ttsPitch 1.0 .
+# 
+# # Q23: Protect NCD
+# :ProtectNCDQuestion a mm:MultimodalQuestion ;
+#     rdfs:label "Protect No Claims" ;
+#     :questionId "q_protect_ncd" ;
+#     :questionText "Would you like to protect your no claims discount?" ;
+#     :slotName "protectNCD" ;
+#     :required false ;
+#     :order 34 ;
+#     :inSection :PolicySection ;
+#     mm:hasTTSPrompt :ProtectNCDTTS ;
+#     mm:hasOption :ProtectYes, :ProtectNo .
+# 
+# :ProtectNCDTTS a mm:TTSPrompt ;
+#     mm:ttsText "Would you like to protect your no claims discount for an additional fee?" ;
+#     mm:ttsVariant1 "Would you like to protect your no claims discount for an additional fee?" ;
+#     mm:ttsVariant2 "Do you want NCD protection?" ;
+#     mm:ttsVariant3 "Protect your no claims bonus?" ;
+#     mm:ttsVariant4 "NCD protection - yes or no?" ;
+#     mm:ttsVoice "en-GB-Neural2-A" ;
+#     mm:ttsRate 1.0 ;
+#     mm:ttsPitch 1.0 .
+# 
+# :ProtectYes a mm:SelectOption ;
+#     mm:optionValue "YES" ;
+#     mm:optionLabel "Yes" ;
+#     mm:optionDescription "Protect my NCD" .
+# 
+# :ProtectNo a mm:SelectOption ;
+#     mm:optionValue "NO" ;
+#     mm:optionLabel "No" ;
+#     mm:optionDescription "Don't protect NCD" .
 
 # ============================================================================
 # SECTION 4: CLAIMS - 2 Main Questions (with conditional sub-questions)
 # ============================================================================
 
 # Q24: Has Claims or Accidents
-:HasClaimsQuestion a mm:MultimodalQuestion ;
-    rdfs:label "Claims or Accidents" ;
-    :questionId "q_has_claims" ;
-    :questionText "Have you had any claims or accidents in the last 5 years?" ;
-    :slotName "hasClaimsOrAccidents" ;
-    :required true ;
-    :order 40 ;
-    :inSection :ClaimsSection ;
-    mm:hasTTSPrompt :HasClaimsTTS ;
-    mm:hasOption :ClaimsYes, :ClaimsNo .
+# DUPLICATE REMOVED - This question is now defined in dialog-sections.ttl
+# TTS prompts and options are defined there as well
+# :HasClaimsQuestion a mm:MultimodalQuestion ;
+#     rdfs:label "Claims or Accidents" ;
+#     :questionId "q_has_claims" ;
+#     :questionText "Have you had any claims or accidents in the last 5 years?" ;
+#     :slotName "hasClaimsOrAccidents" ;
+#     :required true ;
+#     :order 40 ;
+#     :inSection :ClaimsSection ;
+#     mm:hasTTSPrompt :HasClaimsTTS ;
+#     mm:hasOption :ClaimsYes, :ClaimsNo .
 
-:HasClaimsTTS a mm:TTSPrompt ;
-    mm:ttsText "Have you had any claims or accidents in the last five years?" ;
-    mm:ttsVariant1 "Have you had any claims or accidents in the last five years?" ;
-    mm:ttsVariant2 "Any insurance claims or accidents in the past five years?" ;
-    mm:ttsVariant3 "Have you made any claims recently?" ;
-    mm:ttsVariant4 "Any claims or accidents?" ;
-    mm:ttsVoice "en-GB-Neural2-A" ;
-    mm:ttsRate 1.0 ;
-    mm:ttsPitch 1.0 .
+# :HasClaimsTTS a mm:TTSPrompt ;
+#     mm:ttsText "Have you had any claims or accidents in the last five years?" ;
+#     mm:ttsVariant1 "Have you had any claims or accidents in the last five years?" ;
+#     mm:ttsVariant2 "Any insurance claims or accidents in the past five years?" ;
+#     mm:ttsVariant3 "Have you made any claims recently?" ;
+#     mm:ttsVariant4 "Any claims or accidents?" ;
+#     mm:ttsVoice "en-GB-Neural2-A" ;
+#     mm:ttsRate 1.0 ;
+#     mm:ttsPitch 1.0 .
 
-:ClaimsYes a mm:SelectOption ;
-    mm:optionValue "YES" ;
-    mm:optionLabel "Yes" ;
-    mm:optionDescription "I have had claims or accidents" .
+# :ClaimsYes a mm:SelectOption ;
+#     mm:optionValue "YES" ;
+#     mm:optionLabel "Yes" ;
+#     mm:optionDescription "I have had claims or accidents" .
 
-:ClaimsNo a mm:SelectOption ;
-    mm:optionValue "NO" ;
-    mm:optionLabel "No" ;
-    mm:optionDescription "No claims or accidents" .
+# :ClaimsNo a mm:SelectOption ;
+#     mm:optionValue "NO" ;
+#     mm:optionLabel "No" ;
+#     mm:optionDescription "No claims or accidents" .
 
 # Q25: Has Convictions
 :HasConvictionsQuestion a mm:MultimodalQuestion ;
@@ -2011,111 +2015,112 @@
     mm:ttsPitch 1.0 .
 
 # Q: No Claims Discount (NCD) Years
-:NCDYearsQuestion a mm:MultimodalQuestion ;
-    rdfs:label "No Claims Discount" ;
-    :questionId "q_ncd_years" ;
-    :questionText "How many years of no claims discount do you have?" ;
-    :slotName "ncdYears" ;
-    :required true ;
-    :order 47 ;
-    :inSection :InsuranceHistorySection ;
-    mm:hasTTSPrompt :NCDYearsTTS ;
-    mm:hasSelectOption :NCD0, :NCD1, :NCD2, :NCD3, :NCD4, :NCD5, :NCD6Plus .
-
-:NCDYearsTTS a mm:TTSPrompt ;
-    mm:ttsText "How many years of no claims discount or no claims bonus do you have?" ;
-    mm:ttsVariant1 "How many years of no claims discount or no claims bonus do you have?" ;
-    mm:ttsVariant2 "Years of no claims discount?" ;
-    mm:ttsVariant3 "How many years NCD?" ;
-    mm:ttsVariant4 "Tell me your no claims bonus." ;
-    mm:ttsVoice "en-GB-Neural2-A" ;
-    mm:ttsRate 1.0 ;
-    mm:ttsPitch 1.0 .
-
-:NCD0 a mm:SelectOption ;
-    mm:optionValue "0" ;
-    mm:optionLabel "0 years" ;
-    mm:optionDescription "No discount" ;
-    mm:optionAlias "zero, 0, none" ;
-    mm:optionPhonetic "zulu echo romeo oscar" .
-
-:NCD1 a mm:SelectOption ;
-    mm:optionValue "1" ;
-    mm:optionLabel "1 year" ;
-    mm:optionDescription "1 year no claims" ;
-    mm:optionAlias "one, 1" ;
-    mm:optionPhonetic "oscar november echo" .
-
-:NCD2 a mm:SelectOption ;
-    mm:optionValue "2" ;
-    mm:optionLabel "2 years" ;
-    mm:optionDescription "2 years no claims" ;
-    mm:optionAlias "two, 2" ;
-    mm:optionPhonetic "tango whiskey oscar" .
-
-:NCD3 a mm:SelectOption ;
-    mm:optionValue "3" ;
-    mm:optionLabel "3 years" ;
-    mm:optionDescription "3 years no claims" ;
-    mm:optionAlias "three, 3" ;
-    mm:optionPhonetic "tango hotel romeo echo echo" .
-
-:NCD4 a mm:SelectOption ;
-    mm:optionValue "4" ;
-    mm:optionLabel "4 years" ;
-    mm:optionDescription "4 years no claims" ;
-    mm:optionAlias "four, 4" ;
-    mm:optionPhonetic "foxtrot oscar uniform romeo" .
-
-:NCD5 a mm:SelectOption ;
-    mm:optionValue "5" ;
-    mm:optionLabel "5 years" ;
-    mm:optionDescription "5 years no claims" ;
-    mm:optionAlias "five, 5" ;
-    mm:optionPhonetic "foxtrot india victor echo" .
-
-:NCD6Plus a mm:SelectOption ;
-    mm:optionValue "6+" ;
-    mm:optionLabel "6+ years" ;
-    mm:optionDescription "6 or more years no claims" ;
-    mm:optionAlias "six, 6, six plus, more than five" ;
-    mm:optionPhonetic "sierra india xray papa lima uniform sierra" .
-
-# Q: Protect NCD
-:ProtectNCDQuestion a mm:MultimodalQuestion ;
-    rdfs:label "Protect No Claims Discount" ;
-    :questionId "q_protect_ncd" ;
-    :questionText "Would you like to protect your no claims discount?" ;
-    :slotName "protectNCD" ;
-    :required false ;
-    :order 48 ;
-    :inSection :InsuranceHistorySection ;
-    mm:hasTTSPrompt :ProtectNCDTTS ;
-    mm:hasSelectOption :ProtectNCDYes, :ProtectNCDNo .
-
-:ProtectNCDTTS a mm:TTSPrompt ;
-    mm:ttsText "Would you like to protect your no claims discount? This costs extra but prevents losing it after a claim." ;
-    mm:ttsVariant1 "Would you like to protect your no claims discount? This costs extra but prevents losing it after a claim." ;
-    mm:ttsVariant2 "Protect your no claims bonus?" ;
-    mm:ttsVariant3 "NCD protection - yes or no?" ;
-    mm:ttsVariant4 "Do you want NCD protection?" ;
-    mm:ttsVoice "en-GB-Neural2-A" ;
-    mm:ttsRate 1.0 ;
-    mm:ttsPitch 1.0 .
-
-:ProtectNCDYes a mm:SelectOption ;
-    mm:optionValue "YES" ;
-    mm:optionLabel "Yes" ;
-    mm:optionDescription "Protect my NCD" ;
-    mm:optionAlias "yes, yeah, yep, protect" ;
-    mm:optionPhonetic "yankee echo sierra" .
-
-:ProtectNCDNo a mm:SelectOption ;
-    mm:optionValue "NO" ;
-    mm:optionLabel "No" ;
-    mm:optionDescription "No protection needed" ;
-    mm:optionAlias "no, nope, no thanks" ;
-    mm:optionPhonetic "november oscar" .
+# :NCDYearsQuestion a mm:MultimodalQuestion ;
+# DUPLICATE REMOVED - These NCD questions are now defined in dialog-sections.ttl
+#     rdfs:label "No Claims Discount" ;
+#     :questionId "q_ncd_years" ;
+#     :questionText "How many years of no claims discount do you have?" ;
+#     :slotName "ncdYears" ;
+#     :required true ;
+#     :order 47 ;
+#     :inSection :InsuranceHistorySection ;
+#     mm:hasTTSPrompt :NCDYearsTTS ;
+#     mm:hasSelectOption :NCD0, :NCD1, :NCD2, :NCD3, :NCD4, :NCD5, :NCD6Plus .
+# 
+# :NCDYearsTTS a mm:TTSPrompt ;
+#     mm:ttsText "How many years of no claims discount or no claims bonus do you have?" ;
+#     mm:ttsVariant1 "How many years of no claims discount or no claims bonus do you have?" ;
+#     mm:ttsVariant2 "Years of no claims discount?" ;
+#     mm:ttsVariant3 "How many years NCD?" ;
+#     mm:ttsVariant4 "Tell me your no claims bonus." ;
+#     mm:ttsVoice "en-GB-Neural2-A" ;
+#     mm:ttsRate 1.0 ;
+#     mm:ttsPitch 1.0 .
+# 
+# :NCD0 a mm:SelectOption ;
+#     mm:optionValue "0" ;
+#     mm:optionLabel "0 years" ;
+#     mm:optionDescription "No discount" ;
+#     mm:optionAlias "zero, 0, none" ;
+#     mm:optionPhonetic "zulu echo romeo oscar" .
+# 
+# :NCD1 a mm:SelectOption ;
+#     mm:optionValue "1" ;
+#     mm:optionLabel "1 year" ;
+#     mm:optionDescription "1 year no claims" ;
+#     mm:optionAlias "one, 1" ;
+#     mm:optionPhonetic "oscar november echo" .
+# 
+# :NCD2 a mm:SelectOption ;
+#     mm:optionValue "2" ;
+#     mm:optionLabel "2 years" ;
+#     mm:optionDescription "2 years no claims" ;
+#     mm:optionAlias "two, 2" ;
+#     mm:optionPhonetic "tango whiskey oscar" .
+# 
+# :NCD3 a mm:SelectOption ;
+#     mm:optionValue "3" ;
+#     mm:optionLabel "3 years" ;
+#     mm:optionDescription "3 years no claims" ;
+#     mm:optionAlias "three, 3" ;
+#     mm:optionPhonetic "tango hotel romeo echo echo" .
+# 
+# :NCD4 a mm:SelectOption ;
+#     mm:optionValue "4" ;
+#     mm:optionLabel "4 years" ;
+#     mm:optionDescription "4 years no claims" ;
+#     mm:optionAlias "four, 4" ;
+#     mm:optionPhonetic "foxtrot oscar uniform romeo" .
+# 
+# :NCD5 a mm:SelectOption ;
+#     mm:optionValue "5" ;
+#     mm:optionLabel "5 years" ;
+#     mm:optionDescription "5 years no claims" ;
+#     mm:optionAlias "five, 5" ;
+#     mm:optionPhonetic "foxtrot india victor echo" .
+# 
+# :NCD6Plus a mm:SelectOption ;
+#     mm:optionValue "6+" ;
+#     mm:optionLabel "6+ years" ;
+#     mm:optionDescription "6 or more years no claims" ;
+#     mm:optionAlias "six, 6, six plus, more than five" ;
+#     mm:optionPhonetic "sierra india xray papa lima uniform sierra" .
+# 
+# # Q: Protect NCD
+# :ProtectNCDQuestion a mm:MultimodalQuestion ;
+#     rdfs:label "Protect No Claims Discount" ;
+#     :questionId "q_protect_ncd" ;
+#     :questionText "Would you like to protect your no claims discount?" ;
+#     :slotName "protectNCD" ;
+#     :required false ;
+#     :order 48 ;
+#     :inSection :InsuranceHistorySection ;
+#     mm:hasTTSPrompt :ProtectNCDTTS ;
+#     mm:hasSelectOption :ProtectNCDYes, :ProtectNCDNo .
+# 
+# :ProtectNCDTTS a mm:TTSPrompt ;
+#     mm:ttsText "Would you like to protect your no claims discount? This costs extra but prevents losing it after a claim." ;
+#     mm:ttsVariant1 "Would you like to protect your no claims discount? This costs extra but prevents losing it after a claim." ;
+#     mm:ttsVariant2 "Protect your no claims bonus?" ;
+#     mm:ttsVariant3 "NCD protection - yes or no?" ;
+#     mm:ttsVariant4 "Do you want NCD protection?" ;
+#     mm:ttsVoice "en-GB-Neural2-A" ;
+#     mm:ttsRate 1.0 ;
+#     mm:ttsPitch 1.0 .
+# 
+# :ProtectNCDYes a mm:SelectOption ;
+#     mm:optionValue "YES" ;
+#     mm:optionLabel "Yes" ;
+#     mm:optionDescription "Protect my NCD" ;
+#     mm:optionAlias "yes, yeah, yep, protect" ;
+#     mm:optionPhonetic "yankee echo sierra" .
+# 
+# :ProtectNCDNo a mm:SelectOption ;
+#     mm:optionValue "NO" ;
+#     mm:optionLabel "No" ;
+#     mm:optionDescription "No protection needed" ;
+#     mm:optionAlias "no, nope, no thanks" ;
+#     mm:optionPhonetic "november oscar" .
 
 # Q: Claims in Last 5 Years
 :ClaimsLast5YearsQuestion a mm:MultimodalQuestion ;

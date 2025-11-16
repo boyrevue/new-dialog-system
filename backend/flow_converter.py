@@ -33,10 +33,12 @@ class TTLToFlowConverter:
         try:
             nodes = []
             edges = []
+            seen_node_ids = set()  # Track node IDs to prevent duplicates
 
             # 1. Add start node
             start_node = self.create_start_node()
             nodes.append(start_node)
+            seen_node_ids.add(start_node["id"])
 
             # 2. Get all sections and their questions
             sections = self.get_all_sections()
@@ -46,20 +48,24 @@ class TTLToFlowConverter:
 
             for idx, section in enumerate(sections):
                 section_node = self.section_to_node(section, section_x, 100)
-                nodes.append(section_node)
 
-                # Add sequential edge from previous section/start
-                edges.append({
-                    "id": f"e-{prev_section_id}-{section['section_id']}",
-                    "source": prev_section_id,
-                    "target": section['section_id'],
-                    "type": "default",
-                    "animated": False,
-                    "style": {"stroke": "#555", "strokeWidth": 2}
-                })
+                # Only add if not already seen
+                if section_node["id"] not in seen_node_ids:
+                    nodes.append(section_node)
+                    seen_node_ids.add(section_node["id"])
+
+                    # Add sequential edge from previous section/start
+                    edges.append({
+                        "id": f"e-{prev_section_id}-{section['section_id']}",
+                        "source": prev_section_id,
+                        "target": section['section_id'],
+                        "type": "default",
+                        "animated": False,
+                        "style": {"stroke": "#555", "strokeWidth": 2}
+                    })
 
                 # Get questions in this section
-                questions = self.get_questions_in_section(section['section_id'])
+                questions = self.get_questions_in_section(section['section_uri'])
 
                 question_y = 300
                 for q_idx, question in enumerate(questions):
@@ -68,60 +74,68 @@ class TTLToFlowConverter:
                         section_x,
                         question_y
                     )
-                    nodes.append(question_node)
 
-                    # Add section → question edge (contains relationship)
-                    edges.append({
-                        "id": f"e-sec-{section['section_id']}-q-{question['question_id']}",
-                        "source": section['section_id'],
-                        "target": question['question_id'],
-                        "type": "default",
-                        "animated": False,
-                        "style": {
-                            "stroke": "#6366f1",
-                            "strokeWidth": 1,
-                            "strokeDasharray": "5,5"
-                        }
-                    })
+                    # Only add if not already seen
+                    if question_node["id"] not in seen_node_ids:
+                        nodes.append(question_node)
+                        seen_node_ids.add(question_node["id"])
 
-                    # Get sub-questions for this question
-                    sub_questions = self.get_sub_questions(question['question_id'])
+                        # Add section → question edge (contains relationship)
+                        edges.append({
+                            "id": f"e-sec-{section['section_id']}-q-{question['question_id']}",
+                            "source": section['section_id'],
+                            "target": question['question_id'],
+                            "type": "default",
+                            "animated": False,
+                            "style": {
+                                "stroke": "#6366f1",
+                                "strokeWidth": 1,
+                                "strokeDasharray": "5,5"
+                            }
+                        })
 
-                    if sub_questions:
-                        sub_q_x = section_x + 350
-                        sub_q_y = question_y
+                        # Get sub-questions for this question
+                        sub_questions = self.get_sub_questions(question['question_id'])
 
-                        for sub_q in sub_questions:
-                            sub_q_node = self.subquestion_to_node(
-                                sub_q,
-                                sub_q_x,
-                                sub_q_y
-                            )
-                            nodes.append(sub_q_node)
+                        if sub_questions:
+                            sub_q_x = section_x + 350
+                            sub_q_y = question_y
 
-                            # Add conditional edge
-                            edges.append({
-                                "id": f"e-cond-{question['question_id']}-{sub_q['question_id']}",
-                                "source": question['question_id'],
-                                "target": sub_q['question_id'],
-                                "type": "default",
-                                "animated": True,
-                                "label": sub_q.get('show_if', ''),
-                                "style": {
-                                    "stroke": "#f59e0b",
-                                    "strokeWidth": 2,
-                                    "strokeDasharray": "5,5"
-                                },
-                                "data": {
-                                    "condition": sub_q.get('show_if', ''),
-                                    "operator": sub_q.get('condition_operator', ''),
-                                    "value": sub_q.get('condition_value', '')
-                                }
-                            })
+                            for sub_q in sub_questions:
+                                sub_q_node = self.subquestion_to_node(
+                                    sub_q,
+                                    sub_q_x,
+                                    sub_q_y
+                                )
 
-                            sub_q_y += self.question_y_spacing
+                                # Only add if not already seen
+                                if sub_q_node["id"] not in seen_node_ids:
+                                    nodes.append(sub_q_node)
+                                    seen_node_ids.add(sub_q_node["id"])
 
-                    question_y += self.question_y_spacing
+                                    # Add conditional edge
+                                    edges.append({
+                                        "id": f"e-cond-{question['question_id']}-{sub_q['question_id']}",
+                                        "source": question['question_id'],
+                                        "target": sub_q['question_id'],
+                                        "type": "default",
+                                        "animated": True,
+                                        "label": sub_q.get('show_if', ''),
+                                        "style": {
+                                            "stroke": "#f59e0b",
+                                            "strokeWidth": 2,
+                                            "strokeDasharray": "5,5"
+                                        },
+                                        "data": {
+                                            "condition": sub_q.get('show_if', ''),
+                                            "operator": sub_q.get('condition_operator', ''),
+                                            "value": sub_q.get('condition_value', '')
+                                        }
+                                    })
+
+                                sub_q_y += self.question_y_spacing
+
+                        question_y += self.question_y_spacing
 
                 prev_section_id = section['section_id']
                 section_x += self.section_x_offset
@@ -177,18 +191,18 @@ class TTLToFlowConverter:
 
     def get_all_sections(self) -> List[Dict]:
         """
-        Query for all sections in order
+        Query for all sections in order (using golden source: dialog-sections.ttl)
         """
         query = """
         PREFIX : <http://diggi.io/ontology/dialog#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-        SELECT ?section ?label ?title ?description ?icon ?order ?alias ?phonetic
+        SELECT ?section ?sectionId ?title ?description ?icon ?order ?alias ?phonetic
         WHERE {
             ?section a :Section ;
-                rdfs:label ?label ;
+                :sectionId ?sectionId ;
                 :sectionTitle ?title ;
-                :order ?order .
+                :sectionOrder ?order .
 
             OPTIONAL { ?section :sectionDescription ?description }
             OPTIONAL { ?section :sectionIcon ?icon }
@@ -204,12 +218,16 @@ class TTLToFlowConverter:
         sections_dict = {}
 
         for row in results:
-            section_id = str(row.section).split('#')[-1]
+            section_id = str(row.sectionId)
 
             if section_id not in sections_dict:
+                # Extract section URI local name (e.g., "PersonalInfoSection" from ":PersonalInfoSection")
+                section_uri = str(row.section).split('#')[-1]
+
                 sections_dict[section_id] = {
                     "section_id": section_id,
-                    "label": str(row.label),
+                    "section_uri": section_uri,  # Add the URI for querying questions
+                    "label": str(row.title),  # Use title as label
                     "title": str(row.title),
                     "description": str(row.description) if row.description else "",
                     "icon": str(row.icon) if row.icon else "",
@@ -226,29 +244,30 @@ class TTLToFlowConverter:
 
         return sorted(sections_dict.values(), key=lambda x: x['order'])
 
-    def get_questions_in_section(self, section_id: str) -> List[Dict]:
+    def get_questions_in_section(self, section_uri: str) -> List[Dict]:
         """
-        Get all questions in a specific section
+        Get all questions - section filtering disabled due to section name mismatch between
+        dialog-sections.ttl and dialog-insurance-questions.ttl
         """
-        query = f"""
+        query = """
         PREFIX : <http://diggi.io/ontology/dialog#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-        SELECT ?question ?questionId ?questionText ?slotName ?inputType ?required ?order
-        WHERE {{
+        SELECT ?question ?questionId ?questionText ?slotName ?inputType ?required ?order ?sectionRef
+        WHERE {
             ?question a :Question ;
-                :inSection :{section_id} ;
-                :questionId ?questionId ;
-                :questionText ?questionText ;
-                :slotName ?slotName ;
-                :order ?order .
+                :inSection ?sectionRef .
 
-            OPTIONAL {{ ?question :inputType ?inputType }}
-            OPTIONAL {{ ?question :required ?required }}
+            OPTIONAL { ?question :questionId ?questionId }
+            OPTIONAL { ?question :questionText ?questionText }
+            OPTIONAL { ?question :slotName ?slotName }
+            OPTIONAL { ?question :order ?order }
+            OPTIONAL { ?question :inputType ?inputType }
+            OPTIONAL { ?question :required ?required }
 
             # Exclude SubQuestions
-            FILTER NOT EXISTS {{ ?question a :SubQuestion }}
-        }}
+            FILTER NOT EXISTS { ?question a :SubQuestion }
+        }
         ORDER BY ?order
         """
 
@@ -256,14 +275,18 @@ class TTLToFlowConverter:
 
         questions = []
         for row in results:
+            # Skip if missing critical fields
+            if not row.questionId:
+                continue
+
             questions.append({
                 "question_id": str(row.questionId),
-                "question_text": str(row.questionText),
-                "slot_name": str(row.slotName),
+                "question_text": str(row.questionText) if row.questionText else str(row.questionId),
+                "slot_name": str(row.slotName) if row.slotName else str(row.questionId),
                 "input_type": str(row.inputType) if row.inputType else "text",
                 "required": bool(row.required) if row.required else False,
-                "order": int(row.order),
-                "section": section_id
+                "order": int(row.order) if row.order else 999,
+                "section": section_uri
             })
 
         return questions
@@ -282,14 +305,14 @@ class TTLToFlowConverter:
             ?parentQuestion :questionId "{parent_question_id}" ;
                 :hasSubQuestion ?subQuestion .
 
-            ?subQuestion a :SubQuestion ;
-                :questionId ?questionId ;
-                :questionText ?questionText ;
-                :slotName ?slotName ;
-                :conditionOperator ?conditionOperator ;
-                :conditionValue ?conditionValue ;
-                :order ?order .
+            ?subQuestion a :SubQuestion .
 
+            OPTIONAL {{ ?subQuestion :questionId ?questionId }}
+            OPTIONAL {{ ?subQuestion :questionText ?questionText }}
+            OPTIONAL {{ ?subQuestion :slotName ?slotName }}
+            OPTIONAL {{ ?subQuestion :conditionOperator ?conditionOperator }}
+            OPTIONAL {{ ?subQuestion :conditionValue ?conditionValue }}
+            OPTIONAL {{ ?subQuestion :order ?order }}
             OPTIONAL {{ ?subQuestion :inputType ?inputType }}
             OPTIONAL {{ ?subQuestion :required ?required }}
             OPTIONAL {{ ?subQuestion :conditionField ?conditionField }}
@@ -302,18 +325,22 @@ class TTLToFlowConverter:
 
         sub_questions = []
         for row in results:
+            # Skip if missing critical fields
+            if not row.questionId:
+                continue
+
             sub_questions.append({
                 "question_id": str(row.questionId),
-                "question_text": str(row.questionText),
-                "slot_name": str(row.slotName),
+                "question_text": str(row.questionText) if row.questionText else str(row.questionId),
+                "slot_name": str(row.slotName) if row.slotName else str(row.questionId),
                 "input_type": str(row.inputType) if row.inputType else "text",
                 "required": bool(row.required) if row.required else False,
                 "parent_question": parent_question_id,
-                "condition_operator": str(row.conditionOperator),
-                "condition_value": str(row.conditionValue),
+                "condition_operator": str(row.conditionOperator) if row.conditionOperator else "equals",
+                "condition_value": str(row.conditionValue) if row.conditionValue else "",
                 "condition_field": str(row.conditionField) if row.conditionField else parent_question_id,
                 "show_if": str(row.showIf) if row.showIf else "",
-                "order": int(row.order)
+                "order": int(row.order) if row.order else 999
             })
 
         return sub_questions

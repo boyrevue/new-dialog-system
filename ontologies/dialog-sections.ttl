@@ -1,248 +1,4697 @@
 @prefix : <http://diggi.io/ontology/dialog#> .
+@prefix conf: <http://diggi.io/ontology/confidence#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix doc: <http://diggi.io/ontology/documents#> .
+@prefix form: <http://diggi.io/ontology/form#> .
+@prefix mm: <http://diggi.io/ontology/multimodal#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix qc: <http://diggi.io/ontology/quality-control#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix val: <http://diggi.io/ontology/validation#> .
+@prefix vocab: <http://diggi.io/ontology/vocabularies#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-# ============================================================================
-# Dialog Sections for Insurance Quote Flow
-# ============================================================================
-# This file defines the section structure for the insurance quote dialog
-# and assigns all questions to their appropriate sections using OWL/SPARQL
-# relationships.
-# ============================================================================
+val:ValidationFunction a rdfs:Class ;
+    rdfs:label "Validation Function" ;
+    rdfs:comment "Custom validation function definition" .
 
-# Section 1: Personal Information
-:PersonalInfoSection a :Section ;
-    :sectionId "section_personal_info" ;
-    :sectionTitle "Personal Information" ;
-    :sectionDescription "Basic personal details required for your insurance quote" ;
-    :sectionOrder 1 ;
-    rdfs:label "Personal Information Section" .
+<http://diggi.io/ontology/confidence> a owl:Ontology ;
+    rdfs:label "Dialog Confidence Scoring Ontology" ;
+    rdfs:comment "Confidence scoring and quality control for dialog responses" ;
+    owl:versionInfo "1.0" .
 
-# Section 2: Contact Details
-:ContactDetailsSection a :Section ;
-    :sectionId "section_contact" ;
-    :sectionTitle "Contact Details" ;
-    :sectionDescription "How we can reach you" ;
-    :sectionOrder 2 ;
-    rdfs:label "Contact Details Section" .
+conf:action a owl:DatatypeProperty ;
+    rdfs:label "action" ;
+    rdfs:domain conf:ConfidenceThreshold ;
+    rdfs:range xsd:string .
 
-# Section 3: Address Information
-:AddressSection a :Section ;
-    :sectionId "section_address" ;
-    :sectionTitle "Address Information" ;
-    :sectionDescription "Your current residential address" ;
-    :sectionOrder 3 ;
-    rdfs:label "Address Section" .
+conf:audioQuality a owl:DatatypeProperty ;
+    rdfs:label "audio quality" ;
+    rdfs:domain conf:ConfidenceScore ;
+    rdfs:range xsd:decimal .
 
-# Section 4: Vehicle Details
-:VehicleDetailsSection a :Section ;
-    :sectionId "section_vehicle" ;
-    :sectionTitle "Vehicle Details" ;
-    :sectionDescription "Information about the vehicle you want to insure" ;
-    :sectionOrder 4 ;
-    rdfs:label "Vehicle Details Section" .
+conf:contextMatch a owl:DatatypeProperty ;
+    rdfs:label "context match" ;
+    rdfs:domain conf:ConfidenceScore ;
+    rdfs:range xsd:decimal .
 
-# Section 5: Driving History
-:DrivingHistorySection a :Section ;
-    :sectionId "section_driving" ;
-    :sectionTitle "Driving History" ;
-    :sectionDescription "Your driving experience and history" ;
-    :sectionOrder 5 ;
-    rdfs:label "Driving History Section" .
+conf:grammarMatch a owl:DatatypeProperty ;
+    rdfs:label "grammar match" ;
+    rdfs:domain conf:ConfidenceScore ;
+    rdfs:range xsd:decimal .
 
-# Section 6: Insurance History
-:InsuranceHistorySection a :Section ;
-    :sectionId "section_insurance" ;
-    :sectionTitle "Insurance History" ;
-    :sectionDescription "Your previous insurance and claims history" ;
-    :sectionOrder 6 ;
-    rdfs:label "Insurance History Section" .
+conf:hasConfidenceScore a owl:ObjectProperty ;
+    rdfs:label "has confidence score" ;
+    rdfs:domain :Answer ;
+    rdfs:range conf:ConfidenceScore .
 
-# Section 7: Policy Options
-:PolicyOptionsSection a :Section ;
-    :sectionId "section_policy_options" ;
-    :sectionTitle "Policy Options" ;
-    :sectionDescription "Choose your coverage level and policy preferences" ;
-    :sectionOrder 7 ;
-    rdfs:label "Policy Options Section" .
+conf:overallScore a owl:DatatypeProperty ;
+    rdfs:label "overall score" ;
+    rdfs:comment "Overall confidence score (0.0 to 1.0)" ;
+    rdfs:domain conf:ConfidenceScore ;
+    rdfs:range xsd:decimal .
 
-# Section 8: Usage and Mileage
-:UsageMileageSection a :Section ;
-    :sectionId "section_usage" ;
-    :sectionTitle "Usage & Mileage" ;
-    :sectionDescription "How you use your vehicle" ;
-    :sectionOrder 8 ;
-    rdfs:label "Usage and Mileage Section" .
+conf:recognitionConfidence a owl:DatatypeProperty ;
+    rdfs:label "recognition confidence" ;
+    rdfs:domain conf:ConfidenceScore ;
+    rdfs:range xsd:decimal .
 
-# Section 9: Additional Drivers
-:AdditionalDriversSection a :Section ;
-    :sectionId "section_additional_drivers" ;
-    :sectionTitle "Additional Drivers" ;
-    :sectionDescription "Other people who will drive the vehicle" ;
-    :sectionOrder 9 ;
-    rdfs:label "Additional Drivers Section" .
+conf:thresholdValue a owl:DatatypeProperty ;
+    rdfs:label "threshold value" ;
+    rdfs:domain conf:ConfidenceThreshold ;
+    rdfs:range xsd:decimal .
 
-# Section 10: Occupation Details
-:OccupationSection a :Section ;
-    :sectionId "section_occupation" ;
-    :sectionTitle "Occupation Details" ;
-    :sectionDescription "Your employment and occupation information" ;
-    :sectionOrder 10 ;
-    rdfs:label "Occupation Section" .
+conf:vocabularyMatch a owl:DatatypeProperty ;
+    rdfs:label "vocabulary match" ;
+    rdfs:domain conf:ConfidenceScore ;
+    rdfs:range xsd:decimal .
 
-# ============================================================================
-# Question-to-Section Assignments (OWL Relationships)
-# ============================================================================
+<http://diggi.io/ontology/dialog> a owl:Ontology ;
+    dcterms:created "2025-01-15"^^xsd:date ;
+    dcterms:description "Core ontology for multimodal dialog management with confidence scoring" ;
+    dcterms:title "Dialog System Core Ontology" ;
+    owl:versionInfo "1.0" .
 
-# Personal Information Section Questions
-:FirstNameQuestion :inSection :PersonalInfoSection .
-:LastNameQuestion :inSection :PersonalInfoSection .
-:DateOfBirthQuestion :inSection :PersonalInfoSection .
-:TitleQuestion :inSection :PersonalInfoSection .
-:GenderQuestion :inSection :PersonalInfoSection .
-:MaritalStatusQuestion :inSection :PersonalInfoSection .
-:ResidentialStatusQuestion :inSection :PersonalInfoSection .
-:TimeAtAddressQuestion :inSection :PersonalInfoSection .
-
-# Contact Details Section Questions
-:EmailQuestion :inSection :ContactDetailsSection .
-:PhoneQuestion :inSection :ContactDetailsSection .
-:MobileNumberQuestion :inSection :ContactDetailsSection .
-:PreferredContactMethodQuestion :inSection :ContactDetailsSection .
-
-# Address Section Questions
-:AddressQuestion :inSection :AddressSection .
-:CityTownQuestion :inSection :AddressSection .
-:PostcodeQuestion :inSection :AddressSection .
-:AddressLine1Question :inSection :AddressSection .
-:AddressLine2Question :inSection :AddressSection .
-:CityQuestion :inSection :AddressSection .
-:CountyQuestion :inSection :AddressSection .
-:PreviousPostcodeQuestion :inSection :AddressSection .
-:PreviousAddressLine1Question :inSection :AddressSection .
-:PreviousAddressLine2Question :inSection :AddressSection .
-
-# Vehicle Details Section Questions
-:VehicleRegistrationQuestion :inSection :VehicleDetailsSection .
-:VehicleMakeQuestion :inSection :VehicleDetailsSection .
-:VehicleModelQuestion :inSection :VehicleDetailsSection .
-:VehicleYearQuestion :inSection :VehicleDetailsSection .
-:VehicleValueQuestion :inSection :VehicleDetailsSection .
-:ParkingLocationQuestion :inSection :VehicleDetailsSection .
-:VehicleOwnerQuestion :inSection :VehicleDetailsSection .
-:VehiclePurchaseDateQuestion :inSection :VehicleDetailsSection .
-:VehicleKeeperQuestion :inSection :VehicleDetailsSection .
-:HasModificationsQuestion :inSection :VehicleDetailsSection .
-:ModificationDetailsQuestion :inSection :VehicleDetailsSection .
-:SecurityDevicesQuestion :inSection :VehicleDetailsSection .
-:HasAlarmQuestion :inSection :VehicleDetailsSection .
-:HasImmobiliserQuestion :inSection :VehicleDetailsSection .
-:HasTrackerQuestion :inSection :VehicleDetailsSection .
-:MOTStatusQuestion :inSection :VehicleDetailsSection .
-:MOTExpiryDateQuestion :inSection :VehicleDetailsSection .
-:IsVehicleFinancedQuestion :inSection :VehicleDetailsSection .
-:FinanceCompanyQuestion :inSection :VehicleDetailsSection .
-
-# Driving History Section Questions
-:LicenceTypeQuestion :inSection :DrivingHistorySection .
-:LicenceNumberQuestion :inSection :DrivingHistorySection .
-:YearsHoldingLicenceQuestion :inSection :DrivingHistorySection .
-:PassingDateQuestion :inSection :DrivingHistorySection .
-:DrivingConvictionsQuestion :inSection :DrivingHistorySection .
-:ConvictionDetailsQuestion :inSection :DrivingHistorySection .
-:EndorsementsQuestion :inSection :DrivingHistorySection .
-:PenaltyPointsQuestion :inSection :DrivingHistorySection .
-:BansOrDisqualificationsQuestion :inSection :DrivingHistorySection .
-:AccidentsQuestion :inSection :DrivingHistorySection .
 :AccidentDetailsQuestion :inSection :DrivingHistorySection .
-:MedicalConditionsQuestion :inSection :DrivingHistorySection .
-:MedicalConditionDetailsQuestion :inSection :DrivingHistorySection .
-:LicenceRestrictionsQuestion :inSection :DrivingHistorySection .
 
-# Insurance History Section Questions
-:PreviousInsurerQuestion :inSection :InsuranceHistorySection .
-:YearsNoClaimsQuestion :inSection :InsuranceHistorySection .
-:NoClaimsDiscountProofQuestion :inSection :InsuranceHistorySection .
-:ClaimsHistoryQuestion :inSection :InsuranceHistorySection .
-:ClaimDetailsQuestion :inSection :InsuranceHistorySection .
-:ClaimAmountQuestion :inSection :InsuranceHistorySection .
-:ClaimDateQuestion :inSection :InsuranceHistorySection .
-:ClaimTypeQuestion :inSection :InsuranceHistorySection .
-:InsuranceCancelledQuestion :inSection :InsuranceHistorySection .
-:CancellationReasonQuestion :inSection :InsuranceHistorySection .
-:InsuranceRefusedQuestion :inSection :InsuranceHistorySection .
-:SpecialTermsImposedQuestion :inSection :InsuranceHistorySection .
+:AccidentsQuestion :inSection :DrivingHistorySection .
 
-# Policy Options Section Questions
-:CoverLevelQuestion :inSection :PolicyOptionsSection .
-:VoluntaryExcessQuestion :inSection :PolicyOptionsSection .
-:CompulsoryExcessQuestion :inSection :PolicyOptionsSection .
-:NCDProtectionQuestion :inSection :PolicyOptionsSection .
-:BreakdownCoverQuestion :inSection :PolicyOptionsSection .
-:LegalExpensesCoverQuestion :inSection :PolicyOptionsSection .
-:EuropeanCoverQuestion :inSection :PolicyOptionsSection .
-:WindscreenCoverQuestion :inSection :PolicyOptionsSection .
-:CourtesyCarQuestion :inSection :PolicyOptionsSection .
-:PersonalAccidentCoverQuestion :inSection :PolicyOptionsSection .
-:KeyCoverQuestion :inSection :PolicyOptionsSection .
-:PolicyStartDateQuestion :inSection :PolicyOptionsSection .
-:PolicyDurationQuestion :inSection :PolicyOptionsSection .
+:AdditionalDriverCountQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Number of Additional Drivers" ;
+    :inSection :AdditionalDriversSection ;
+    :order 31 ;
+    :questionId "q_additional_driver_count" ;
+    :questionText "How many additional drivers would you like to add?" ;
+    :required false ;
+    :slotName "additionalDriverCount" ;
+    mm:hasSelectOption :DriverCount1,
+        :DriverCount2,
+        :DriverCount3,
+        :DriverCount4 ;
+    mm:hasTTSPrompt :AdditionalDriverCountTTS .
 
-# Usage and Mileage Section Questions
-:AnnualMileageQuestion :inSection :UsageMileageSection .
-:ClassOfUseQuestion :inSection :UsageMileageSection .
-:CommutingDistanceQuestion :inSection :UsageMileageSection .
-:CommutingFrequencyQuestion :inSection :UsageMileageSection .
+:AddressLine1Question :inSection :AddressSection .
+
+:AddressLine2Question :inSection :AddressSection .
+
+:AnnualMileageQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Annual Mileage" ;
+    :inSection :UsageMileageSection ;
+    :order 24 ;
+    :questionId "q_annual_mileage" ;
+    :questionText "What is your estimated annual mileage?" ;
+    :required true ;
+    :slotName "annualMileage" ;
+    mm:hasTTSPrompt :AnnualMileageTTS .
+
+:BansOrDisqualificationsQuestion :inSection :DrivingHistorySection .
+
 :BusinessMileageQuestion :inSection :UsageMileageSection .
-:BusinessUseTypeQuestion :inSection :UsageMileageSection .
-:MainDriverQuestion :inSection :UsageMileageSection .
-:VehicleKeptOvernightQuestion :inSection :UsageMileageSection .
 
-# Additional Drivers Section Questions
-:HasAdditionalDriversQuestion :inSection :AdditionalDriversSection .
-:AdditionalDriverCountQuestion :inSection :AdditionalDriversSection .
-:Driver2FirstNameQuestion :inSection :AdditionalDriversSection .
-:Driver2LastNameQuestion :inSection :AdditionalDriversSection .
-:Driver2DOBQuestion :inSection :AdditionalDriversSection .
-:Driver2GenderQuestion :inSection :AdditionalDriversSection .
-:Driver2RelationshipQuestion :inSection :AdditionalDriversSection .
-:Driver2LicenceTypeQuestion :inSection :AdditionalDriversSection .
-:Driver2YearsHoldingLicenceQuestion :inSection :AdditionalDriversSection .
-:Driver2ConvictionsQuestion :inSection :AdditionalDriversSection .
+:BusinessUseTypeQuestion :inSection :UsageMileageSection .
+
+:CancellationReasonQuestion :inSection :InsuranceHistorySection .
+
+:CityQuestion :inSection :AddressSection .
+
+:CityTownQuestion a mm:MultimodalQuestion ;
+    rdfs:label "City or Town" ;
+    :inSection :AddressSection ;
+    :order 15 ;
+    :questionId "q_city_town" ;
+    :questionText "What is your city or town?" ;
+    :required true ;
+    :slotName "city_town" ;
+    mm:hasTTSPrompt :CityTownTTS .
+
+:ClaimAmountQuestion :inSection :InsuranceHistorySection .
+
+:ClaimDateQuestion :inSection :InsuranceHistorySection .
+
+:ClaimDetailsQuestion :inSection :InsuranceHistorySection .
+
+:ClaimTypeQuestion :inSection :InsuranceHistorySection .
+
+:ClaimsHistoryQuestion :inSection :InsuranceHistorySection .
+
+:ClaimsLast5YearsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Claims History" ;
+    :inSection :InsuranceHistorySection ;
+    :order 49 ;
+    :questionId "q_claims_last_5_years" ;
+    :questionText "Have you made any insurance claims in the last 5 years?" ;
+    :required true ;
+    :slotName "claimsLast5Years" ;
+    mm:hasSelectOption :ClaimsNo,
+        :ClaimsYes ;
+    mm:hasTTSPrompt :ClaimsLast5YearsTTS .
+
+:ClassOfUseQuestion :inSection :UsageMileageSection .
+
+:CommuteDistanceQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Commute Distance" ;
+    :inSection :UsageMileageSection ;
+    :order 26 ;
+    :questionId "q_commute_distance" ;
+    :questionText "How many miles is your one-way commute to work?" ;
+    :required false ;
+    :slotName "commuteDistance" ;
+    mm:hasTTSPrompt :CommuteDistanceTTS .
+
+:CommutingDistanceQuestion :inSection :UsageMileageSection .
+
+:CommutingFrequencyQuestion :inSection :UsageMileageSection .
+
+:CompulsoryExcessQuestion :inSection :PolicyOptionsSection .
+
+:ConfirmationRephraseTemplate a qc:RephraseRequest ;
+    rdfs:label "Confirmation Request" ;
+    :appliesTo :AllQuestions ;
+    :rephraseTTSConfig "standard" ;
+    :suggestedRephrase "Just to confirm, did you say {transcribed_value}? Please say yes or no." .
+
+:ConvictionDetailsQuestion :inSection :DrivingHistorySection .
+
+:ConvictionsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driving Convictions" ;
+    :inSection :InsuranceHistorySection ;
+    :order 51 ;
+    :questionId "q_convictions" ;
+    :questionText "Do you have any driving convictions or penalty points on your licence?" ;
+    :required true ;
+    :slotName "hasConvictions" ;
+    mm:hasSelectOption :ConvictionsNo,
+        :ConvictionsYes ;
+    mm:hasTTSPrompt :ConvictionsTTS .
+
+:CountyQuestion :inSection :AddressSection .
+
+:CoverLevelQuestion :inSection :PolicyOptionsSection .
+
+:DateOfBirthQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Date of Birth" ;
+    :hasInputMode vocab:DateInputMode ;
+    :inSection :DriversSection ;
+    :order 12 ;
+    :questionId "q_date_of_birth" ;
+    :questionText "What is your date of birth?" ;
+    :required true ;
+    :slotName "dateOfBirth" ;
+    mm:hasTTSPrompt :DateOfBirthTTS .
+
+:DaysPerWeekQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Days Driven Per Week" ;
+    :inSection :UsageMileageSection ;
+    :order 28 ;
+    :questionId "q_days_per_week" ;
+    :questionText "How many days per week do you typically drive this vehicle?" ;
+    :required true ;
+    :slotName "daysPerWeek" ;
+    mm:hasSelectOption :Days1,
+        :Days2,
+        :Days3,
+        :Days4,
+        :Days5,
+        :Days6,
+        :Days7 ;
+    mm:hasTTSPrompt :DaysPerWeekTTS .
+
+:DefaultTTL a :TTLConfiguration ;
+    :answerTTL "PT10M"^^xsd:duration ;
+    :recordingTTL "P7D"^^xsd:duration ;
+    :sessionTTL "PT30M"^^xsd:duration .
+
 :Driver2ClaimsQuestion :inSection :AdditionalDriversSection .
+
+:Driver2ConvictionsQuestion :inSection :AdditionalDriversSection .
+
+:Driver2DOBQuestion :inSection :AdditionalDriversSection .
+
+:Driver2FirstNameQuestion :inSection :AdditionalDriversSection .
+
+:Driver2GenderQuestion :inSection :AdditionalDriversSection .
+
+:Driver2LastNameQuestion :inSection :AdditionalDriversSection .
+
+:Driver2LicenceTypeQuestion :inSection :AdditionalDriversSection .
+
 :Driver2OccupationQuestion :inSection :AdditionalDriversSection .
 
-# Occupation Details Section Questions
-:OccupationQuestion :inSection :OccupationSection .
-:JobTitleQuestion :inSection :OccupationSection .
-:EmployerNameQuestion :inSection :OccupationSection .
+:Driver2RelationshipQuestion :inSection :AdditionalDriversSection .
+
+:Driver2YearsHoldingLicenceQuestion :inSection :AdditionalDriversSection .
+
+:DrivingConvictionsQuestion :inSection :DrivingHistorySection .
+
+:DrivingLicenseConfidenceThreshold a conf:ConfidenceThreshold ;
+    rdfs:label "Driving License Threshold" ;
+    conf:action "record_and_review" ;
+    conf:thresholdValue 0.95 ;
+    :appliesTo :DrivingLicenseQuestion ;
+    qc:reviewPriority 1 ;
+    rdfs:comment "Very high threshold - critical PII field" .
+
+:EmployerNameQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Employer Name" ;
+    :inSection :OccupationSection ;
+    :order 43 ;
+    :questionId "q_employer_name" ;
+    :questionText "What is the name of your employer or company?" ;
+    :required false ;
+    :slotName "employerName" ;
+    :spellingRequired true ;
+    mm:hasTTSPrompt :EmployerNameTTS .
+
+:EmploymentStatusQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Employment Status" ;
+    :inSection :OccupationSection ;
+    :order 40 ;
+    :questionId "q_employment_status" ;
+    :questionText "What is your current employment status?" ;
+    :required true ;
+    :slotName "employmentStatus" ;
+    mm:hasSelectOption :EmpFullTime,
+        :EmpHomemaker,
+        :EmpPartTime,
+        :EmpRetired,
+        :EmpSelfEmployed,
+        :EmpStudent,
+        :EmpUnemployed ;
+    mm:hasTTSPrompt :EmploymentStatusTTS .
+
+:EndorsementsQuestion :inSection :DrivingHistorySection .
+
+:EuropeanCoverQuestion :inSection :PolicyOptionsSection .
+
+:ExampleRephraseTemplate a qc:RephraseRequest ;
+    rdfs:label "Example-Based Request" ;
+    :appliesTo :PostcodeQuestion ;
+    :rephraseTTSConfig "standard" ;
+    :suggestedRephrase "Could you provide your postcode? For example, SW1A 1AA." .
+
+:FinanceCompanyQuestion :inSection :VehicleDetailsSection .
+
+:GenderQuestion :inSection :PersonalInfoSection .
+
+:HasAdditionalDriversQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Additional Drivers" ;
+    :inSection :AdditionalDriversSection ;
+    :order 30 ;
+    :questionId "q_has_additional_drivers" ;
+    :questionText "Will anyone else be driving this vehicle?" ;
+    :required true ;
+    :slotName "hasAdditionalDrivers" ;
+    mm:hasSelectOption :HasAdditionalDriversNo,
+        :HasAdditionalDriversYes ;
+    mm:hasTTSPrompt :HasAdditionalDriversTTS .
+
+:HasAlarmQuestion :inSection :VehicleDetailsSection .
+
+:HasAnotherVehicleQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Other Vehicles" ;
+    :inSection :UsageMileageSection ;
+    :order 27 ;
+    :questionId "q_has_another_vehicle" ;
+    :questionText "Do you have access to another vehicle?" ;
+    :required true ;
+    :slotName "hasAnotherVehicle" ;
+    mm:hasSelectOption :AnotherVehicleNo,
+        :AnotherVehicleYes ;
+    mm:hasTTSPrompt :HasAnotherVehicleTTS .
+
+:HasImmobiliserQuestion :inSection :VehicleDetailsSection .
+
+:HasTrackerQuestion :inSection :VehicleDetailsSection .
+
 :IndustryQuestion :inSection :OccupationSection .
-:EmploymentStatusQuestion :inSection :OccupationSection .
-:SecondOccupationQuestion :inSection :OccupationSection .
+
+:IndustrySectorQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Industry Sector" ;
+    :inSection :OccupationSection ;
+    :order 42 ;
+    :questionId "q_industry_sector" ;
+    :questionText "Which industry or business sector do you work in?" ;
+    :required false ;
+    :slotName "industrySector" ;
+    mm:hasSelectOption :IndConstruction,
+        :IndEducation,
+        :IndFinance,
+        :IndHealthcare,
+        :IndHospitality,
+        :IndIT,
+        :IndManufacturing,
+        :IndOther,
+        :IndPublicSector,
+        :IndRetail ;
+    mm:hasTTSPrompt :IndustrySectorTTS .
+
+:InsuranceCancelledQuestion :inSection :InsuranceHistorySection .
+
+:InsuranceQuoteDialog a :Dialog ;
+    rdfs:label "Car Insurance Quote Dialog" ;
+    :hasNode :ClaimsSection,
+        :DriversSection,
+        :ExtrasSection,
+        :MarketingSection,
+        :PaymentSection,
+        :PolicySection,
+        :SummaryNode,
+        :VehicleSection,
+        :WelcomeNode ;
+    :hasQuestion :AddressQuestion,
+        :BreakdownCoverQuestion,
+        :CarModelQuestion,
+        :CarYearQuestion,
+        :CourtesyCarQuestion,
+        :CoverTypeQuestion,
+        :DOBQuestion,
+        :EmailMarketingQuestion,
+        :EmailQuestion,
+        :FirstNameQuestion,
+        :HasClaimsQuestion,
+        :HasConvictionsQuestion,
+        :HasModificationsQuestion,
+        :LastNameQuestion,
+        :LegalExpensesQuestion,
+        :LicenceNumberQuestion,
+        :LicenceTypeQuestion,
+        :MileageQuestion,
+        :NCDYearsQuestion,
+        :OvernightLocationQuestion,
+        :PaymentFrequencyQuestion,
+        :PaymentMethodQuestion,
+        :PhoneQuestion,
+        :PostMarketingQuestion,
+        :PostcodeQuestion,
+        :ProtectNCDQuestion,
+        :SMSMarketingQuestion,
+        :StartDateQuestion,
+        :VehicleMakeQuestion,
+        :VehicleRegQuestion,
+        :VehicleValueQuestion,
+        :VoluntaryExcessQuestion,
+        :YearsHeldQuestion ;
+    dcterms:description "Comprehensive dialog for collecting car insurance quote information" .
+
+:InsuranceRefusedQuestion :inSection :InsuranceHistorySection .
+
+:IsVehicleFinancedQuestion :inSection :VehicleDetailsSection .
+
+:JobTitleQuestion :inSection :OccupationSection .
+
+:KeyCoverQuestion :inSection :PolicyOptionsSection .
+
+:LegalExpensesCoverQuestion :inSection :PolicyOptionsSection .
+
+:LicenceCancelledQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Licence Cancelled/Refused" ;
+    :inSection :InsuranceHistorySection ;
+    :order 53 ;
+    :questionId "q_licence_cancelled" ;
+    :questionText "Has your licence ever been cancelled, suspended, or refused?" ;
+    :required true ;
+    :slotName "licenceCancelled" ;
+    mm:hasSelectOption :LicenceCancelledNo,
+        :LicenceCancelledYes ;
+    mm:hasTTSPrompt :LicenceCancelledTTS .
+
+:LicenceRestrictionsQuestion :inSection :DrivingHistorySection .
+
+:MOTExpiryDateQuestion :inSection :VehicleDetailsSection .
+
+:MOTStatusQuestion :inSection :VehicleDetailsSection .
+
+:MainDriverQuestion :inSection :UsageMileageSection .
+
+:MaritalStatusQuestion :inSection :PersonalInfoSection .
+
+:MedicalConditionDetailsQuestion :inSection :DrivingHistorySection .
+
+:MedicalConditionsQuestion :inSection :DrivingHistorySection .
+
+:MobileNumberQuestion :inSection :ContactDetailsSection .
+
+:ModificationDetailsQuestion :inSection :VehicleDetailsSection .
+
+:NCDProtectionQuestion :inSection :PolicyOptionsSection .
+
+:NameConfidenceThreshold a conf:ConfidenceThreshold ;
+    rdfs:label "Name Question Threshold" ;
+    conf:action "record_and_review" ;
+    conf:thresholdValue 0.75 ;
+    :appliesTo :NameQuestion ;
+    qc:reviewPriority 2 .
+
+:NameQuestionMM a mm:MultimodalQuestion ;
+    rdfs:label "Full Name Question (Multimodal)" ;
+    :hasInputMode vocab:NameInputMode ;
+    :inSection :PersonalDetailsSection ;
+    :nextNode :VehicleRegQuestionMM ;
+    :order 2 ;
+    :questionId "q_name_mm" ;
+    :questionText "What is your full name?" ;
+    :required true ;
+    :slotName "customer_name" ;
+    :spellingRequired true ;
+    mm:hasFAQ :NameFAQ1,
+        :NameFAQ2 ;
+    mm:hasTTSPrompt :NameTTS .
+
+:NoClaimsDiscountProofQuestion :inSection :InsuranceHistorySection .
+
+:NumberOfClaimsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Number of Claims" ;
+    :inSection :InsuranceHistorySection ;
+    :order 50 ;
+    :questionId "q_number_of_claims" ;
+    :questionText "How many claims have you made in the last 5 years?" ;
+    :required false ;
+    :slotName "numberOfClaims" ;
+    mm:hasSelectOption :Claims1,
+        :Claims2,
+        :Claims3,
+        :Claims4Plus ;
+    mm:hasTTSPrompt :NumberOfClaimsTTS .
+
+:OccupationQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Occupation" ;
+    :inSection :OccupationSection ;
+    :order 41 ;
+    :questionId "q_occupation" ;
+    :questionText "What is your occupation or job title?" ;
+    :required false ;
+    :slotName "occupation" ;
+    mm:hasSelectOption :OccAccountant,
+        :OccAdmin,
+        :OccDriver,
+        :OccEngineer,
+        :OccManager,
+        :OccNurse,
+        :OccOther,
+        :OccRetail,
+        :OccTeacher,
+        :OccTrade ;
+    mm:hasTTSPrompt :OccupationTTS .
+
+:ParkingLocationQuestion :inSection :VehicleDetailsSection .
+
+:PassingDateQuestion :inSection :DrivingHistorySection .
+
+:PenaltyPointsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Penalty Points" ;
+    :inSection :DrivingHistorySection ;
+    :order 52 ;
+    :questionId "q_penalty_points" ;
+    :questionText "How many penalty points do you currently have on your licence?" ;
+    :required false ;
+    :slotName "penaltyPoints" ;
+    mm:hasSelectOption :Points12Plus,
+        :Points3,
+        :Points6,
+        :Points9 ;
+    mm:hasTTSPrompt :PenaltyPointsTTS .
+
+:PersonalAccidentCoverQuestion :inSection :PolicyOptionsSection .
+
+:PhoneConfidenceThreshold a conf:ConfidenceThreshold ;
+    rdfs:label "Phone Number Threshold" ;
+    conf:action "record_and_review" ;
+    conf:thresholdValue 0.80 ;
+    :appliesTo :PhoneQuestion ;
+    qc:reviewPriority 3 .
+
+:PhoneticRephraseTemplate a qc:RephraseRequest ;
+    rdfs:label "Phonetic Spelling Request" ;
+    :appliesTo :DrivingLicenseQuestion,
+        :VehicleRegQuestion ;
+    :rephraseTTSConfig "slow_clear_phonetic" ;
+    :suggestedRephrase "Could you spell out your {field_name} using the phonetic alphabet? For example, A as in Alpha, B as in Bravo." .
+
+:PolicyDurationQuestion :inSection :PolicyOptionsSection .
+
+:PolicyStartDateQuestion :inSection :PolicyOptionsSection .
+
+:PostcodeConfidenceThreshold a conf:ConfidenceThreshold ;
+    rdfs:label "Postcode Question Threshold" ;
+    conf:action "record_and_review" ;
+    conf:thresholdValue 0.85 ;
+    :appliesTo :PostcodeQuestion ;
+    qc:reviewPriority 2 .
+
+:PreferredContactMethodQuestion :inSection :ContactDetailsSection .
+
+:PreviousAddressLine1Question :inSection :AddressSection .
+
+:PreviousAddressLine2Question :inSection :AddressSection .
+
+:PreviousInsuranceQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Previous Insurance" ;
+    :inSection :InsuranceHistorySection ;
+    :order 45 ;
+    :questionId "q_previous_insurance" ;
+    :questionText "Have you had continuous car insurance for the last 12 months?" ;
+    :required true ;
+    :slotName "previousInsurance" ;
+    mm:hasSelectOption :PrevInsNo,
+        :PrevInsYes ;
+    mm:hasTTSPrompt :PreviousInsuranceTTS .
+
+:PreviousInsurerQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Previous Insurer" ;
+    :inSection :InsuranceHistorySection ;
+    :order 46 ;
+    :questionId "q_previous_insurer" ;
+    :questionText "Who was your previous car insurance provider?" ;
+    :required false ;
+    :slotName "previousInsurer" ;
+    :spellingRequired true ;
+    mm:hasTTSPrompt :PreviousInsurerTTS .
+
+:PreviousPostcodeQuestion :inSection :AddressSection .
+
+:PrimaryUseQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Primary Use" ;
+    :inSection :UsageMileageSection ;
+    :order 25 ;
+    :questionId "q_primary_use" ;
+    :questionText "What is the primary use of your vehicle?" ;
+    :required true ;
+    :slotName "primaryUse" ;
+    mm:hasSelectOption :PrimaryUseBusiness,
+        :PrimaryUseCommuting,
+        :PrimaryUseSchoolRun,
+        :PrimaryUseSocialDomestic ;
+    mm:hasTTSPrompt :PrimaryUseTTS .
+
+:RegistrationNumberQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Registration Number" ;
+    :hasInputMode vocab:VehicleRegInputMode ;
+    :inSection :VehicleSection ;
+    :order 20 ;
+    :questionId "q_registration_number" ;
+    :questionText "What is your vehicle registration number?" ;
+    :required true ;
+    :slotName "registrationNumber" ;
+    :spellingRequired true ;
+    mm:hasTTSPrompt :RegistrationNumberTTS .
+
+:ResidentialStatusQuestion :inSection :PersonalInfoSection .
+
 :SecondJobTitleQuestion :inSection :OccupationSection .
 
-# ============================================================================
-# Additional Properties for Section Management
-# ============================================================================
+:SecondOccupationQuestion :inSection :OccupationSection .
+
+:SecurityDevicesQuestion :inSection :VehicleDetailsSection .
+
+:SlowRepeatTemplate a qc:RephraseRequest ;
+    rdfs:label "Slow Repeat Request" ;
+    :appliesTo :AddressQuestion,
+        :NameQuestion ;
+    :rephraseTTSConfig "slow_clear" ;
+    :suggestedRephrase "I didn't quite catch that. Could you please repeat your {field_name} slowly and clearly?" .
+
+:SpecialTermsImposedQuestion :inSection :InsuranceHistorySection .
+
+:SpeechConfidenceRule a conf:ConfidenceScoringRule ;
+    rdfs:label "Speech Recognition Confidence Rule" ;
+    qc:factor "audio_quality",
+        "grammar_match",
+        "recognition_confidence",
+        "vocabulary_match" ;
+    qc:weight 0.2,
+        0.4 ;
+    rdfs:comment "Multi-factor confidence calculation for speech input" .
+
+:TextConfidenceRule a conf:ConfidenceScoringRule ;
+    rdfs:label "Text Input Confidence Rule" ;
+    qc:factor "grammar_match",
+        "validation_pass",
+        "vocabulary_match" ;
+    qc:weight 0.3,
+        0.4 ;
+    rdfs:comment "Confidence calculation for typed text input" .
+
+:TimeAtAddressQuestion :inSection :PersonalInfoSection .
+
+:TitleQuestion :inSection :PersonalInfoSection .
+
+:VehicleKeeperQuestion :inSection :VehicleDetailsSection .
+
+:VehicleKeptOvernightQuestion :inSection :UsageMileageSection .
+
+:VehicleModelQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Model" ;
+    :inSection :VehicleDetailsSection ;
+    :order 22 ;
+    :questionId "q_vehicle_model" ;
+    :questionText "What model is your vehicle?" ;
+    :required true ;
+    :slotName "vehicleModel" ;
+    mm:hasTTSPrompt :VehicleModelTTS .
+
+:VehicleOwnerQuestion :inSection :VehicleDetailsSection .
+
+:VehiclePurchaseDateQuestion :inSection :VehicleDetailsSection .
+
+:VehicleRegConfidenceThreshold a conf:ConfidenceThreshold ;
+    rdfs:label "Vehicle Registration Threshold" ;
+    conf:action "record_and_review" ;
+    conf:thresholdValue 0.90 ;
+    :appliesTo :VehicleRegQuestion ;
+    qc:reviewPriority 1 ;
+    rdfs:comment "High threshold due to critical nature of vehicle registration" .
+
+:VehicleRegistrationQuestion :inSection :VehicleDetailsSection .
+
+:VehicleTypeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Type Selection" ;
+    :questionId "q_vehicle_type" ;
+    :questionText "What type of vehicle do you have?" ;
+    :required true ;
+    :slotName "vehicle_type" ;
+    mm:hasOption :VehicleTypeCar,
+        :VehicleTypeMotorbike,
+        :VehicleTypeVan ;
+    mm:hasTTSPrompt :VehicleTypeTTS .
+
+:VehicleYearQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Year" ;
+    :inSection :VehicleDetailsSection ;
+    :order 23 ;
+    :questionId "q_vehicle_year" ;
+    :questionText "What year was your vehicle manufactured?" ;
+    :required true ;
+    :slotName "vehicleYear" ;
+    mm:hasTTSPrompt :VehicleYearTTS .
+
+:WeekendDrivingQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Weekend Driving" ;
+    :inSection :UsageMileageSection ;
+    :order 29 ;
+    :questionId "q_weekend_driving" ;
+    :questionText "Do you regularly use your vehicle on weekends?" ;
+    :required true ;
+    :slotName "weekendDriving" ;
+    mm:hasSelectOption :WeekendDrivingNo,
+        :WeekendDrivingYes ;
+    mm:hasTTSPrompt :WeekendDrivingTTS .
+
+:WindscreenCoverQuestion :inSection :PolicyOptionsSection .
+
+:YearsHoldingLicenceQuestion :inSection :DrivingHistorySection .
+
+:YearsInOccupationQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Years in Occupation" ;
+    :inSection :OccupationSection ;
+    :order 44 ;
+    :questionId "q_years_in_occupation" ;
+    :questionText "How many years have you been in your current occupation?" ;
+    :required false ;
+    :slotName "yearsInOccupation" ;
+    mm:hasTTSPrompt :YearsInOccupationTTS .
+
+:YearsNoClaimsQuestion :inSection :InsuranceHistorySection .
+
+:answerTTL a owl:DatatypeProperty ;
+    rdfs:label "answer TTL" ;
+    rdfs:comment "Time-to-live for cached answers" ;
+    rdfs:domain :TTLConfiguration ;
+    rdfs:range xsd:duration .
+
+:branchCondition a owl:DatatypeProperty ;
+    rdfs:label "branch condition" ;
+    rdfs:domain :ConditionalBranch ;
+    rdfs:range xsd:string .
+
+:conditionField a owl:DatatypeProperty ;
+    rdfs:label "condition field" ;
+    rdfs:comment "Which field/answer to check (defaults to parent question)" ;
+    rdfs:domain :SubQuestion ;
+    rdfs:range xsd:string .
+
+:conditionOperator a owl:DatatypeProperty ;
+    rdfs:label "condition operator" ;
+    rdfs:comment "Operator for condition: equals, not_equals, contains, greater_than, less_than, in, not_in" ;
+    rdfs:domain :SubQuestion ;
+    rdfs:range xsd:string .
+
+:conditionValue a owl:DatatypeProperty ;
+    rdfs:label "condition value" ;
+    rdfs:comment "Value to compare against for the condition" ;
+    rdfs:domain :SubQuestion ;
+    rdfs:range xsd:string .
+
+:dataType a owl:DatatypeProperty ;
+    rdfs:label "data type" ;
+    rdfs:comment "Data type: 'alphanumeric', 'numeric', 'alpha', 'date', 'email', 'phone'" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:string .
+
+:extractableFrom a owl:ObjectProperty ;
+    rdfs:label "extractable from" ;
+    rdfs:comment "Documents that can provide this field's data" ;
+    rdfs:domain :Question ;
+    rdfs:range doc:Document .
+
+:hasInputMode a owl:ObjectProperty ;
+    rdfs:label "has input mode" ;
+    rdfs:comment "Links to SKOS InputMode configuration for this question" ;
+    rdfs:domain :Question .
+
+:hasNode a owl:ObjectProperty ;
+    rdfs:label "has node" ;
+    rdfs:domain :Dialog ;
+    rdfs:range :DialogNode .
+
+:hasQuestion a owl:ObjectProperty ;
+    rdfs:label "has question" ;
+    rdfs:domain :Dialog ;
+    rdfs:range :Question .
+
+:hasSection a owl:ObjectProperty ;
+    rdfs:label "has section" ;
+    rdfs:comment "The sections contained in this dialog" ;
+    rdfs:domain :Dialog ;
+    rdfs:range :Section ;
+    owl:inverseOf :inSection .
+
+:hasSubQuestion a owl:ObjectProperty ;
+    rdfs:label "has sub question" ;
+    rdfs:comment "Links a question to its conditional sub-questions" ;
+    rdfs:domain :Question ;
+    rdfs:range :SubQuestion .
+
+:inputType a owl:DatatypeProperty ;
+    rdfs:label "input type" ;
+    rdfs:comment "Type of input: 'spelling' (letter-by-letter) or 'word' (spoken as word)" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:string .
+
+:mandatoryField a owl:DatatypeProperty ;
+    rdfs:label "mandatory field" ;
+    rdfs:comment "Whether this field is legally or business-mandated (vs just required for quote)" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:boolean .
+
+:nextNode a owl:ObjectProperty ;
+    rdfs:label "next node" ;
+    rdfs:domain :DialogNode ;
+    rdfs:range :DialogNode .
+
+:order a owl:DatatypeProperty ;
+    rdfs:label "order" ;
+    rdfs:comment "The sequence order of this node" ;
+    rdfs:domain :DialogNode ;
+    rdfs:range xsd:integer .
+
+:parentQuestion a owl:ObjectProperty ;
+    rdfs:label "parent question" ;
+    rdfs:comment "The parent question this sub-question belongs to" ;
+    rdfs:domain :SubQuestion ;
+    rdfs:range :Question .
+
+:questionId a owl:DatatypeProperty ;
+    rdfs:label "question ID" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:string .
+
+:questionText a owl:DatatypeProperty ;
+    rdfs:label "question text" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:string .
+
+:recordingTTL a owl:DatatypeProperty ;
+    rdfs:label "recording TTL" ;
+    rdfs:comment "Time-to-live for audio recordings" ;
+    rdfs:domain :TTLConfiguration ;
+    rdfs:range xsd:duration .
+
+:required a owl:DatatypeProperty ;
+    rdfs:label "required" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:boolean .
+
+:sectionAlias a owl:DatatypeProperty ;
+    rdfs:label "section alias" ;
+    rdfs:comment "Alternative names for the section for voice recognition and natural language understanding" ;
+    rdfs:domain :Section ;
+    rdfs:range xsd:string .
+
+:sectionDescription a owl:DatatypeProperty ;
+    rdfs:label "section description" ;
+    rdfs:comment "Description of what the section collects" ;
+    rdfs:domain :Section ;
+    rdfs:range xsd:string .
+
+:sectionIcon a owl:DatatypeProperty ;
+    rdfs:label "section icon" ;
+    rdfs:comment "Icon/emoji representing the section" ;
+    rdfs:domain :Section ;
+    rdfs:range xsd:string .
 
 :sectionId a owl:DatatypeProperty ;
     rdfs:label "section ID" ;
+    rdfs:comment "Unique identifier for the section" ;
     rdfs:domain :Section ;
-    rdfs:range xsd:string ;
-    rdfs:comment "Unique identifier for the section" .
+    rdfs:range xsd:string .
 
 :sectionOrder a owl:DatatypeProperty ;
     rdfs:label "section order" ;
+    rdfs:comment "The display order of sections in the dialog flow" ;
     rdfs:domain :Section ;
-    rdfs:range xsd:integer ;
-    rdfs:comment "The display order of sections in the dialog flow" .
+    rdfs:range xsd:integer .
 
-# Inverse property for easier querying
-:hasSection a owl:ObjectProperty ;
-    rdfs:label "has section" ;
-    rdfs:domain :Dialog ;
-    rdfs:range :Section ;
-    owl:inverseOf :inSection ;
-    rdfs:comment "The sections contained in this dialog" .
+:sectionPhonetic a owl:DatatypeProperty ;
+    rdfs:label "section phonetic" ;
+    rdfs:comment "Phonetic spellings of section name for ASR" ;
+    rdfs:domain :Section ;
+    rdfs:range xsd:string .
+
+:sectionTitle a owl:DatatypeProperty ;
+    rdfs:label "section title" ;
+    rdfs:comment "The display title of the section" ;
+    rdfs:domain :Section ;
+    rdfs:range xsd:string .
+
+:sessionTTL a owl:DatatypeProperty ;
+    rdfs:label "session TTL" ;
+    rdfs:comment "Time-to-live for dialog sessions" ;
+    rdfs:domain :TTLConfiguration ;
+    rdfs:range xsd:duration .
+
+:showIf a owl:DatatypeProperty ;
+    rdfs:label "show if" ;
+    rdfs:comment "Condition for showing this sub-question (e.g., 'answer == yes')" ;
+    rdfs:domain :SubQuestion ;
+    rdfs:range xsd:string .
+
+:spellingRequired a owl:DatatypeProperty ;
+    rdfs:label "spelling required" ;
+    rdfs:comment "Indicates if this field requires precise spelling using phonetic alphabet" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:boolean .
+
+<http://diggi.io/ontology/documents> a owl:Ontology ;
+    rdfs:label "Document Types Ontology" ;
+    rdfs:comment "Ontology for identity and verification documents" ;
+    owl:versionInfo "1.0" .
+
+doc:AddressExtraction a skos:Concept ;
+    doc:canExtractField "address" ;
+    doc:extractionConfidence 0.90 ;
+    rdfs:comment "Address can be extracted from Driving Licence, Utility Bills, Bank Statements with 90% confidence" ;
+    skos:inScheme doc:FieldDocumentMappings ;
+    skos:prefLabel "Address Extraction"@en .
+
+doc:BankStatement a doc:AddressDocument ;
+    rdfs:label "Bank Statement" ;
+    doc:requiresOCR true ;
+    rdfs:comment "Bank statement or letter - verifies name and address" ;
+    skos:altLabel "Bank Letter"@en ;
+    skos:prefLabel "Bank Statement"@en .
+
+doc:BirthCertificate a doc:IdentityDocument ;
+    rdfs:label "Birth Certificate" ;
+    doc:requiresOCR true ;
+    rdfs:comment "Birth Certificate - contains full name, date of birth, place of birth" ;
+    skos:altLabel "Certificate of Birth"@en ;
+    skos:prefLabel "Birth Certificate"@en .
+
+doc:CouncilTaxBill a doc:AddressDocument ;
+    rdfs:label "Council Tax Bill" ;
+    doc:requiresOCR true ;
+    rdfs:comment "Council tax bill - verifies address" ;
+    skos:altLabel "Council Tax Statement"@en ;
+    skos:prefLabel "Council Tax Bill"@en .
+
+doc:DateOfBirthExtraction a skos:Concept ;
+    doc:canExtractField "dateOfBirth" ;
+    doc:extractionConfidence 0.98 ;
+    rdfs:comment "Date of birth can be extracted from Passport, Driving Licence, Birth Certificate with 98% confidence" ;
+    skos:inScheme doc:FieldDocumentMappings ;
+    skos:prefLabel "Date of Birth Extraction"@en .
+
+doc:DrivingLicence a doc:IdentityDocument ;
+    rdfs:label "Driving Licence" ;
+    doc:requiresOCR false ;
+    rdfs:comment "UK Photocard Driving Licence - contains name, DOB, address, licence number, photo" ;
+    skos:altLabel "Driver's License"@en,
+        "Photocard Licence"@en,
+        "UK Driving Licence"@en ;
+    skos:prefLabel "Driving Licence"@en .
+
+doc:DrivingLicenceNumberExtraction a skos:Concept ;
+    doc:canExtractField "licenceNumber" ;
+    doc:extractionConfidence 0.95 ;
+    rdfs:comment "Licence number can be extracted from Driving Licence with 95% confidence" ;
+    skos:inScheme doc:FieldDocumentMappings ;
+    skos:prefLabel "Driving Licence Number Extraction"@en .
+
+doc:FirstNameExtraction a skos:Concept ;
+    doc:canExtractField "firstName" ;
+    doc:extractionConfidence 0.95 ;
+    rdfs:comment "First name can be extracted from Passport, Driving Licence, ID Card with 95% confidence" ;
+    skos:inScheme doc:FieldDocumentMappings ;
+    skos:prefLabel "First Name Extraction"@en .
+
+doc:InsuranceCertificate a doc:VehicleDocument ;
+    rdfs:label "Insurance Certificate" ;
+    doc:requiresOCR true ;
+    rdfs:comment "Previous insurance certificate - contains policy details, vehicle info" ;
+    skos:altLabel "Certificate of Insurance"@en,
+        "Cover Note"@en ;
+    skos:prefLabel "Insurance Certificate"@en .
+
+doc:LastNameExtraction a skos:Concept ;
+    doc:canExtractField "lastName" ;
+    doc:extractionConfidence 0.95 ;
+    rdfs:comment "Last name can be extracted from Passport, Driving Licence, ID Card with 95% confidence" ;
+    skos:inScheme doc:FieldDocumentMappings ;
+    skos:prefLabel "Last Name Extraction"@en .
+
+doc:MOTCertificate a doc:VehicleDocument ;
+    rdfs:label "MOT Certificate" ;
+    doc:requiresOCR false ;
+    rdfs:comment "MOT Certificate - contains vehicle registration, test date, mileage" ;
+    skos:altLabel "MOT Test Certificate"@en ;
+    skos:prefLabel "MOT Certificate"@en .
+
+doc:NationalIDCard a doc:IdentityDocument ;
+    rdfs:label "National ID Card" ;
+    doc:requiresOCR false ;
+    rdfs:comment "National Identity Card" ;
+    skos:altLabel "ID Card"@en,
+        "Identity Card"@en ;
+    skos:prefLabel "National ID Card"@en .
+
+doc:Passport a doc:IdentityDocument ;
+    rdfs:label "Passport" ;
+    doc:requiresOCR false ;
+    rdfs:comment "UK Passport - contains full name, date of birth, photo, passport number" ;
+    skos:altLabel "Biometric Passport"@en,
+        "UK Passport"@en ;
+    skos:prefLabel "Passport"@en .
+
+doc:UtilityBill a doc:AddressDocument ;
+    rdfs:label "Utility Bill" ;
+    doc:requiresOCR true ;
+    rdfs:comment "Recent utility bill (gas, electric, water) - verifies address" ;
+    skos:altLabel "Electric Bill"@en,
+        "Gas Bill"@en,
+        "Water Bill"@en ;
+    skos:prefLabel "Utility Bill"@en .
+
+doc:V5CLogBook a doc:VehicleDocument ;
+    rdfs:label "V5C Log Book" ;
+    doc:requiresOCR false ;
+    rdfs:comment "V5C Log Book - contains vehicle registration, make, model, owner details" ;
+    skos:altLabel "Log Book"@en,
+        "Registration Document"@en,
+        "V5C"@en ;
+    skos:prefLabel "V5C Vehicle Registration Certificate"@en .
+
+doc:VehicleRegExtraction a skos:Concept ;
+    doc:canExtractField "vehicleRegistration" ;
+    doc:extractionConfidence 0.98 ;
+    rdfs:comment "Vehicle registration can be extracted from V5C, Insurance Certificate, MOT Certificate with 98% confidence" ;
+    skos:inScheme doc:FieldDocumentMappings ;
+    skos:prefLabel "Vehicle Registration Extraction"@en .
+
+doc:canExtractField a owl:ObjectProperty ;
+    rdfs:label "can extract field" ;
+    rdfs:comment "Links a document to fields it can provide" ;
+    rdfs:domain doc:Document .
+
+doc:extractionConfidence a owl:DatatypeProperty ;
+    rdfs:label "extraction confidence" ;
+    rdfs:comment "Confidence level for automated extraction (0.0-1.0)" ;
+    rdfs:range xsd:float .
+
+doc:requiresOCR a owl:DatatypeProperty ;
+    rdfs:label "requires OCR" ;
+    rdfs:comment "Whether OCR is needed to extract data" ;
+    rdfs:domain doc:Document ;
+    rdfs:range xsd:boolean .
+
+mm:DiagramComponent a mm:VisualComponent ;
+    mm:componentType "diagram" ;
+    rdfs:comment "Interactive diagram or illustration" .
+
+mm:ExampleComponent a mm:VisualComponent ;
+    mm:componentType "example" ;
+    rdfs:comment "Example display with formatting" .
+
+mm:ImageComponent a mm:VisualComponent ;
+    mm:componentType "image" ;
+    rdfs:comment "Static image display" .
+
+mm:PhoneticVoice a mm:TTSPrompt ;
+    rdfs:label "Phonetic Spelling Voice" ;
+    mm:ttsConfig "slow_clear_phonetic" ;
+    mm:ttsPitch 1.1 ;
+    mm:ttsRate 0.7 ;
+    mm:ttsVoice "en-GB-Neural2-C" .
+
+mm:SlowClearVoice a mm:TTSPrompt ;
+    rdfs:label "Slow Clear Voice" ;
+    mm:ttsConfig "slow_clear" ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 0.85 ;
+    mm:ttsVoice "en-GB-Neural2-B" .
+
+mm:StandardVoice a mm:TTSPrompt ;
+    rdfs:label "Standard Voice" ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+mm:VideoComponent a mm:VisualComponent ;
+    mm:componentType "video" ;
+    rdfs:comment "Video player component" .
+
+mm:asrConfidenceThreshold a owl:DatatypeProperty ;
+    rdfs:label "ASR confidence threshold" ;
+    rdfs:comment "Minimum confidence score (0.0-1.0) for accepting ASR results" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:decimal .
+
+mm:asrGrammarPatterns a owl:DatatypeProperty ;
+    rdfs:label "ASR grammar patterns" ;
+    rdfs:comment "Speech recognition grammar patterns (JSGF, GRXML, ABNF, regex)" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:asrGrammarVariants a owl:DatatypeProperty ;
+    rdfs:label "ASR grammar variants" ;
+    rdfs:comment "Expected phrases for speech recognition, pipe-separated" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:asrHints a owl:DatatypeProperty ;
+    rdfs:label "ASR hints" ;
+    rdfs:comment "Voice input tips for users" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:asrLanguageModel a owl:DatatypeProperty ;
+    rdfs:label "ASR language model" ;
+    rdfs:comment "Custom language model for domain-specific recognition" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:asrLibrary a owl:DatatypeProperty ;
+    rdfs:label "ASR library" ;
+    rdfs:comment "Recommended ASR library: whisper, vosk-api, coqui-stt, google-cloud-speech" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:commonMistakes a owl:DatatypeProperty ;
+    rdfs:label "common mistakes" ;
+    rdfs:comment "Common errors users make when filling this field" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:componentData a owl:DatatypeProperty ;
+    rdfs:label "component data" ;
+    rdfs:domain mm:VisualComponent ;
+    rdfs:range xsd:string .
+
+mm:componentType a owl:DatatypeProperty ;
+    rdfs:label "component type" ;
+    rdfs:domain mm:VisualComponent ;
+    rdfs:range xsd:string .
+
+mm:defaultValue a owl:DatatypeProperty ;
+    rdfs:label "default value" ;
+    rdfs:comment "Default value for the field" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:faqAnswer a owl:DatatypeProperty ;
+    rdfs:label "FAQ answer" ;
+    rdfs:domain mm:FAQ ;
+    rdfs:range xsd:string .
+
+mm:faqCategory a owl:DatatypeProperty ;
+    rdfs:label "FAQ category" ;
+    rdfs:domain mm:FAQ ;
+    rdfs:range xsd:string .
+
+mm:faqQuestion a owl:DatatypeProperty ;
+    rdfs:label "FAQ question" ;
+    rdfs:domain mm:FAQ ;
+    rdfs:range xsd:string .
+
+mm:fieldDescription a owl:DatatypeProperty ;
+    rdfs:label "field description" ;
+    rdfs:comment "Explanation of what this field is for" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:fieldType a owl:DatatypeProperty ;
+    rdfs:label "field type" ;
+    rdfs:comment "Type of input field: text, textarea, number, email, phone, date, select, checkbox, radio" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:hasFAQ a owl:ObjectProperty ;
+    rdfs:label "has FAQ" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range mm:FAQ .
+
+mm:hasOption a owl:ObjectProperty ;
+    rdfs:label "has option" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range mm:SelectOption .
+
+mm:hasTTSPrompt a owl:ObjectProperty ;
+    rdfs:label "has TTS prompt" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range mm:TTSPrompt .
+
+mm:hasVisualComponent a owl:ObjectProperty ;
+    rdfs:label "has visual component" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range mm:VisualComponent .
+
+mm:helpText a owl:DatatypeProperty ;
+    rdfs:label "help text" ;
+    rdfs:comment "Help text displayed below the field" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:howToFill a owl:DatatypeProperty ;
+    rdfs:label "how to fill" ;
+    rdfs:comment "Instructions on how to fill this field correctly" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:imageUrl a owl:DatatypeProperty ;
+    rdfs:label "image URL" ;
+    rdfs:domain mm:VisualComponent ;
+    rdfs:range xsd:anyURI .
+
+mm:invalidExamples a owl:DatatypeProperty ;
+    rdfs:label "invalid examples" ;
+    rdfs:comment "JSON array of invalid example values with explanations" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:isAlpha a owl:DatatypeProperty ;
+    rdfs:label "is alpha" ;
+    rdfs:comment "Validates that value contains only letters" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean .
+
+mm:isAlphanumeric a owl:DatatypeProperty ;
+    rdfs:label "is alphanumeric" ;
+    rdfs:comment "Validates that value contains only letters and numbers" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean .
+
+mm:isDate a owl:DatatypeProperty ;
+    rdfs:label "is date" ;
+    rdfs:comment "Validates date format" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean .
+
+mm:isDigit a owl:DatatypeProperty ;
+    rdfs:label "is digit" ;
+    rdfs:comment "Validates that value contains only digits" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean .
+
+mm:isEmail a owl:DatatypeProperty ;
+    rdfs:label "is email" ;
+    rdfs:comment "Validates email address format" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean .
+
+mm:isNumber a owl:DatatypeProperty ;
+    rdfs:label "is number" ;
+    rdfs:comment "Validates that value is a valid number" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean .
+
+mm:isPhoneNumber a owl:DatatypeProperty ;
+    rdfs:label "is phone number" ;
+    rdfs:comment "Validates phone number format" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean .
+
+mm:isUKDrivingLicence a owl:DatatypeProperty ;
+    rdfs:label "is UK driving licence" ;
+    rdfs:comment "Validates UK driving licence number format" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean .
+
+mm:isUKPostcode a owl:DatatypeProperty ;
+    rdfs:label "is UK postcode" ;
+    rdfs:comment "Validates UK postcode format" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean .
+
+mm:isVehicleReg a owl:DatatypeProperty ;
+    rdfs:label "is vehicle registration" ;
+    rdfs:comment "Validates UK vehicle registration format" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean .
+
+mm:maxLength a owl:DatatypeProperty ;
+    rdfs:label "maximum length" ;
+    rdfs:comment "Maximum length for text inputs" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:integer .
+
+mm:maxValue a owl:DatatypeProperty ;
+    rdfs:label "maximum value" ;
+    rdfs:comment "Maximum value for number inputs" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:decimal .
+
+mm:minLength a owl:DatatypeProperty ;
+    rdfs:label "minimum length" ;
+    rdfs:comment "Minimum length for text inputs" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:integer .
+
+mm:minValue a owl:DatatypeProperty ;
+    rdfs:label "minimum value" ;
+    rdfs:comment "Minimum value for number inputs" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:decimal .
+
+mm:optionAlias a owl:DatatypeProperty ;
+    rdfs:label "option alias" ;
+    rdfs:comment "Semantic equivalent or alternate name for ASR matching" ;
+    rdfs:domain mm:SelectOption ;
+    rdfs:range xsd:string .
+
+mm:optionDescription a owl:DatatypeProperty ;
+    rdfs:label "option description" ;
+    rdfs:domain mm:SelectOption ;
+    rdfs:range xsd:string .
+
+mm:optionLabel a owl:DatatypeProperty ;
+    rdfs:label "option label" ;
+    rdfs:domain mm:SelectOption ;
+    rdfs:range xsd:string .
+
+mm:optionPhonetic a owl:DatatypeProperty ;
+    rdfs:label "option phonetic" ;
+    rdfs:comment "Phonetic spelling variant for speech recognition" ;
+    rdfs:domain mm:SelectOption ;
+    rdfs:range xsd:string .
+
+mm:optionValue a owl:DatatypeProperty ;
+    rdfs:label "option value" ;
+    rdfs:domain mm:SelectOption ;
+    rdfs:range xsd:string .
+
+mm:pattern a owl:DatatypeProperty ;
+    rdfs:label "pattern" ;
+    rdfs:comment "Regular expression pattern for validation" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:placeholder a owl:DatatypeProperty ;
+    rdfs:label "placeholder" ;
+    rdfs:comment "Placeholder text for the input field" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:transformationScript a owl:DatatypeProperty ;
+    rdfs:label "transformation script" ;
+    rdfs:comment "Custom JavaScript/Python function for complex transformations" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:transformationType a owl:DatatypeProperty ;
+    rdfs:label "transformation type" ;
+    rdfs:comment "Type of transformation: none, word-to-format, custom, lookup" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:ttsConfig a owl:DatatypeProperty ;
+    rdfs:label "TTS config" ;
+    rdfs:comment "Named configuration preset (e.g., slow_clear_phonetic)" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string .
+
+mm:ttsGrammarText a owl:DatatypeProperty ;
+    rdfs:label "TTS grammar text" ;
+    rdfs:comment "Text-to-speech prompt for this field" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:ttsLibrary a owl:DatatypeProperty ;
+    rdfs:label "TTS library" ;
+    rdfs:comment "Recommended TTS library: coqui-tts, pyttsx3, gtts, azure-speech" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:ttsPitch a owl:DatatypeProperty ;
+    rdfs:label "TTS pitch" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:decimal .
+
+mm:ttsRate a owl:DatatypeProperty ;
+    rdfs:label "TTS rate" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:decimal .
+
+mm:ttsSSML a owl:DatatypeProperty ;
+    rdfs:label "TTS SSML" ;
+    rdfs:comment "SSML markup for advanced TTS control" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:ttsText a owl:DatatypeProperty ;
+    rdfs:label "TTS text" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string .
+
+mm:ttsVariant1 a owl:DatatypeProperty ;
+    rdfs:label "TTS variant 1" ;
+    rdfs:comment "First rephrase variant of the TTS prompt" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string .
+
+mm:ttsVariant2 a owl:DatatypeProperty ;
+    rdfs:label "TTS variant 2" ;
+    rdfs:comment "Second rephrase variant of the TTS prompt" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string .
+
+mm:ttsVariant3 a owl:DatatypeProperty ;
+    rdfs:label "TTS variant 3" ;
+    rdfs:comment "Third rephrase variant of the TTS prompt" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string .
+
+mm:ttsVariant4 a owl:DatatypeProperty ;
+    rdfs:label "TTS variant 4" ;
+    rdfs:comment "Fourth rephrase variant of the TTS prompt" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string .
+
+mm:ttsVoice a owl:DatatypeProperty ;
+    rdfs:label "TTS voice" ;
+    rdfs:domain mm:TTSPrompt ;
+    rdfs:range xsd:string .
+
+mm:uiHint a owl:DatatypeProperty ;
+    rdfs:label "UI hint" ;
+    rdfs:comment "UI layout hint: full-width, half-width, inline, two-column" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:validExamples a owl:DatatypeProperty ;
+    rdfs:label "valid examples" ;
+    rdfs:comment "JSON array of valid example values" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:validationMessage a owl:DatatypeProperty ;
+    rdfs:label "validation message" ;
+    rdfs:comment "Custom error message for validation failures" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:validationRule a owl:DatatypeProperty ;
+    rdfs:label "validation rule" ;
+    rdfs:comment "Validation rules in Zod format or predicate names" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+mm:wordToFormatMapping a owl:DatatypeProperty ;
+    rdfs:label "word to format mapping" ;
+    rdfs:comment "JSON object mapping spoken words to formatted values" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string .
+
+qc:ClippingThreshold a qc:RecordingConfiguration ;
+    rdfs:label "Audio Clipping Threshold" ;
+    qc:clippingPercent 5.0 ;
+    rdfs:comment "Maximum percentage of clipped samples before flagging" .
+
+qc:DefaultRecordingConfig a qc:RecordingConfiguration ;
+    rdfs:label "Default Recording Configuration" ;
+    qc:bitDepth 16 ;
+    qc:channels 1 ;
+    qc:codec "pcm_s16le" ;
+    qc:format "wav" ;
+    qc:sampleRate 16000 .
+
+qc:HighQualityRecordingConfig a qc:RecordingConfiguration ;
+    rdfs:label "High Quality Recording Configuration" ;
+    qc:bitDepth 24 ;
+    qc:channels 1 ;
+    qc:codec "pcm_s24le" ;
+    qc:format "wav" ;
+    qc:sampleRate 48000 .
+
+qc:InReviewStatus a qc:ReviewStatus ;
+    rdfs:label "In Review" ;
+    qc:statusCode "IN_REVIEW" ;
+    qc:statusOrder 2 .
+
+qc:JuniorOperator a qc:OperatorRole ;
+    rdfs:label "Junior Operator" ;
+    qc:canTranscribe true ;
+    qc:canValidate false ;
+    qc:maxPriority 3 ;
+    qc:requiresSupervisorApproval true .
+
+qc:MinimumSNR a qc:RecordingConfiguration ;
+    rdfs:label "Minimum Signal-to-Noise Ratio" ;
+    qc:snrThreshold 20.0 ;
+    rdfs:comment "Minimum SNR in dB for acceptable audio quality" .
+
+qc:PendingStatus a qc:ReviewStatus ;
+    rdfs:label "Pending" ;
+    qc:statusCode "PENDING" ;
+    qc:statusOrder 1 .
+
+qc:RejectedStatus a qc:ReviewStatus ;
+    rdfs:label "Rejected" ;
+    qc:statusCode "REJECTED" ;
+    qc:statusOrder 5 .
+
+qc:RephraseRequestedStatus a qc:ReviewStatus ;
+    rdfs:label "Rephrase Requested" ;
+    qc:statusCode "REPHRASE_REQUESTED" ;
+    qc:statusOrder 6 .
+
+qc:ReviewQueue a owl:Class ;
+    rdfs:label "Review Queue" ;
+    rdfs:comment "Queue of items awaiting operator review" .
+
+qc:SeniorOperator a qc:OperatorRole ;
+    rdfs:label "Senior Operator" ;
+    qc:canTranscribe true ;
+    qc:canValidate true ;
+    qc:maxPriority 1 ;
+    qc:requiresSupervisorApproval false .
+
+qc:Supervisor a qc:OperatorRole ;
+    rdfs:label "Supervisor" ;
+    qc:canApprove true ;
+    qc:canTranscribe true ;
+    qc:canValidate true ;
+    qc:maxPriority 1 ;
+    qc:requiresSupervisorApproval false .
+
+qc:TranscribedStatus a qc:ReviewStatus ;
+    rdfs:label "Transcribed" ;
+    qc:statusCode "TRANSCRIBED" ;
+    qc:statusOrder 3 .
+
+qc:ValidatedStatus a qc:ReviewStatus ;
+    rdfs:label "Validated" ;
+    qc:statusCode "VALIDATED" ;
+    qc:statusOrder 4 .
+
+qc:allowedTransition a owl:ObjectProperty ;
+    rdfs:label "allowed transition" ;
+    rdfs:domain qc:WorkflowState ;
+    rdfs:range qc:WorkflowState .
+
+qc:operatorConfidence a owl:DatatypeProperty ;
+    rdfs:label "operator confidence" ;
+    rdfs:domain qc:OperatorReview ;
+    rdfs:range xsd:decimal .
+
+qc:operatorId a owl:DatatypeProperty ;
+    rdfs:label "operator ID" ;
+    rdfs:domain qc:OperatorReview ;
+    rdfs:range xsd:string .
+
+qc:recordingPath a owl:DatatypeProperty ;
+    rdfs:label "recording path" ;
+    rdfs:domain :Answer ;
+    rdfs:range xsd:string .
+
+qc:recordingRequired a owl:DatatypeProperty ;
+    rdfs:label "recording required" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:boolean .
+
+qc:reviewPriority a owl:DatatypeProperty ;
+    rdfs:label "review priority" ;
+    rdfs:domain qc:OperatorReview ;
+    rdfs:range xsd:integer .
+
+qc:reviewStatus a owl:DatatypeProperty ;
+    rdfs:label "review status" ;
+    rdfs:domain qc:OperatorReview ;
+    rdfs:range xsd:string .
+
+qc:transcribedText a owl:DatatypeProperty ;
+    rdfs:label "transcribed text" ;
+    rdfs:domain qc:OperatorReview ;
+    rdfs:range xsd:string .
+
+<http://diggi.io/ontology/validation> a sh:NodeShape ;
+    rdfs:label "Dialog Validation Rules" ;
+    rdfs:comment "SHACL validation shapes for dialog answers" .
+
+val:AgeMatchesDOB a sh:NodeShape ;
+    sh:sparql [ sh:message "Age must match date of birth" ;
+            sh:select """
+            PREFIX : <http://diggi.io/ontology/dialog#>
+            SELECT $this
+            WHERE {
+                $this :slotName "age" ;
+                      :answerNumeric ?age .
+                ?dob :slotName "date_of_birth" ;
+                     :answerDate ?dobDate .
+                FILTER(abs(?age - (year(now()) - year(?dobDate))) > 1)
+            }
+        """ ] ;
+    sh:targetClass :Answer .
+
+val:AgeShape a sh:NodeShape ;
+    sh:property [ sh:equals "age" ;
+            sh:path :slotName ],
+        [ sh:datatype xsd:integer ;
+            sh:maxInclusive 120 ;
+            sh:message "Age must be between 17 and 120" ;
+            sh:minInclusive 17 ;
+            sh:path :answerNumeric ] ;
+    sh:targetClass :Answer .
+
+val:CrossFieldValidation a sh:NodeShape ;
+    rdfs:label "Cross-field Validation" ;
+    rdfs:comment "Validations that depend on multiple fields" .
+
+val:CustomerNameShape a sh:NodeShape ;
+    sh:property [ sh:equals "customer_name" ;
+            sh:path :slotName ],
+        [ sh:maxLength 100 ;
+            sh:message "Name must contain only letters, spaces, hyphens, and apostrophes" ;
+            sh:minLength 2 ;
+            sh:path :answerText ;
+            sh:pattern "^[A-Za-z\\s'-]+$" ] ;
+    sh:targetClass :Answer .
+
+val:DateOfBirthShape a sh:NodeShape ;
+    sh:property [ sh:equals "date_of_birth" ;
+            sh:path :slotName ],
+        [ sh:message "Date of birth must be in YYYY-MM-DD format" ;
+            sh:path :answerText ;
+            sh:pattern "^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$" ],
+        [ sh:maxInclusive "2007-01-01"^^xsd:date ;
+            sh:message "Driver must be at least 17 years old" ;
+            sh:minInclusive "1900-01-01"^^xsd:date ;
+            sh:path :answerDate ] ;
+    sh:targetClass :Answer .
+
+val:DrivingLicenseShape a sh:NodeShape ;
+    sh:property [ sh:length 18 ;
+            sh:message "Invalid UK driving license format (e.g., SMITH123456AB1CD)" ;
+            sh:path :answerText ;
+            sh:pattern "^[A-Z]{5}[0-9]{6}[A-Z]{2}[0-9]{3}$" ],
+        [ sh:equals "driving_license" ;
+            sh:path :slotName ] ;
+    sh:targetClass :Answer .
+
+val:EmailShape a sh:NodeShape ;
+    sh:property [ sh:equals "email" ;
+            sh:path :slotName ],
+        [ sh:message "Invalid email address format" ;
+            sh:path :answerText ;
+            sh:pattern "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$" ] ;
+    sh:targetClass :Answer .
+
+val:NumericRangeShape a sh:NodeShape ;
+    sh:property [ sh:equals "numeric" ;
+            sh:path :answerType ],
+        [ sh:datatype xsd:decimal ;
+            sh:path :answerNumeric ] ;
+    sh:targetClass :Answer .
+
+val:PhoneNumberShape a sh:NodeShape ;
+    sh:property [ sh:message "Invalid UK phone number format" ;
+            sh:path :answerText ;
+            sh:pattern "^(\\+44\\s?7\\d{3}|\\(?07\\d{3}\\)?)\\s?\\d{3}\\s?\\d{3}$|^(\\+44\\s?|0)([1-9]\\d{1,4}|\\d{1}\\s?\\d{3})\\s?\\d{3,4}$" ],
+        [ sh:equals "phone_number" ;
+            sh:path :slotName ] ;
+    sh:targetClass :Answer .
+
+val:PostcodeMatchesRegion a sh:NodeShape ;
+    sh:sparql [ sh:message "Postcode must match selected region" ;
+            sh:select """
+            PREFIX : <http://diggi.io/ontology/dialog#>
+            SELECT $this
+            WHERE {
+                $this :slotName "postcode" ;
+                      :answerText ?postcode .
+                ?region :slotName "uk_region" ;
+                        :answerText ?regionName .
+                FILTER NOT EXISTS {
+                    # Region-specific postcode validation logic
+                    # Scotland: postcode starts with certain letters
+                    # etc.
+                }
+            }
+        """ ] ;
+    sh:targetClass :Answer .
+
+val:PostcodeShape a sh:NodeShape ;
+    sh:property [ sh:equals "postcode" ;
+            sh:path :slotName ],
+        [ sh:message "Invalid UK postcode format" ;
+            sh:path :answerText ;
+            sh:pattern "^[A-Z]{1,2}[0-9R][0-9A-Z]?\\s?[0-9][A-Z]{2}$" ] ;
+    sh:targetClass :Answer .
+
+val:VehicleRegistrationShape a sh:NodeShape ;
+    sh:property [ sh:equals "vehicle_registration" ;
+            sh:path :slotName ],
+        [ sh:maxLength 8 ;
+            sh:message "Invalid UK vehicle registration format" ;
+            sh:minLength 2 ;
+            sh:path :answerText ;
+            sh:pattern "^[A-Z]{2}[0-9]{2}\\s?[A-Z]{3}$|^[A-Z][0-9]{1,3}\\s?[A-Z]{3}$|^[A-Z]{3}\\s?[0-9]{1,3}[A-Z]$|^[0-9]{1,4}\\s?[A-Z]{1,2}$|^[0-9]{1,3}\\s?[A-Z]{1,3}$|^[A-Z]{1,2}\\s?[0-9]{1,4}$|^[A-Z]{1,3}\\s?[0-9]{1,3}$" ] ;
+    sh:targetClass :Answer .
+
+val:VehicleValueShape a sh:NodeShape ;
+    sh:property [ sh:equals "vehicle_value" ;
+            sh:path :slotName ],
+        [ sh:datatype xsd:decimal ;
+            sh:maxInclusive 500000 ;
+            sh:message "Vehicle value must be between £0 and £500,000" ;
+            sh:minInclusive 0 ;
+            sh:path :answerNumeric ] ;
+    sh:targetClass :Answer .
+
+val:YearsNoClaimsShape a sh:NodeShape ;
+    sh:property [ sh:equals "years_no_claims" ;
+            sh:path :slotName ],
+        [ sh:datatype xsd:integer ;
+            sh:maxInclusive 50 ;
+            sh:message "Years of no claims must be between 0 and 50" ;
+            sh:minInclusive 0 ;
+            sh:path :answerNumeric ] ;
+    sh:targetClass :Answer .
+
+val:YesNoShape a sh:NodeShape ;
+    sh:property [ sh:equals "yes_no" ;
+            sh:path :answerType ],
+        [ sh:in ( "yes" "no" "y" "n" "true" "false" ) ;
+            sh:message "Answer must be yes or no" ;
+            sh:path :answerText ] ;
+    sh:targetClass :Answer .
+
+val:checkDVLAFormat a val:ValidationFunction ;
+    rdfs:label "DVLA License Format Check" ;
+    val:functionCode """
+def dvla_check(license_number):
+    if len(license_number) != 18:
+        return False
+    # First 5 characters: surname (padded with 9s)
+    surname = license_number[0:5]
+    if not surname.isalpha():
+        return False
+    # Characters 6-7: decade of birth
+    decade = license_number[5:7]
+    if not decade.isdigit():
+        return False
+    # Character 8: month of birth (add 5 for female)
+    month = license_number[7]
+    if not month.isdigit() or int(month) > 5:
+        return False
+    # And so on...
+    return True
+""" ;
+    rdfs:comment "Validates UK driving license number format and checksum" .
+
+val:checkLuhnAlgorithm a val:ValidationFunction ;
+    rdfs:label "Luhn Algorithm Check" ;
+    val:functionCode """
+def luhn_check(number):
+    def digits_of(n):
+        return [int(d) for d in str(n)]
+    digits = digits_of(number)
+    odd_digits = digits[-1::-2]
+    even_digits = digits[-2::-2]
+    checksum = sum(odd_digits)
+    for d in even_digits:
+        checksum += sum(digits_of(d*2))
+    return checksum % 10 == 0
+""" ;
+    rdfs:comment "Validates numbers using Luhn algorithm (for credit cards, etc.)" .
+
+<http://diggi.io/ontology/vocabularies> a owl:Ontology ;
+    rdfs:label "Dialog Vocabularies" ;
+    rdfs:comment "SKOS controlled vocabularies for dialog system" ;
+    owl:versionInfo "1.0" .
+
+vocab:AddressInputMode a vocab:InputMode ;
+    rdfs:label "Address Input Mode" ;
+    vocab:supportsLetterByLetterSpelling false ;
+    rdfs:comment "Input configuration for address lines - free text input" .
+
+vocab:Alpha a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "A" ;
+    skos:prefLabel "Alpha"@en .
+
+vocab:Bravo a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "B" ;
+    skos:prefLabel "Bravo"@en .
+
+vocab:Car a skos:Concept ;
+    skos:altLabel "Automobile"@en,
+        "Motor Car"@en,
+        "Private Car"@en ;
+    skos:definition "Private passenger motor vehicle"@en ;
+    skos:inScheme vocab:VehicleTypes ;
+    skos:notation "CAR" ;
+    skos:prefLabel "Car"@en .
+
+vocab:Charlie a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "C" ;
+    skos:prefLabel "Charlie"@en .
+
+vocab:Comprehensive a skos:Concept ;
+    skos:altLabel "Comp"@en,
+        "Full Cover"@en,
+        "Fully Comprehensive"@en ;
+    skos:definition "Complete coverage including own vehicle damage"@en ;
+    skos:inScheme vocab:CoverTypes ;
+    skos:notation "COMP" ;
+    skos:prefLabel "Comprehensive"@en .
+
+vocab:Delta a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "D" ;
+    skos:prefLabel "Delta"@en .
+
+vocab:Echo a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "E" ;
+    skos:prefLabel "Echo"@en .
+
+vocab:England a skos:Concept ;
+    skos:definition "Country within the United Kingdom"@en ;
+    skos:inScheme vocab:UKRegions ;
+    skos:notation "ENG" ;
+    skos:prefLabel "England"@en .
+
+vocab:Foxtrot a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "F" ;
+    skos:prefLabel "Foxtrot"@en .
+
+vocab:Golf a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "G" ;
+    skos:prefLabel "Golf"@en .
+
+vocab:Hotel a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "H" ;
+    skos:prefLabel "Hotel"@en .
+
+vocab:India a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "I" ;
+    skos:prefLabel "India"@en .
+
+vocab:Juliet a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "J" ;
+    skos:prefLabel "Juliet"@en .
+
+vocab:Kilo a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "K" ;
+    skos:prefLabel "Kilo"@en .
+
+vocab:Lima a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "L" ;
+    skos:prefLabel "Lima"@en .
+
+vocab:Mike a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "M" ;
+    skos:prefLabel "Mike"@en .
+
+vocab:Motorbike a skos:Concept ;
+    skos:altLabel "Bike"@en,
+        "Moped"@en,
+        "Motorcycle"@en ;
+    skos:definition "Two-wheeled motor vehicle"@en ;
+    skos:inScheme vocab:VehicleTypes ;
+    skos:notation "BIKE" ;
+    skos:prefLabel "Motorbike"@en .
+
+vocab:No a skos:Concept ;
+    skos:altLabel "False"@en,
+        "Incorrect"@en,
+        "N"@en,
+        "Nah"@en,
+        "Negative"@en,
+        "Nope"@en ;
+    skos:definition "Negative or denial response"@en ;
+    skos:inScheme vocab:YesNoValues ;
+    skos:notation "NO" ;
+    skos:prefLabel "No"@en .
+
+vocab:NorthernIreland a skos:Concept ;
+    skos:altLabel "NI"@en,
+        "Ulster"@en ;
+    skos:definition "Country within the United Kingdom"@en ;
+    skos:inScheme vocab:UKRegions ;
+    skos:notation "NIR" ;
+    skos:prefLabel "Northern Ireland"@en .
+
+vocab:November a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "N" ;
+    skos:prefLabel "November"@en .
+
+vocab:Oscar a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "O" ;
+    skos:prefLabel "Oscar"@en .
+
+vocab:Papa a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "P" ;
+    skos:prefLabel "Papa"@en .
+
+vocab:Quebec a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "Q" ;
+    skos:prefLabel "Quebec"@en .
+
+vocab:Romeo a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "R" ;
+    skos:prefLabel "Romeo"@en .
+
+vocab:Scotland a skos:Concept ;
+    skos:definition "Country within the United Kingdom"@en ;
+    skos:inScheme vocab:UKRegions ;
+    skos:notation "SCT" ;
+    skos:prefLabel "Scotland"@en .
+
+vocab:Sierra a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "S" ;
+    skos:prefLabel "Sierra"@en .
+
+vocab:Tango a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "T" ;
+    skos:prefLabel "Tango"@en .
+
+vocab:Taxi a skos:Concept ;
+    skos:altLabel "Cab"@en,
+        "Hackney Carriage"@en,
+        "Private Hire"@en ;
+    skos:definition "Licensed passenger transport vehicle"@en ;
+    skos:inScheme vocab:VehicleTypes ;
+    skos:notation "TAXI" ;
+    skos:prefLabel "Taxi"@en .
+
+vocab:ThirdParty a skos:Concept ;
+    skos:altLabel "TP"@en,
+        "TPO"@en,
+        "Third Party Only"@en ;
+    skos:definition "Basic legal minimum coverage"@en ;
+    skos:inScheme vocab:CoverTypes ;
+    skos:notation "TP" ;
+    skos:prefLabel "Third Party"@en .
+
+vocab:ThirdPartyFireTheft a skos:Concept ;
+    skos:altLabel "TP Fire & Theft"@en,
+        "TPFT"@en ;
+    skos:definition "Third party cover plus fire and theft protection"@en ;
+    skos:inScheme vocab:CoverTypes ;
+    skos:notation "TPFT" ;
+    skos:prefLabel "Third Party, Fire and Theft"@en .
+
+vocab:Uniform a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "U" ;
+    skos:prefLabel "Uniform"@en .
+
+vocab:Van a skos:Concept ;
+    skos:altLabel "LCV"@en,
+        "Light Commercial Vehicle"@en ;
+    skos:definition "Light commercial vehicle or van"@en ;
+    skos:inScheme vocab:VehicleTypes ;
+    skos:notation "VAN" ;
+    skos:prefLabel "Van"@en .
+
+vocab:Victor a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "V" ;
+    skos:prefLabel "Victor"@en .
+
+vocab:Wales a skos:Concept ;
+    skos:altLabel "Cymru"@en ;
+    skos:definition "Country within the United Kingdom"@en ;
+    skos:inScheme vocab:UKRegions ;
+    skos:notation "WLS" ;
+    skos:prefLabel "Wales"@en .
+
+vocab:Whiskey a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "W" ;
+    skos:prefLabel "Whiskey"@en .
+
+vocab:Xray a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "X" ;
+    skos:prefLabel "X-ray"@en .
+
+vocab:Yankee a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "Y" ;
+    skos:prefLabel "Yankee"@en .
+
+vocab:Yes a skos:Concept ;
+    skos:altLabel "Affirmative"@en,
+        "Correct"@en,
+        "True"@en,
+        "Y"@en,
+        "Yeah"@en,
+        "Yep"@en,
+        "Yup"@en ;
+    skos:definition "Positive or affirmative response"@en ;
+    skos:inScheme vocab:YesNoValues ;
+    skos:notation "YES" ;
+    skos:prefLabel "Yes"@en .
+
+vocab:Zulu a skos:Concept ;
+    skos:inScheme vocab:PhoneticAlphabet ;
+    skos:notation "Z" ;
+    skos:prefLabel "Zulu"@en .
+
+vocab:spellingTerminationKeyword a owl:DatatypeProperty ;
+    rdfs:label "spelling termination keyword" ;
+    rdfs:comment "Keyword to signal completion of spelling (e.g., 'end', 'done', 'finish')" ;
+    rdfs:domain vocab:InputMode ;
+    rdfs:range xsd:string .
+
+vocab:spellingTimeout a owl:DatatypeProperty ;
+    rdfs:label "spelling timeout" ;
+    rdfs:comment "Timeout in seconds after last letter before auto-completing" ;
+    rdfs:domain vocab:InputMode ;
+    rdfs:range xsd:integer .
+
+vocab:supportsLetterByLetterSpelling a owl:DatatypeProperty ;
+    rdfs:label "supports letter-by-letter spelling" ;
+    rdfs:comment "Whether this field supports letter-by-letter spelling with space separation" ;
+    rdfs:domain vocab:InputMode ;
+    rdfs:range xsd:boolean .
+
+vocab:usesSpaceSeparator a owl:DatatypeProperty ;
+    rdfs:label "uses space separator" ;
+    rdfs:comment "Whether spaces separate letters in spelling mode" ;
+    rdfs:domain vocab:InputMode ;
+    rdfs:range xsd:boolean .
+
+:AddDriverClaimsNo a mm:SelectOption ;
+    mm:optionAlias "no, nope, negative" ;
+    mm:optionDescription "No claims" ;
+    mm:optionLabel "No" ;
+    mm:optionPhonetic "november oscar" ;
+    mm:optionValue "NO" .
+
+:AddDriverClaimsYes a mm:SelectOption ;
+    mm:optionAlias "yes, yeah, yep, affirmative" ;
+    mm:optionDescription "Yes, they have claims" ;
+    mm:optionLabel "Yes" ;
+    mm:optionPhonetic "yankee echo sierra" ;
+    mm:optionValue "YES" .
+
+:AddDriverConvictionsNo a mm:SelectOption ;
+    mm:optionAlias "no, nope, negative" ;
+    mm:optionDescription "No convictions" ;
+    mm:optionLabel "No" ;
+    mm:optionPhonetic "november oscar" ;
+    mm:optionValue "NO" .
+
+:AddDriverConvictionsYes a mm:SelectOption ;
+    mm:optionAlias "yes, yeah, yep, affirmative" ;
+    mm:optionDescription "Yes, they have convictions" ;
+    mm:optionLabel "Yes" ;
+    mm:optionPhonetic "yankee echo sierra" ;
+    mm:optionValue "YES" .
+
+:AddDriverLicenceEU a mm:SelectOption ;
+    mm:optionAlias "eu, european, europe" ;
+    mm:optionDescription "EU licence" ;
+    mm:optionLabel "European Union" ;
+    mm:optionPhonetic "echo uniform" ;
+    mm:optionValue "EU" .
+
+:AddDriverLicenceInternational a mm:SelectOption ;
+    mm:optionAlias "international, foreign, overseas" ;
+    mm:optionDescription "International licence" ;
+    mm:optionLabel "International" ;
+    mm:optionPhonetic "india november tango echo romeo november alpha tango india oscar november alpha lima" ;
+    mm:optionValue "INTERNATIONAL" .
+
+:AddDriverLicenceUKFull a mm:SelectOption ;
+    mm:optionAlias "uk full, full uk, full" ;
+    mm:optionDescription "Full UK driving licence" ;
+    mm:optionLabel "UK Full" ;
+    mm:optionPhonetic "uniform kilo foxtrot uniform lima lima" ;
+    mm:optionValue "UK_FULL" .
+
+:AddDriverLicenceUKProvisional a mm:SelectOption ;
+    mm:optionAlias "uk provisional, provisional" ;
+    mm:optionDescription "UK provisional licence" ;
+    mm:optionLabel "UK Provisional" ;
+    mm:optionPhonetic "uniform kilo papa romeo oscar victor india sierra india oscar november alpha lima" ;
+    mm:optionValue "UK_PROVISIONAL" .
+
+:AdditionalDriverClaimsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driver Has Claims" ;
+    :inSection :AdditionalDriversSection ;
+    :order 38 ;
+    :questionId "q_add_driver_claims" ;
+    :questionText "Has the additional driver made any insurance claims in the last 5 years?" ;
+    :required false ;
+    :slotName "additionalDriverClaims" ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasSelectOption :AddDriverClaimsNo,
+        :AddDriverClaimsYes ;
+    mm:hasTTSPrompt :AdditionalDriverClaimsTTS .
+
+:AdditionalDriverClaimsTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Has the additional driver made any insurance claims in the last 5 years?" ;
+    mm:ttsVariant1 "Has the additional driver made any insurance claims in the last 5 years?" ;
+    mm:ttsVariant2 "Any claims in the past 5 years?" ;
+    mm:ttsVariant3 "Have they made any claims?" ;
+    mm:ttsVariant4 "Claims history - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:AdditionalDriverConvictionsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driver Has Convictions" ;
+    :inSection :AdditionalDriversSection ;
+    :order 39 ;
+    :questionId "q_add_driver_convictions" ;
+    :questionText "Does the additional driver have any driving convictions or penalty points?" ;
+    :required false ;
+    :slotName "additionalDriverConvictions" ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasSelectOption :AddDriverConvictionsNo,
+        :AddDriverConvictionsYes ;
+    mm:hasTTSPrompt :AdditionalDriverConvictionsTTS .
+
+:AdditionalDriverConvictionsTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Does the additional driver have any driving convictions or penalty points on their licence?" ;
+    mm:ttsVariant1 "Does the additional driver have any driving convictions or penalty points on their licence?" ;
+    mm:ttsVariant2 "Any convictions or points?" ;
+    mm:ttsVariant3 "Do they have penalty points?" ;
+    mm:ttsVariant4 "Convictions - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:AdditionalDriverCountTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "How many additional drivers would you like to add to the policy?" ;
+    mm:ttsVariant1 "How many additional drivers would you like to add to the policy?" ;
+    mm:ttsVariant2 "How many other people will drive the vehicle?" ;
+    mm:ttsVariant3 "Number of additional drivers?" ;
+    mm:ttsVariant4 "Tell me how many additional drivers." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:AdditionalDriverDOBQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driver Date of Birth" ;
+    :inSection :AdditionalDriversSection ;
+    :order 34 ;
+    :questionId "q_add_driver_dob" ;
+    :questionText "What is the additional driver's date of birth?" ;
+    :required false ;
+    :slotName "additionalDriverDOB" ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasTTSPrompt :AdditionalDriverDOBTTS .
+
+:AdditionalDriverDOBTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What is the additional driver's date of birth? Please say it as day, month, year." ;
+    mm:ttsVariant1 "What is the additional driver's date of birth? Please say it as day, month, year." ;
+    mm:ttsVariant2 "When were they born? Day, month, year please." ;
+    mm:ttsVariant3 "Additional driver's date of birth?" ;
+    mm:ttsVariant4 "Tell me their birth date." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:AdditionalDriverFirstNameQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driver First Name" ;
+    :hasInputMode vocab:NameInputMode ;
+    :inSection :AdditionalDriversSection ;
+    :order 32 ;
+    :questionId "q_add_driver_first_name" ;
+    :questionText "What is the additional driver's first name?" ;
+    :required false ;
+    :slotName "additionalDriverFirstName" ;
+    :spellingRequired true ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasTTSPrompt :AdditionalDriverFirstNameTTS .
+
+:AdditionalDriverFirstNameTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What is the additional driver's first name?" ;
+    mm:ttsVariant1 "What is the additional driver's first name?" ;
+    mm:ttsVariant2 "Please tell me their first name." ;
+    mm:ttsVariant3 "First name of the additional driver?" ;
+    mm:ttsVariant4 "What's their first name?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:AdditionalDriverLastNameQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driver Last Name" ;
+    :hasInputMode vocab:NameInputMode ;
+    :inSection :AdditionalDriversSection ;
+    :order 33 ;
+    :questionId "q_add_driver_last_name" ;
+    :questionText "What is the additional driver's last name?" ;
+    :required false ;
+    :slotName "additionalDriverLastName" ;
+    :spellingRequired true ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasTTSPrompt :AdditionalDriverLastNameTTS .
+
+:AdditionalDriverLastNameTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What is the additional driver's last name or surname?" ;
+    mm:ttsVariant1 "What is the additional driver's last name or surname?" ;
+    mm:ttsVariant2 "Please tell me their surname." ;
+    mm:ttsVariant3 "Last name of the additional driver?" ;
+    mm:ttsVariant4 "What's their surname?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:AdditionalDriverLicenceTypeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driver Licence Type" ;
+    :inSection :AdditionalDriversSection ;
+    :order 36 ;
+    :questionId "q_add_driver_licence_type" ;
+    :questionText "What type of driving licence does the additional driver have?" ;
+    :required false ;
+    :slotName "additionalDriverLicenceType" ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasSelectOption :AddDriverLicenceEU,
+        :AddDriverLicenceInternational,
+        :AddDriverLicenceUKFull,
+        :AddDriverLicenceUKProvisional ;
+    mm:hasTTSPrompt :AdditionalDriverLicenceTypeTTS .
+
+:AdditionalDriverLicenceTypeTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What type of driving licence does the additional driver have? UK full, UK provisional, European Union, or International?" ;
+    mm:ttsVariant1 "What type of driving licence does the additional driver have? UK full, UK provisional, European Union, or International?" ;
+    mm:ttsVariant2 "What's their licence type?" ;
+    mm:ttsVariant3 "Type of driving licence?" ;
+    mm:ttsVariant4 "Tell me their licence type." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:AdditionalDriverRelationshipQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Relationship to Driver" ;
+    :inSection :AdditionalDriversSection ;
+    :order 35 ;
+    :questionId "q_add_driver_relationship" ;
+    :questionText "What is the additional driver's relationship to you?" ;
+    :required false ;
+    :slotName "additionalDriverRelationship" ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasSelectOption :RelChild,
+        :RelFriend,
+        :RelOther,
+        :RelParent,
+        :RelPartner,
+        :RelSibling,
+        :RelSpouse ;
+    mm:hasTTSPrompt :AdditionalDriverRelationshipTTS .
+
+:AdditionalDriverRelationshipTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What is the additional driver's relationship to you? For example, spouse, partner, child, parent, or friend." ;
+    mm:ttsVariant1 "What is the additional driver's relationship to you? For example, spouse, partner, child, parent, or friend." ;
+    mm:ttsVariant2 "How are they related to you?" ;
+    mm:ttsVariant3 "What's their relationship?" ;
+    mm:ttsVariant4 "Tell me their relationship to you." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:AdditionalDriverYearsHeldQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Years Licence Held" ;
+    :inSection :AdditionalDriversSection ;
+    :order 37 ;
+    :questionId "q_add_driver_years_held" ;
+    :questionText "How many years has the additional driver held their licence?" ;
+    :required false ;
+    :slotName "additionalDriverYearsHeld" ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasTTSPrompt :AdditionalDriverYearsHeldTTS .
+
+:AdditionalDriverYearsHeldTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "How many years has the additional driver held their licence?" ;
+    mm:ttsVariant1 "How many years has the additional driver held their licence?" ;
+    mm:ttsVariant2 "How long have they had their licence?" ;
+    mm:ttsVariant3 "Years of driving experience?" ;
+    mm:ttsVariant4 "How many years licensed?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:AddressTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Please tell me your street address, including house number and street name." ;
+    mm:ttsVariant1 "What's your street address? Include the house number and street name." ;
+    mm:ttsVariant2 "What's your home address? Include the house number and street." ;
+    mm:ttsVariant3 "Could you provide your full address, please?" ;
+    mm:ttsVariant4 "I need your complete address." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:AnnualMileageTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What is your estimated annual mileage? This is how many miles you drive per year." ;
+    mm:ttsVariant1 "What is your estimated annual mileage? This is how many miles you drive per year." ;
+    mm:ttsVariant2 "How many miles do you drive each year, approximately?" ;
+    mm:ttsVariant3 "What's your yearly mileage?" ;
+    mm:ttsVariant4 "Tell me your annual mileage." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:AnotherVehicleNo a mm:SelectOption ;
+    mm:optionAlias "no, nope, negative" ;
+    mm:optionDescription "No other vehicle available" ;
+    mm:optionLabel "No" ;
+    mm:optionPhonetic "november oscar" ;
+    mm:optionValue "NO" .
+
+:AnotherVehicleYes a mm:SelectOption ;
+    mm:optionAlias "yes, yeah, yep, affirmative" ;
+    mm:optionDescription "I have access to another vehicle" ;
+    mm:optionLabel "Yes" ;
+    mm:optionPhonetic "yankee echo sierra" ;
+    mm:optionValue "YES" .
+
+:BreakdownCoverQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Breakdown Cover" ;
+    :inSection :ExtrasSection ;
+    :order 60 ;
+    :questionId "q_breakdown_cover" ;
+    :questionText "Would you like breakdown cover?" ;
+    :required false ;
+    :slotName "breakdownCover" ;
+    mm:hasOption :BreakdownEuropean,
+        :BreakdownNational,
+        :BreakdownNone,
+        :BreakdownRoadside ;
+    mm:hasTTSPrompt :BreakdownCoverTTS .
+
+:BreakdownCoverTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Would you like breakdown cover? Options are none, roadside assistance, national coverage, or European coverage." ;
+    mm:ttsVariant1 "Would you like breakdown cover? Options are none, roadside assistance, national coverage, or European coverage." ;
+    mm:ttsVariant2 "Do you want breakdown cover?" ;
+    mm:ttsVariant3 "Choose your breakdown level." ;
+    mm:ttsVariant4 "Breakdown cover?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:BreakdownEuropean a mm:SelectOption ;
+    mm:optionDescription "European breakdown cover" ;
+    mm:optionLabel "European Coverage" ;
+    mm:optionValue "EUROPEAN" .
+
+:BreakdownNational a mm:SelectOption ;
+    mm:optionDescription "UK-wide breakdown cover" ;
+    mm:optionLabel "National Coverage" ;
+    mm:optionValue "NATIONAL" .
+
+:BreakdownNone a mm:SelectOption ;
+    mm:optionDescription "No breakdown assistance" ;
+    mm:optionLabel "No Breakdown Cover" ;
+    mm:optionValue "NONE" .
+
+:BreakdownRoadside a mm:SelectOption ;
+    mm:optionDescription "Roadside breakdown assistance" ;
+    mm:optionLabel "Roadside Assistance" ;
+    mm:optionValue "ROADSIDE" .
+
+:CarNo a mm:SelectOption ;
+    mm:optionDescription "No courtesy car" ;
+    mm:optionLabel "No" ;
+    mm:optionValue "NO" .
+
+:CarYes a mm:SelectOption ;
+    mm:optionDescription "Include courtesy car" ;
+    mm:optionLabel "Yes" ;
+    mm:optionValue "YES" .
+
+:CityTownTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What city or town do you live in?" ;
+    mm:ttsVariant1 "What city or town do you live in?" ;
+    mm:ttsVariant2 "Which city or town is your address in?" ;
+    mm:ttsVariant3 "Please tell me your city or town." ;
+    mm:ttsVariant4 "What's your city or town?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:ClaimAmountSubQuestion a :SubQuestion ;
+    rdfs:label "Claim Amount" ;
+    :conditionField "has_claims" ;
+    :conditionOperator "equals" ;
+    :conditionValue "yes" ;
+    :inputType "number" ;
+    :order 4 ;
+    :parentQuestion :HasClaimsQuestion ;
+    :questionId "claim_amount" ;
+    :questionText "What was the approximate claim amount?" ;
+    :required true ;
+    :showIf "has_claims == yes" ;
+    :slotName "claim_amount" ;
+    :validationMax "100000" ;
+    :validationMin "0" .
+
+:ClaimDateSubQuestion a :SubQuestion ;
+    rdfs:label "Claim Date" ;
+    :conditionField "has_claims" ;
+    :conditionOperator "equals" ;
+    :conditionValue "yes" ;
+    :inputType "date" ;
+    :order 3 ;
+    :parentQuestion :HasClaimsQuestion ;
+    :questionId "claim_date" ;
+    :questionText "When did the claim occur?" ;
+    :required true ;
+    :showIf "has_claims == yes" ;
+    :slotName "claim_date" .
+
+:ClaimDescriptionSubQuestion a :SubQuestion ;
+    rdfs:label "Claim Description" ;
+    :conditionField "has_claims" ;
+    :conditionOperator "equals" ;
+    :conditionValue "yes" ;
+    :inputType "textarea" ;
+    :order 5 ;
+    :parentQuestion :HasClaimsQuestion ;
+    :questionId "claim_description" ;
+    :questionText "Please provide a brief description of the claim" ;
+    :required false ;
+    :showIf "has_claims == yes" ;
+    :slotName "claim_description" ;
+    :validationMaxLength "500" .
+
+:ClaimTypeAccident a :SelectOption ;
+    rdfs:label "Accident" ;
+    :forQuestion :ClaimTypeSubQuestion ;
+    :optionAlias "Accident Damage",
+        "Collision",
+        "Crash" ;
+    :optionLabel "Accident" ;
+    :optionValue "accident" .
+
+:ClaimTypeOther a :SelectOption ;
+    rdfs:label "Other" ;
+    :forQuestion :ClaimTypeSubQuestion ;
+    :optionLabel "Other" ;
+    :optionValue "other" .
+
+:ClaimTypeTheft a :SelectOption ;
+    rdfs:label "Theft" ;
+    :forQuestion :ClaimTypeSubQuestion ;
+    :optionAlias "Car Theft",
+        "Stolen",
+        "Theft of Vehicle" ;
+    :optionLabel "Theft" ;
+    :optionValue "theft" .
+
+:ClaimTypeVandalism a :SelectOption ;
+    rdfs:label "Vandalism" ;
+    :forQuestion :ClaimTypeSubQuestion ;
+    :optionAlias "Criminal Damage",
+        "Damage",
+        "Malicious Damage" ;
+    :optionLabel "Vandalism" ;
+    :optionValue "vandalism" .
+
+:ClaimTypeWindscreen a :SelectOption ;
+    rdfs:label "Windscreen" ;
+    :forQuestion :ClaimTypeSubQuestion ;
+    :optionAlias "Glass",
+        "Window",
+        "Windscreen Damage",
+        "Windshield" ;
+    :optionLabel "Windscreen" ;
+    :optionValue "windscreen" .
+
+:Claims1 a mm:SelectOption ;
+    mm:optionAlias "one, 1" ;
+    mm:optionDescription "One claim" ;
+    mm:optionLabel "1 claim" ;
+    mm:optionPhonetic "oscar november echo" ;
+    mm:optionValue "1" .
+
+:Claims2 a mm:SelectOption ;
+    mm:optionAlias "two, 2" ;
+    mm:optionDescription "Two claims" ;
+    mm:optionLabel "2 claims" ;
+    mm:optionPhonetic "tango whiskey oscar" ;
+    mm:optionValue "2" .
+
+:Claims3 a mm:SelectOption ;
+    mm:optionAlias "three, 3" ;
+    mm:optionDescription "Three claims" ;
+    mm:optionLabel "3 claims" ;
+    mm:optionPhonetic "tango hotel romeo echo echo" ;
+    mm:optionValue "3" .
+
+:Claims4Plus a mm:SelectOption ;
+    mm:optionAlias "four, 4, more than three" ;
+    mm:optionDescription "Four or more claims" ;
+    mm:optionLabel "4+ claims" ;
+    mm:optionPhonetic "foxtrot oscar uniform romeo papa lima uniform sierra" ;
+    mm:optionValue "4+" .
+
+:ClaimsLast5YearsTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Have you made any motor insurance claims in the last 5 years? This includes claims where you were not at fault." ;
+    mm:ttsVariant1 "Have you made any motor insurance claims in the last 5 years? This includes claims where you were not at fault." ;
+    mm:ttsVariant2 "Any insurance claims in the past 5 years?" ;
+    mm:ttsVariant3 "Have you claimed on your insurance?" ;
+    mm:ttsVariant4 "Claims in last 5 years - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:CommuteDistanceTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "How many miles is your one-way commute to work?" ;
+    mm:ttsVariant1 "How many miles is your one-way commute to work?" ;
+    mm:ttsVariant2 "What's the distance to your workplace?" ;
+    mm:ttsVariant3 "How far do you travel to work?" ;
+    mm:ttsVariant4 "Tell me your commute distance in miles." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:ConditionalBranch a owl:Class ;
+    rdfs:label "Conditional Branch" ;
+    rdfs:comment "A branching point based on conditions" ;
+    rdfs:subClassOf :DialogNode .
+
+:ConvictionsTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Do you have any driving convictions or penalty points on your licence? This includes speeding tickets, driving bans, or other motoring offences." ;
+    mm:ttsVariant1 "Do you have any driving convictions or penalty points on your licence? This includes speeding tickets, driving bans, or other motoring offences." ;
+    mm:ttsVariant2 "Any penalty points or convictions?" ;
+    mm:ttsVariant3 "Do you have points on your licence?" ;
+    mm:ttsVariant4 "Convictions or points - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:CourtesyCarQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Courtesy Car" ;
+    :inSection :ExtrasSection ;
+    :order 62 ;
+    :questionId "q_courtesy_car" ;
+    :questionText "Would you like a courtesy car?" ;
+    :required false ;
+    :slotName "courtesyCar" ;
+    mm:hasOption :CarNo,
+        :CarYes ;
+    mm:hasTTSPrompt :CourtesyCarTTS .
+
+:CourtesyCarTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Would you like a courtesy car while yours is being repaired?" ;
+    mm:ttsVariant1 "Would you like a courtesy car while yours is being repaired?" ;
+    mm:ttsVariant2 "Do you want a replacement car during repairs?" ;
+    mm:ttsVariant3 "Add courtesy car?" ;
+    mm:ttsVariant4 "Courtesy car?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:CoverComprehensive a mm:SelectOption ;
+    mm:optionAlias "Comp",
+        "Fully Comp" ;
+    mm:optionDescription "Full comprehensive cover" ;
+    mm:optionLabel "Comprehensive" ;
+    mm:optionValue "COMPREHENSIVE" .
+
+:CoverTP a mm:SelectOption ;
+    mm:optionAlias "TP",
+        "Third Party Only" ;
+    mm:optionDescription "Third party only" ;
+    mm:optionLabel "Third Party" ;
+    mm:optionValue "TP" .
+
+:CoverTPFT a mm:SelectOption ;
+    mm:optionAlias "TPFT",
+        "Third Party Fire and Theft" ;
+    mm:optionDescription "Third party, fire and theft" ;
+    mm:optionLabel "Third Party Fire & Theft" ;
+    mm:optionValue "TPFT" .
+
+:CoverTypeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Cover Type" ;
+    :inSection :PolicySection ;
+    :order 30 ;
+    :questionId "q_cover_type" ;
+    :questionText "What type of cover would you like?" ;
+    :required true ;
+    :slotName "coverType" ;
+    mm:hasOption :CoverComprehensive,
+        :CoverTP,
+        :CoverTPFT ;
+    mm:hasTTSPrompt :CoverTypeTTS .
+
+:CoverTypeTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What type of cover would you like? Comprehensive, Third Party Fire and Theft, or Third Party only?" ;
+    mm:ttsVariant1 "What type of cover would you like? Comprehensive, Third Party Fire and Theft, or Third Party only?" ;
+    mm:ttsVariant2 "Which level of insurance cover do you need?" ;
+    mm:ttsVariant3 "What type of insurance coverage?" ;
+    mm:ttsVariant4 "Tell me your preferred cover type." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:DateOfBirthTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Please tell me your date of birth. For example, fifteenth of March nineteen ninety." ;
+    mm:ttsVariant1 "Please tell me your date of birth. For example, fifteenth of March nineteen ninety." ;
+    mm:ttsVariant2 "What's your date of birth? Please say it as day, month, year." ;
+    mm:ttsVariant3 "Could you provide your date of birth, please?" ;
+    mm:ttsVariant4 "When were you born?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:Days1 a mm:SelectOption ;
+    mm:optionAlias "one, 1" ;
+    mm:optionDescription "Drive once per week" ;
+    mm:optionLabel "1 day" ;
+    mm:optionPhonetic "oscar november echo" ;
+    mm:optionValue "1" .
+
+:Days2 a mm:SelectOption ;
+    mm:optionAlias "two, 2" ;
+    mm:optionDescription "Drive twice per week" ;
+    mm:optionLabel "2 days" ;
+    mm:optionPhonetic "tango whiskey oscar" ;
+    mm:optionValue "2" .
+
+:Days3 a mm:SelectOption ;
+    mm:optionAlias "three, 3" ;
+    mm:optionDescription "Drive three times per week" ;
+    mm:optionLabel "3 days" ;
+    mm:optionPhonetic "tango hotel romeo echo echo" ;
+    mm:optionValue "3" .
+
+:Days4 a mm:SelectOption ;
+    mm:optionAlias "four, 4" ;
+    mm:optionDescription "Drive four times per week" ;
+    mm:optionLabel "4 days" ;
+    mm:optionPhonetic "foxtrot oscar uniform romeo" ;
+    mm:optionValue "4" .
+
+:Days5 a mm:SelectOption ;
+    mm:optionAlias "five, 5" ;
+    mm:optionDescription "Drive five times per week" ;
+    mm:optionLabel "5 days" ;
+    mm:optionPhonetic "foxtrot india victor echo" ;
+    mm:optionValue "5" .
+
+:Days6 a mm:SelectOption ;
+    mm:optionAlias "six, 6" ;
+    mm:optionDescription "Drive six times per week" ;
+    mm:optionLabel "6 days" ;
+    mm:optionPhonetic "sierra india xray" ;
+    mm:optionValue "6" .
+
+:Days7 a mm:SelectOption ;
+    mm:optionAlias "seven, 7, daily, every day" ;
+    mm:optionDescription "Drive every day" ;
+    mm:optionLabel "7 days" ;
+    mm:optionPhonetic "sierra echo victor echo november" ;
+    mm:optionValue "7" .
+
+:DaysPerWeekTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "How many days per week do you typically drive this vehicle?" ;
+    mm:ttsVariant1 "How many days per week do you typically drive this vehicle?" ;
+    mm:ttsVariant2 "On how many days each week do you use your car?" ;
+    mm:ttsVariant3 "How often do you drive each week?" ;
+    mm:ttsVariant4 "Tell me the number of days you drive per week." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:DriverCount1 a mm:SelectOption ;
+    mm:optionAlias "one, 1" ;
+    mm:optionDescription "One additional driver" ;
+    mm:optionLabel "1 driver" ;
+    mm:optionPhonetic "oscar november echo" ;
+    mm:optionValue "1" .
+
+:DriverCount2 a mm:SelectOption ;
+    mm:optionAlias "two, 2" ;
+    mm:optionDescription "Two additional drivers" ;
+    mm:optionLabel "2 drivers" ;
+    mm:optionPhonetic "tango whiskey oscar" ;
+    mm:optionValue "2" .
+
+:DriverCount3 a mm:SelectOption ;
+    mm:optionAlias "three, 3" ;
+    mm:optionDescription "Three additional drivers" ;
+    mm:optionLabel "3 drivers" ;
+    mm:optionPhonetic "tango hotel romeo echo echo" ;
+    mm:optionValue "3" .
+
+:DriverCount4 a mm:SelectOption ;
+    mm:optionAlias "four, 4" ;
+    mm:optionDescription "Four additional drivers" ;
+    mm:optionLabel "4 drivers" ;
+    mm:optionPhonetic "foxtrot oscar uniform romeo" ;
+    mm:optionValue "4" .
+
+:EmailMarketingNo a mm:SelectOption ;
+    mm:optionDescription "No email marketing" ;
+    mm:optionLabel "No" ;
+    mm:optionValue "NO" .
+
+:EmailMarketingQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Email Marketing" ;
+    :inSection :MarketingSection ;
+    :order 70 ;
+    :questionId "q_email_marketing" ;
+    :questionText "May we contact you by email with offers and updates?" ;
+    :required false ;
+    :slotName "emailMarketing" ;
+    mm:hasOption :EmailMarketingNo,
+        :EmailMarketingYes ;
+    mm:hasTTSPrompt :EmailMarketingTTS .
+
+:EmailMarketingTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "May we contact you by email with offers and updates?" ;
+    mm:ttsVariant1 "May we contact you by email with offers and updates?" ;
+    mm:ttsVariant2 "Do you consent to email marketing?" ;
+    mm:ttsVariant3 "Receive emails from us?" ;
+    mm:ttsVariant4 "Email marketing consent?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:EmailMarketingYes a mm:SelectOption ;
+    mm:optionDescription "I consent to email marketing" ;
+    mm:optionLabel "Yes" ;
+    mm:optionValue "YES" .
+
+:EmailQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Email Address" ;
+    :hasInputMode vocab:EmailInputMode ;
+    :inSection :ContactDetailsSection ;
+    :order 13 ;
+    :questionId "q_email" ;
+    :questionText "What is your email address?" ;
+    :required true ;
+    :slotName "email" ;
+    :spellingRequired true ;
+    mm:hasTTSPrompt :EmailTTS .
+
+:EmailTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Please tell me your email address. You can spell it letter by letter." ;
+    mm:ttsVariant1 "Please tell me your email address. You can spell it letter by letter." ;
+    mm:ttsVariant2 "What's your email address? Please spell it out." ;
+    mm:ttsVariant3 "Could you provide your email, spelling it letter by letter?" ;
+    mm:ttsVariant4 "I need your email address. Please spell it." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:EmpFullTime a mm:SelectOption ;
+    mm:optionAlias "full time, employed, working" ;
+    mm:optionDescription "Working full-time" ;
+    mm:optionLabel "Employed full-time" ;
+    mm:optionPhonetic "foxtrot uniform lima lima tango india mike echo" ;
+    mm:optionValue "FULL_TIME" .
+
+:EmpHomemaker a mm:SelectOption ;
+    mm:optionAlias "homemaker, housewife, househusband, stay at home" ;
+    mm:optionDescription "Homemaker or housewife/househusband" ;
+    mm:optionLabel "Homemaker" ;
+    mm:optionPhonetic "hotel oscar mike echo mike alpha kilo echo romeo" ;
+    mm:optionValue "HOMEMAKER" .
+
+:EmpPartTime a mm:SelectOption ;
+    mm:optionAlias "part time" ;
+    mm:optionDescription "Working part-time" ;
+    mm:optionLabel "Employed part-time" ;
+    mm:optionPhonetic "papa alpha romeo tango tango india mike echo" ;
+    mm:optionValue "PART_TIME" .
+
+:EmpRetired a mm:SelectOption ;
+    mm:optionAlias "retired" ;
+    mm:optionDescription "Retired from work" ;
+    mm:optionLabel "Retired" ;
+    mm:optionPhonetic "romeo echo tango india romeo echo delta" ;
+    mm:optionValue "RETIRED" .
+
+:EmpSelfEmployed a mm:SelectOption ;
+    mm:optionAlias "self employed, freelance, contractor" ;
+    mm:optionDescription "Self-employed or freelance" ;
+    mm:optionLabel "Self-employed" ;
+    mm:optionPhonetic "sierra echo lima foxtrot echo mike papa lima oscar yankee echo delta" ;
+    mm:optionValue "SELF_EMPLOYED" .
+
+:EmpStudent a mm:SelectOption ;
+    mm:optionAlias "student, studying" ;
+    mm:optionDescription "Full-time student" ;
+    mm:optionLabel "Student" ;
+    mm:optionPhonetic "sierra tango uniform delta echo november tango" ;
+    mm:optionValue "STUDENT" .
+
+:EmpUnemployed a mm:SelectOption ;
+    mm:optionAlias "unemployed, not working" ;
+    mm:optionDescription "Currently unemployed" ;
+    mm:optionLabel "Unemployed" ;
+    mm:optionPhonetic "uniform november echo mike papa lima oscar yankee echo delta" ;
+    mm:optionValue "UNEMPLOYED" .
+
+:EmployerNameTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What is the name of your employer or company?" ;
+    mm:ttsVariant1 "What is the name of your employer or company?" ;
+    mm:ttsVariant2 "Who do you work for?" ;
+    mm:ttsVariant3 "Tell me your employer's name." ;
+    mm:ttsVariant4 "Company name?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:EmploymentStatusTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What is your current employment status? For example, employed full-time, part-time, self-employed, retired, student, or unemployed." ;
+    mm:ttsVariant1 "What is your current employment status? For example, employed full-time, part-time, self-employed, retired, student, or unemployed." ;
+    mm:ttsVariant2 "What's your employment status?" ;
+    mm:ttsVariant3 "Are you employed, self-employed, retired, or a student?" ;
+    mm:ttsVariant4 "Tell me your employment status." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:Excess0 a mm:SelectOption ;
+    mm:optionDescription "No voluntary excess" ;
+    mm:optionLabel "£0" ;
+    mm:optionValue "0" .
+
+:Excess100 a mm:SelectOption ;
+    mm:optionDescription "One hundred pounds excess" ;
+    mm:optionLabel "£100" ;
+    mm:optionValue "100" .
+
+:Excess1000 a mm:SelectOption ;
+    mm:optionDescription "One thousand pounds excess" ;
+    mm:optionLabel "£1000" ;
+    mm:optionValue "1000" .
+
+:Excess200 a mm:SelectOption ;
+    mm:optionDescription "Two hundred pounds excess" ;
+    mm:optionLabel "£200" ;
+    mm:optionValue "200" .
+
+:Excess300 a mm:SelectOption ;
+    mm:optionDescription "Three hundred pounds excess" ;
+    mm:optionLabel "£300" ;
+    mm:optionValue "300" .
+
+:Excess500 a mm:SelectOption ;
+    mm:optionDescription "Five hundred pounds excess" ;
+    mm:optionLabel "£500" ;
+    mm:optionValue "500" .
+
+:FirstNameQuestion a mm:MultimodalQuestion ;
+    rdfs:label "First Name" ;
+    :hasInputMode vocab:NameInputMode ;
+    :inSection :PersonalInfoSection ;
+    :order 10 ;
+    :questionId "q_first_name" ;
+    :questionText "What is your first name?" ;
+    :required true ;
+    :slotName "firstName" ;
+    :spellingRequired true ;
+    mm:fieldType "text" ;
+    mm:hasTTSPrompt :FirstNameTTS ;
+    mm:helpText "Please provide your legal first name as it appears on your ID" ;
+    mm:maxLength 50 ;
+    mm:minLength 2 ;
+    mm:placeholder "Enter your first name" ;
+    mm:uiHint "half-width" ;
+    mm:validationMessage "First name must contain only letters" ;
+    mm:validationRule "isAlpha" .
+
+:FirstNameTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Please tell me your first name." ;
+    mm:ttsVariant1 "Please tell me your first name." ;
+    mm:ttsVariant2 "Could you provide your first name, please?" ;
+    mm:ttsVariant3 "What's your first name?" ;
+    mm:ttsVariant4 "I need your first name." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:HasAdditionalDriversNo a mm:SelectOption ;
+    mm:optionAlias "no, nope, negative" ;
+    mm:optionDescription "No additional drivers" ;
+    mm:optionLabel "No" ;
+    mm:optionPhonetic "november oscar" ;
+    mm:optionValue "NO" .
+
+:HasAdditionalDriversTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Will anyone else be driving this vehicle? This could be a spouse, partner, or family member." ;
+    mm:ttsVariant1 "Will anyone else be driving this vehicle? This could be a spouse, partner, or family member." ;
+    mm:ttsVariant2 "Do you have any additional drivers?" ;
+    mm:ttsVariant3 "Will other people drive your car?" ;
+    mm:ttsVariant4 "Any other named drivers?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:HasAdditionalDriversYes a mm:SelectOption ;
+    mm:optionAlias "yes, yeah, yep, affirmative" ;
+    mm:optionDescription "Yes, I have additional drivers" ;
+    mm:optionLabel "Yes" ;
+    mm:optionPhonetic "yankee echo sierra" ;
+    mm:optionValue "YES" .
+
+:HasAnotherVehicleTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Do you have access to another vehicle? This could be a car owned by you or a household member." ;
+    mm:ttsVariant1 "Do you have access to another vehicle? This could be a car owned by you or a household member." ;
+    mm:ttsVariant2 "Do you have another car available to you?" ;
+    mm:ttsVariant3 "Can you access any other vehicles?" ;
+    mm:ttsVariant4 "Do you have a second vehicle?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:HasClaimsNo a :SelectOption ;
+    rdfs:label "No" ;
+    :forQuestion :HasClaimsQuestion ;
+    :optionLabel "No" ;
+    :optionValue "no" .
+
+:HasClaimsTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Have you had any claims or accidents in the last five years?" ;
+    mm:ttsVariant1 "Have you had any claims or accidents in the last five years?" ;
+    mm:ttsVariant2 "Any insurance claims or accidents in the past five years?" ;
+    mm:ttsVariant3 "Have you made any claims recently?" ;
+    mm:ttsVariant4 "Any claims or accidents?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:HasClaimsYes a :SelectOption ;
+    rdfs:label "Yes" ;
+    :forQuestion :HasClaimsQuestion ;
+    :optionLabel "Yes" ;
+    :optionValue "yes" .
+
+:HasConvictionsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driving Convictions" ;
+    :inSection :ClaimsSection ;
+    :order 41 ;
+    :questionId "q_has_convictions" ;
+    :questionText "Do you have any driving convictions?" ;
+    :required true ;
+    :slotName "hasConvictions" ;
+    mm:hasOption :ConvictionsNo,
+        :ConvictionsYes ;
+    mm:hasTTSPrompt :HasConvictionsTTS .
+
+:HasConvictionsTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Do you have any driving convictions or penalty points?" ;
+    mm:ttsVariant1 "Do you have any driving convictions or penalty points?" ;
+    mm:ttsVariant2 "Any motoring convictions?" ;
+    mm:ttsVariant3 "Do you have penalty points?" ;
+    mm:ttsVariant4 "Any convictions?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:HasModificationsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Modifications" ;
+    :inSection :VehicleDetailsSection ;
+    :order 27 ;
+    :questionId "q_has_modifications" ;
+    :questionText "Does your vehicle have any modifications?" ;
+    :required true ;
+    :slotName "hasModifications" ;
+    mm:hasOption :ModsNo,
+        :ModsYes ;
+    mm:hasTTSPrompt :HasModificationsTTS .
+
+:HasModificationsTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Does your vehicle have any modifications? This includes performance, cosmetic, or any other changes from standard." ;
+    mm:ttsVariant1 "Does your vehicle have any modifications? This includes performance, cosmetic, or any other changes from standard." ;
+    mm:ttsVariant2 "Has your car been modified in any way?" ;
+    mm:ttsVariant3 "Are there any modifications to your vehicle?" ;
+    mm:ttsVariant4 "Any mods on your car?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:IndConstruction a mm:SelectOption ;
+    mm:optionAlias "construction, building" ;
+    mm:optionDescription "Construction industry" ;
+    mm:optionLabel "Construction" ;
+    mm:optionPhonetic "charlie oscar november sierra tango romeo uniform charlie tango india oscar november" ;
+    mm:optionValue "CONSTRUCTION" .
+
+:IndEducation a mm:SelectOption ;
+    mm:optionAlias "education, school, university" ;
+    mm:optionDescription "Education sector" ;
+    mm:optionLabel "Education" ;
+    mm:optionPhonetic "echo delta uniform charlie alpha tango india oscar november" ;
+    mm:optionValue "EDUCATION" .
+
+:IndFinance a mm:SelectOption ;
+    mm:optionAlias "finance, banking, insurance" ;
+    mm:optionDescription "Financial services and banking" ;
+    mm:optionLabel "Finance / Banking" ;
+    mm:optionPhonetic "foxtrot india november alpha november charlie echo" ;
+    mm:optionValue "FINANCE" .
+
+:IndHealthcare a mm:SelectOption ;
+    mm:optionAlias "healthcare, medical, nhs, hospital" ;
+    mm:optionDescription "Healthcare and medical services" ;
+    mm:optionLabel "Healthcare / Medical" ;
+    mm:optionPhonetic "hotel echo alpha lima tango hotel charlie alpha romeo echo" ;
+    mm:optionValue "HEALTHCARE" .
+
+:IndHospitality a mm:SelectOption ;
+    mm:optionAlias "hospitality, hotel, restaurant, tourism" ;
+    mm:optionDescription "Hotels, restaurants, tourism" ;
+    mm:optionLabel "Hospitality / Tourism" ;
+    mm:optionPhonetic "hotel oscar sierra papa india tango alpha lima india tango yankee" ;
+    mm:optionValue "HOSPITALITY" .
+
+:IndIT a mm:SelectOption ;
+    mm:optionAlias "it, tech, technology, software" ;
+    mm:optionDescription "Information technology" ;
+    mm:optionLabel "IT / Technology" ;
+    mm:optionPhonetic "india tango" ;
+    mm:optionValue "IT" .
+
+:IndManufacturing a mm:SelectOption ;
+    mm:optionAlias "manufacturing, factory, production" ;
+    mm:optionDescription "Manufacturing and production" ;
+    mm:optionLabel "Manufacturing" ;
+    mm:optionPhonetic "mike alpha november uniform foxtrot alpha charlie tango uniform romeo india november golf" ;
+    mm:optionValue "MANUFACTURING" .
+
+:IndOther a mm:SelectOption ;
+    mm:optionAlias "other" ;
+    mm:optionDescription "Other industry not listed" ;
+    mm:optionLabel "Other industry" ;
+    mm:optionPhonetic "oscar tango hotel echo romeo" ;
+    mm:optionValue "OTHER" .
+
+:IndPublicSector a mm:SelectOption ;
+    mm:optionAlias "public sector, government, civil service" ;
+    mm:optionDescription "Government and public services" ;
+    mm:optionLabel "Public Sector / Government" ;
+    mm:optionPhonetic "papa uniform bravo lima india charlie sierra echo charlie tango oscar romeo" ;
+    mm:optionValue "PUBLIC_SECTOR" .
+
+:IndRetail a mm:SelectOption ;
+    mm:optionAlias "retail, shop, store" ;
+    mm:optionDescription "Retail sector" ;
+    mm:optionLabel "Retail" ;
+    mm:optionPhonetic "romeo echo tango alpha india lima" ;
+    mm:optionValue "RETAIL" .
+
+:IndustrySectorTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Which industry or business sector do you work in? For example, education, healthcare, finance, retail, or IT." ;
+    mm:ttsVariant1 "Which industry or business sector do you work in? For example, education, healthcare, finance, retail, or IT." ;
+    mm:ttsVariant2 "What industry do you work in?" ;
+    mm:ttsVariant3 "Which sector are you employed in?" ;
+    mm:ttsVariant4 "Tell me your industry." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:LastNameQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Last Name" ;
+    :hasInputMode vocab:NameInputMode ;
+    :inSection :DriversSection ;
+    :order 11 ;
+    :questionId "q_last_name" ;
+    :questionText "What is your last name?" ;
+    :required true ;
+    :slotName "lastName" ;
+    :spellingRequired true ;
+    mm:hasTTSPrompt :LastNameTTS .
+
+:LastNameTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Please tell me your last name or surname." ;
+    mm:ttsVariant1 "Please tell me your last name or surname." ;
+    mm:ttsVariant2 "Could you provide your surname, please?" ;
+    mm:ttsVariant3 "What's your family name?" ;
+    mm:ttsVariant4 "I need your last name." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:LegalExpensesQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Legal Expenses" ;
+    :inSection :ExtrasSection ;
+    :order 61 ;
+    :questionId "q_legal_expenses" ;
+    :questionText "Would you like legal expenses cover?" ;
+    :required false ;
+    :slotName "legalExpenses" ;
+    mm:hasOption :LegalNo,
+        :LegalYes ;
+    mm:hasTTSPrompt :LegalExpensesTTS .
+
+:LegalExpensesTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Would you like legal expenses cover? This helps with legal costs after an accident." ;
+    mm:ttsVariant1 "Would you like legal expenses cover? This helps with legal costs after an accident." ;
+    mm:ttsVariant2 "Do you want legal expenses protection?" ;
+    mm:ttsVariant3 "Add legal cover?" ;
+    mm:ttsVariant4 "Legal expenses?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:LegalNo a mm:SelectOption ;
+    mm:optionDescription "No legal expenses cover" ;
+    mm:optionLabel "No" ;
+    mm:optionValue "NO" .
+
+:LegalYes a mm:SelectOption ;
+    mm:optionDescription "Add legal expenses cover" ;
+    mm:optionLabel "Yes" ;
+    mm:optionValue "YES" .
+
+:LicenceCancelledNo a mm:SelectOption ;
+    mm:optionAlias "no, nope, never" ;
+    mm:optionDescription "No, never cancelled or refused" ;
+    mm:optionLabel "No" ;
+    mm:optionPhonetic "november oscar" ;
+    mm:optionValue "NO" .
+
+:LicenceCancelledTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Has your driving licence ever been cancelled, suspended, revoked, or refused by the authorities?" ;
+    mm:ttsVariant1 "Has your driving licence ever been cancelled, suspended, revoked, or refused by the authorities?" ;
+    mm:ttsVariant2 "Ever had your licence cancelled or suspended?" ;
+    mm:ttsVariant3 "Licence ever refused or revoked?" ;
+    mm:ttsVariant4 "Licence cancellation - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:LicenceCancelledYes a mm:SelectOption ;
+    mm:optionAlias "yes, yeah, yep" ;
+    mm:optionDescription "Yes, it has been cancelled/refused" ;
+    mm:optionLabel "Yes" ;
+    mm:optionPhonetic "yankee echo sierra" ;
+    mm:optionValue "YES" .
+
+:LicenceNumberQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Licence Number" ;
+    :hasInputMode vocab:LicenceInputMode ;
+    :inSection :DriversSection ;
+    :order 18 ;
+    :questionId "q_licence_number" ;
+    :questionText "What is your driving licence number?" ;
+    :required true ;
+    :slotName "licenceNumber" ;
+    :spellingRequired true ;
+    mm:hasTTSPrompt :LicenceNumberTTS .
+
+:LicenceNumberTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Please tell me your driving licence number. You can spell it letter by letter." ;
+    mm:ttsVariant1 "Please tell me your driving licence number. You can spell it letter by letter." ;
+    mm:ttsVariant2 "What's your licence number? Please spell it out." ;
+    mm:ttsVariant3 "Could you provide your driving licence number?" ;
+    mm:ttsVariant4 "I need your licence number." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:LicenceTypeFull a mm:SelectOption ;
+    mm:optionAlias "Full",
+        "Full UK" ;
+    mm:optionDescription "Full UK driving licence" ;
+    mm:optionLabel "Full UK Licence" ;
+    mm:optionPhonetic "full you-kay" ;
+    mm:optionValue "FULL_UK" .
+
+:LicenceTypeInternational a mm:SelectOption ;
+    mm:optionAlias "International" ;
+    mm:optionDescription "International driving licence" ;
+    mm:optionLabel "International Licence" ;
+    mm:optionPhonetic "in-ter-nash-uh-nul" ;
+    mm:optionValue "INTERNATIONAL" .
+
+:LicenceTypeProvisional a mm:SelectOption ;
+    mm:optionAlias "Provisional" ;
+    mm:optionDescription "Provisional driving licence" ;
+    mm:optionLabel "Provisional Licence" ;
+    mm:optionPhonetic "pro-vizh-uh-nul" ;
+    mm:optionValue "PROVISIONAL" .
+
+:LicenceTypeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Licence Type" ;
+    :inSection :DriversSection ;
+    :order 17 ;
+    :questionId "q_licence_type" ;
+    :questionText "What type of driving licence do you have?" ;
+    :required true ;
+    :slotName "licenceType" ;
+    mm:hasOption :LicenceTypeFull,
+        :LicenceTypeInternational,
+        :LicenceTypeProvisional ;
+    mm:hasTTSPrompt :LicenceTypeTTS .
+
+:LicenceTypeTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What type of driving licence do you have? Full UK, Provisional, or International?" ;
+    mm:ttsVariant1 "What type of driving licence do you have? Full UK, Provisional, or International?" ;
+    mm:ttsVariant2 "Please select your licence type: Full UK Licence, Provisional, or International." ;
+    mm:ttsVariant3 "What kind of driving licence do you hold?" ;
+    mm:ttsVariant4 "Tell me your licence type." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:MakeAudi a mm:SelectOption ;
+    mm:optionDescription "German manufacturer" ;
+    mm:optionLabel "Audi" ;
+    mm:optionPhonetic "au-di",
+        "ow-dee" ;
+    mm:optionValue "audi" .
+
+:MakeBMW a mm:SelectOption ;
+    mm:optionAlias "Bayerische Motoren Werke" ;
+    mm:optionDescription "German manufacturer" ;
+    mm:optionLabel "BMW" ;
+    mm:optionPhonetic "beamer",
+        "bee-em-double-you",
+        "bimmer" ;
+    mm:optionValue "bmw" .
+
+:MakeCitroen a mm:SelectOption ;
+    mm:optionDescription "French manufacturer" ;
+    mm:optionLabel "Citroën" ;
+    mm:optionPhonetic "sit-ren",
+        "sit-ro-en" ;
+    mm:optionValue "citroen" .
+
+:MakeFord a mm:SelectOption ;
+    mm:optionDescription "American manufacturer" ;
+    mm:optionLabel "Ford" ;
+    mm:optionPhonetic "ford" ;
+    mm:optionValue "ford" .
+
+:MakeHonda a mm:SelectOption ;
+    mm:optionDescription "Japanese manufacturer" ;
+    mm:optionLabel "Honda" ;
+    mm:optionPhonetic "hon-da" ;
+    mm:optionValue "honda" .
+
+:MakeHyundai a mm:SelectOption ;
+    mm:optionDescription "South Korean manufacturer" ;
+    mm:optionLabel "Hyundai" ;
+    mm:optionPhonetic "hi-un-die",
+        "hun-day",
+        "hy-un-day" ;
+    mm:optionValue "hyundai" .
+
+:MakeJaguar a mm:SelectOption ;
+    mm:optionAlias "Jag" ;
+    mm:optionDescription "British manufacturer" ;
+    mm:optionLabel "Jaguar" ;
+    mm:optionPhonetic "jag-war",
+        "jag-you-are" ;
+    mm:optionValue "jaguar" .
+
+:MakeKia a mm:SelectOption ;
+    mm:optionDescription "South Korean manufacturer" ;
+    mm:optionLabel "Kia" ;
+    mm:optionPhonetic "kee-a" ;
+    mm:optionValue "kia" .
+
+:MakeLandRover a mm:SelectOption ;
+    mm:optionAlias "Landrover" ;
+    mm:optionDescription "British manufacturer" ;
+    mm:optionLabel "Land Rover" ;
+    mm:optionPhonetic "land rover" ;
+    mm:optionValue "land_rover" .
+
+:MakeMazda a mm:SelectOption ;
+    mm:optionDescription "Japanese manufacturer" ;
+    mm:optionLabel "Mazda" ;
+    mm:optionPhonetic "maz-da" ;
+    mm:optionValue "mazda" .
+
+:MakeMercedes a mm:SelectOption ;
+    mm:optionAlias "Benz",
+        "Mercedes" ;
+    mm:optionDescription "German manufacturer" ;
+    mm:optionLabel "Mercedes-Benz" ;
+    mm:optionPhonetic "mer-say-deez",
+        "mer-suh-deez",
+        "merc" ;
+    mm:optionValue "mercedes" .
+
+:MakeMini a mm:SelectOption ;
+    mm:optionAlias "Mini Cooper" ;
+    mm:optionDescription "British manufacturer" ;
+    mm:optionLabel "Mini" ;
+    mm:optionPhonetic "mini" ;
+    mm:optionValue "mini" .
+
+:MakeNissan a mm:SelectOption ;
+    mm:optionAlias "Datsun" ;
+    mm:optionDescription "Japanese manufacturer" ;
+    mm:optionLabel "Nissan" ;
+    mm:optionPhonetic "nee-san",
+        "nis-san" ;
+    mm:optionValue "nissan" .
+
+:MakePeugeot a mm:SelectOption ;
+    mm:optionDescription "French manufacturer" ;
+    mm:optionLabel "Peugeot" ;
+    mm:optionPhonetic "per-zho",
+        "poo-joe",
+        "puh-zho" ;
+    mm:optionValue "peugeot" .
+
+:MakeRenault a mm:SelectOption ;
+    mm:optionDescription "French manufacturer" ;
+    mm:optionLabel "Renault" ;
+    mm:optionPhonetic "ren-oh",
+        "ruh-no" ;
+    mm:optionValue "renault" .
+
+:MakeSeat a mm:SelectOption ;
+    mm:optionDescription "Spanish manufacturer" ;
+    mm:optionLabel "Seat" ;
+    mm:optionPhonetic "say-at" ;
+    mm:optionValue "seat" .
+
+:MakeSkoda a mm:SelectOption ;
+    mm:optionDescription "Czech manufacturer" ;
+    mm:optionLabel "Škoda" ;
+    mm:optionPhonetic "shko-da",
+        "sko-da" ;
+    mm:optionValue "skoda" .
+
+:MakeToyota a mm:SelectOption ;
+    mm:optionDescription "Japanese manufacturer" ;
+    mm:optionLabel "Toyota" ;
+    mm:optionPhonetic "toy-ota",
+        "toyoda" ;
+    mm:optionValue "toyota" .
+
+:MakeVolkswagen a mm:SelectOption ;
+    mm:optionAlias "VW" ;
+    mm:optionDescription "German manufacturer" ;
+    mm:optionLabel "Volkswagen" ;
+    mm:optionPhonetic "folks-wagen",
+        "volks-wagen" ;
+    mm:optionValue "volkswagen" .
+
+:MakeVolvo a mm:SelectOption ;
+    mm:optionDescription "Swedish manufacturer" ;
+    mm:optionLabel "Volvo" ;
+    mm:optionPhonetic "vol-vo" ;
+    mm:optionValue "volvo" .
+
+:ModsNo a mm:SelectOption ;
+    mm:optionDescription "No modifications" ;
+    mm:optionLabel "No" ;
+    mm:optionValue "NO" .
+
+:ModsYes a mm:SelectOption ;
+    mm:optionDescription "Vehicle has modifications" ;
+    mm:optionLabel "Yes" ;
+    mm:optionValue "YES" .
+
+:NCD0 a mm:SelectOption ;
+    mm:optionAlias "zero, 0, none" ;
+    mm:optionDescription "No discount" ;
+    mm:optionLabel "0 years" ;
+    mm:optionPhonetic "zulu echo romeo oscar" ;
+    mm:optionValue "0" .
+
+:NCD1 a mm:SelectOption ;
+    mm:optionAlias "one, 1" ;
+    mm:optionDescription "1 year no claims" ;
+    mm:optionLabel "1 year" ;
+    mm:optionPhonetic "oscar november echo" ;
+    mm:optionValue "1" .
+
+:NCD2 a mm:SelectOption ;
+    mm:optionAlias "two, 2" ;
+    mm:optionDescription "2 years no claims" ;
+    mm:optionLabel "2 years" ;
+    mm:optionPhonetic "tango whiskey oscar" ;
+    mm:optionValue "2" .
+
+:NCD3 a mm:SelectOption ;
+    mm:optionAlias "three, 3" ;
+    mm:optionDescription "3 years no claims" ;
+    mm:optionLabel "3 years" ;
+    mm:optionPhonetic "tango hotel romeo echo echo" ;
+    mm:optionValue "3" .
+
+:NCD4 a mm:SelectOption ;
+    mm:optionAlias "four, 4" ;
+    mm:optionDescription "4 years no claims" ;
+    mm:optionLabel "4 years" ;
+    mm:optionPhonetic "foxtrot oscar uniform romeo" ;
+    mm:optionValue "4" .
+
+:NCD5 a mm:SelectOption ;
+    mm:optionAlias "five, 5" ;
+    mm:optionDescription "5 years no claims" ;
+    mm:optionLabel "5 years" ;
+    mm:optionPhonetic "foxtrot india victor echo" ;
+    mm:optionValue "5" .
+
+:NCD6Plus a mm:SelectOption ;
+    mm:optionAlias "six, 6, six plus, more than five" ;
+    mm:optionDescription "6 or more years no claims" ;
+    mm:optionLabel "6+ years" ;
+    mm:optionPhonetic "sierra india xray papa lima uniform sierra" ;
+    mm:optionValue "6+" .
+
+:NCDYearsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "No Claims Discount" ;
+    :inSection :PolicySection ;
+    :order 33 ;
+    :questionId "q_ncd_years" ;
+    :questionText "How many years of no claims discount do you have?" ;
+    :required true ;
+    :slotName "ncdYears" ;
+    mm:hasSelectOption :NCD0,
+        :NCD1,
+        :NCD2,
+        :NCD3,
+        :NCD4,
+        :NCD5,
+        :NCD6Plus ;
+    mm:hasTTSPrompt :NCDYearsTTS .
+
+:NCDYearsTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "How many years of no claims discount do you have? This is the number of claim-free years.",
+        "How many years of no claims discount or no claims bonus do you have?" ;
+    mm:ttsVariant1 "How many years of no claims discount do you have? This is the number of claim-free years.",
+        "How many years of no claims discount or no claims bonus do you have?" ;
+    mm:ttsVariant2 "What's your no claims bonus in years?",
+        "Years of no claims discount?" ;
+    mm:ttsVariant3 "How many years NCD?" ;
+    mm:ttsVariant4 "Tell me your no claims bonus.",
+        "Tell me your no claims years." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:NameFAQ1 a mm:FAQ ;
+    mm:faqAnswer "Only if it appears on your driving licence." ;
+    mm:faqCategory "name" ;
+    mm:faqQuestion "Do I need to include my middle name?" .
+
+:NameFAQ2 a mm:FAQ ;
+    mm:faqAnswer "Please include the full hyphenated surname exactly as it appears on your documents." ;
+    mm:faqCategory "name" ;
+    mm:faqQuestion "What if I have a hyphenated surname?" .
+
+:NameTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Please tell me your full name, including both first name and surname." ;
+    mm:ttsVariant1 "Could you tell me your full name, including first and last name, please?" ;
+    mm:ttsVariant2 "Please provide your complete name with first name and surname." ;
+    mm:ttsVariant3 "I need your full name - both first name and surname." ;
+    mm:ttsVariant4 "What's your full name? Please include both first and last name." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:NumberOfClaimsTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "How many claims have you made in the last 5 years?" ;
+    mm:ttsVariant1 "How many claims have you made in the last 5 years?" ;
+    mm:ttsVariant2 "Number of claims?" ;
+    mm:ttsVariant3 "How many claims?" ;
+    mm:ttsVariant4 "Tell me the number of claims." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:OccAccountant a mm:SelectOption ;
+    mm:optionAlias "accountant, finance, financial" ;
+    mm:optionDescription "Accounting or finance professional" ;
+    mm:optionLabel "Accountant / Finance" ;
+    mm:optionPhonetic "alpha charlie charlie oscar uniform november tango alpha november tango" ;
+    mm:optionValue "ACCOUNTANT" .
+
+:OccAdmin a mm:SelectOption ;
+    mm:optionAlias "admin, administrator, office, clerical" ;
+    mm:optionDescription "Administrative or office work" ;
+    mm:optionLabel "Administrative / Office" ;
+    mm:optionPhonetic "alpha delta mike india november" ;
+    mm:optionValue "ADMIN" .
+
+:OccDriver a mm:SelectOption ;
+    mm:optionAlias "driver, delivery, courier, taxi" ;
+    mm:optionDescription "Professional driver or delivery" ;
+    mm:optionLabel "Driver / Delivery" ;
+    mm:optionPhonetic "delta romeo india victor echo romeo" ;
+    mm:optionValue "DRIVER" .
+
+:OccEngineer a mm:SelectOption ;
+    mm:optionAlias "engineer, engineering" ;
+    mm:optionDescription "Engineering professional" ;
+    mm:optionLabel "Engineer" ;
+    mm:optionPhonetic "echo november golf india november echo echo romeo" ;
+    mm:optionValue "ENGINEER" .
+
+:OccManager a mm:SelectOption ;
+    mm:optionAlias "manager, director, executive" ;
+    mm:optionDescription "Management or director role" ;
+    mm:optionLabel "Manager / Director" ;
+    mm:optionPhonetic "mike alpha november alpha golf echo romeo" ;
+    mm:optionValue "MANAGER" .
+
+:OccNurse a mm:SelectOption ;
+    mm:optionAlias "nurse, healthcare, medical, doctor" ;
+    mm:optionDescription "Nursing or healthcare professional" ;
+    mm:optionLabel "Nurse / Healthcare" ;
+    mm:optionPhonetic "november uniform romeo sierra echo" ;
+    mm:optionValue "NURSE" .
+
+:OccOther a mm:SelectOption ;
+    mm:optionAlias "other" ;
+    mm:optionDescription "Other occupation not listed" ;
+    mm:optionLabel "Other occupation" ;
+    mm:optionPhonetic "oscar tango hotel echo romeo" ;
+    mm:optionValue "OTHER" .
+
+:OccRetail a mm:SelectOption ;
+    mm:optionAlias "retail, sales, shop, store" ;
+    mm:optionDescription "Retail or sales work" ;
+    mm:optionLabel "Retail / Sales" ;
+    mm:optionPhonetic "romeo echo tango alpha india lima" ;
+    mm:optionValue "RETAIL" .
+
+:OccTeacher a mm:SelectOption ;
+    mm:optionAlias "teacher, educator, professor, lecturer" ;
+    mm:optionDescription "Teaching or education" ;
+    mm:optionLabel "Teacher / Educator" ;
+    mm:optionPhonetic "tango echo alpha charlie hotel echo romeo" ;
+    mm:optionValue "TEACHER" .
+
+:OccTrade a mm:SelectOption ;
+    mm:optionAlias "trade, tradesman, electrician, plumber, builder, carpenter" ;
+    mm:optionDescription "Electrician, plumber, carpenter, etc." ;
+    mm:optionLabel "Skilled Trade" ;
+    mm:optionPhonetic "tango romeo alpha delta echo" ;
+    mm:optionValue "TRADE" .
+
+:OccupationTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What is your occupation or job title? Please choose the option that best matches your role." ;
+    mm:ttsVariant1 "What is your occupation or job title? Please choose the option that best matches your role." ;
+    mm:ttsVariant2 "What's your job or occupation?" ;
+    mm:ttsVariant3 "Tell me your job title." ;
+    mm:ttsVariant4 "What do you do for work?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:OvernightLocationQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Overnight Parking" ;
+    :inSection :VehicleSection ;
+    :order 26 ;
+    :questionId "q_overnight_location" ;
+    :questionText "Where is your vehicle parked overnight?" ;
+    :required true ;
+    :slotName "overnightLocation" ;
+    mm:hasOption :ParkingCarPark,
+        :ParkingDriveway,
+        :ParkingGarage,
+        :ParkingStreet ;
+    mm:hasTTSPrompt :OvernightLocationTTS .
+
+:OvernightLocationTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Where is your vehicle usually parked overnight? Garage, driveway, street, or car park?" ;
+    mm:ttsVariant1 "Where is your vehicle usually parked overnight? Garage, driveway, street, or car park?" ;
+    mm:ttsVariant2 "Where do you park your car at night?" ;
+    mm:ttsVariant3 "What's your overnight parking location?" ;
+    mm:ttsVariant4 "Where do you park overnight?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:ParkingCarPark a mm:SelectOption ;
+    mm:optionDescription "Parked in a car park" ;
+    mm:optionLabel "Car Park" ;
+    mm:optionValue "CAR_PARK" .
+
+:ParkingDriveway a mm:SelectOption ;
+    mm:optionDescription "Parked on a driveway" ;
+    mm:optionLabel "Driveway" ;
+    mm:optionValue "DRIVEWAY" .
+
+:ParkingGarage a mm:SelectOption ;
+    mm:optionDescription "Parked in a garage" ;
+    mm:optionLabel "Garage" ;
+    mm:optionValue "GARAGE" .
+
+:ParkingStreet a mm:SelectOption ;
+    mm:optionDescription "Parked on the street" ;
+    mm:optionLabel "Street" ;
+    mm:optionValue "STREET" .
+
+:PayAnnual a mm:SelectOption ;
+    mm:optionAlias "Annual",
+        "Yearly" ;
+    mm:optionDescription "Pay once per year" ;
+    mm:optionLabel "Annual Payment" ;
+    mm:optionValue "ANNUAL" .
+
+:PayCredit a mm:SelectOption ;
+    mm:optionDescription "Pay by credit card" ;
+    mm:optionLabel "Credit Card" ;
+    mm:optionValue "CREDIT_CARD" .
+
+:PayDD a mm:SelectOption ;
+    mm:optionDescription "Pay by direct debit" ;
+    mm:optionLabel "Direct Debit" ;
+    mm:optionValue "DIRECT_DEBIT" .
+
+:PayDebit a mm:SelectOption ;
+    mm:optionDescription "Pay by debit card" ;
+    mm:optionLabel "Debit Card" ;
+    mm:optionValue "DEBIT_CARD" .
+
+:PayMonthly a mm:SelectOption ;
+    mm:optionAlias "Monthly",
+        "Per month" ;
+    mm:optionDescription "Pay monthly" ;
+    mm:optionLabel "Monthly Payment" ;
+    mm:optionValue "MONTHLY" .
+
+:PaymentFrequencyQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Payment Frequency" ;
+    :inSection :PaymentSection ;
+    :order 50 ;
+    :questionId "q_payment_frequency" ;
+    :questionText "How would you like to pay?" ;
+    :required true ;
+    :slotName "paymentFrequency" ;
+    mm:hasOption :PayAnnual,
+        :PayMonthly ;
+    mm:hasTTSPrompt :PaymentFrequencyTTS .
+
+:PaymentFrequencyTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "How would you like to pay? Annually in one payment, or monthly?" ;
+    mm:ttsVariant1 "How would you like to pay? Annually in one payment, or monthly?" ;
+    mm:ttsVariant2 "Choose your payment frequency: annual or monthly." ;
+    mm:ttsVariant3 "Pay annually or monthly?" ;
+    mm:ttsVariant4 "Payment frequency?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:PaymentMethodQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Payment Method" ;
+    :inSection :PaymentSection ;
+    :order 51 ;
+    :questionId "q_payment_method" ;
+    :questionText "What payment method would you like to use?" ;
+    :required true ;
+    :slotName "paymentMethod" ;
+    mm:hasOption :PayCredit,
+        :PayDD,
+        :PayDebit ;
+    mm:hasTTSPrompt :PaymentMethodTTS .
+
+:PaymentMethodTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What payment method would you like to use? Credit card, debit card, or direct debit?" ;
+    mm:ttsVariant1 "What payment method would you like to use? Credit card, debit card, or direct debit?" ;
+    mm:ttsVariant2 "How will you be paying?" ;
+    mm:ttsVariant3 "Choose your payment method." ;
+    mm:ttsVariant4 "Payment method?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:PenaltyPointsTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "How many penalty points do you currently have on your driving licence?" ;
+    mm:ttsVariant1 "How many penalty points do you currently have on your driving licence?" ;
+    mm:ttsVariant2 "Number of penalty points?" ;
+    mm:ttsVariant3 "How many points?" ;
+    mm:ttsVariant4 "Tell me your points total." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:PhoneTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Please tell me your UK mobile number, starting with zero seven." ;
+    mm:ttsVariant1 "Please tell me your UK mobile number, starting with zero seven." ;
+    mm:ttsVariant2 "What's your mobile phone number? UK numbers start with zero seven." ;
+    mm:ttsVariant3 "Could you provide your phone number, please?" ;
+    mm:ttsVariant4 "I need your UK mobile number." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:Points12Plus a mm:SelectOption ;
+    mm:optionAlias "twelve, 12, more than nine" ;
+    mm:optionDescription "Twelve or more points" ;
+    mm:optionLabel "12+ points" ;
+    mm:optionPhonetic "tango whiskey echo lima victor echo papa lima uniform sierra" ;
+    mm:optionValue "12+" .
+
+:Points3 a mm:SelectOption ;
+    mm:optionAlias "three, 3" ;
+    mm:optionDescription "Three points" ;
+    mm:optionLabel "3 points" ;
+    mm:optionPhonetic "tango hotel romeo echo echo" ;
+    mm:optionValue "3" .
+
+:Points6 a mm:SelectOption ;
+    mm:optionAlias "six, 6" ;
+    mm:optionDescription "Six points" ;
+    mm:optionLabel "6 points" ;
+    mm:optionPhonetic "sierra india xray" ;
+    mm:optionValue "6" .
+
+:Points9 a mm:SelectOption ;
+    mm:optionAlias "nine, 9" ;
+    mm:optionDescription "Nine points" ;
+    mm:optionLabel "9 points" ;
+    mm:optionPhonetic "november india november echo" ;
+    mm:optionValue "9" .
+
+:PostMarketingNo a mm:SelectOption ;
+    mm:optionDescription "No postal marketing" ;
+    mm:optionLabel "No" ;
+    mm:optionValue "NO" .
+
+:PostMarketingQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Postal Marketing" ;
+    :inSection :MarketingSection ;
+    :order 72 ;
+    :questionId "q_post_marketing" ;
+    :questionText "May we contact you by post?" ;
+    :required false ;
+    :slotName "postMarketing" ;
+    mm:hasOption :PostMarketingNo,
+        :PostMarketingYes ;
+    mm:hasTTSPrompt :PostMarketingTTS .
+
+:PostMarketingTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "May we contact you by post with offers and updates?" ;
+    mm:ttsVariant1 "May we contact you by post with offers and updates?" ;
+    mm:ttsVariant2 "Do you consent to postal marketing?" ;
+    mm:ttsVariant3 "Receive mail from us?" ;
+    mm:ttsVariant4 "Postal marketing consent?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:PostMarketingYes a mm:SelectOption ;
+    mm:optionDescription "I consent to postal marketing" ;
+    mm:optionLabel "Yes" ;
+    mm:optionValue "YES" .
+
+:PostcodeTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Please tell me your postcode. You can spell it letter by letter." ;
+    mm:ttsVariant1 "Please tell me your postcode. You can spell it letter by letter." ;
+    mm:ttsVariant2 "What's your postcode? Please spell it out." ;
+    mm:ttsVariant3 "Could you provide your postcode, spelling it if needed?" ;
+    mm:ttsVariant4 "I need your postcode." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:PrevInsNo a mm:SelectOption ;
+    mm:optionAlias "no, nope, negative" ;
+    mm:optionDescription "No continuous insurance" ;
+    mm:optionLabel "No" ;
+    mm:optionPhonetic "november oscar" ;
+    mm:optionValue "NO" .
+
+:PrevInsYes a mm:SelectOption ;
+    mm:optionAlias "yes, yeah, yep, affirmative" ;
+    mm:optionDescription "Yes, continuous insurance" ;
+    mm:optionLabel "Yes" ;
+    mm:optionPhonetic "yankee echo sierra" ;
+    mm:optionValue "YES" .
+
+:PreviousInsuranceTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Have you had continuous car insurance for the last 12 months without a break?" ;
+    mm:ttsVariant1 "Have you had continuous car insurance for the last 12 months without a break?" ;
+    mm:ttsVariant2 "Have you been insured for the past year?" ;
+    mm:ttsVariant3 "Continuous insurance in the last 12 months?" ;
+    mm:ttsVariant4 "Were you insured last year?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:PreviousInsurerTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Who was your previous car insurance provider or company?" ;
+    mm:ttsVariant1 "Who was your previous car insurance provider or company?" ;
+    mm:ttsVariant2 "Name of your last insurer?" ;
+    mm:ttsVariant3 "Who insured you previously?" ;
+    mm:ttsVariant4 "Previous insurance company name?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:PrimaryUseBusiness a mm:SelectOption ;
+    mm:optionAlias "business, work travel, commercial" ;
+    mm:optionDescription "Work-related travel" ;
+    mm:optionLabel "Business use" ;
+    mm:optionPhonetic "bravo uniform sierra india november echo sierra sierra" ;
+    mm:optionValue "BUSINESS" .
+
+:PrimaryUseCommuting a mm:SelectOption ;
+    mm:optionAlias "commute, work, office" ;
+    mm:optionDescription "Driving to and from work" ;
+    mm:optionLabel "Commuting to work" ;
+    mm:optionPhonetic "charlie oscar mike mike uniform tango echo" ;
+    mm:optionValue "COMMUTING" .
+
+:PrimaryUseSchoolRun a mm:SelectOption ;
+    mm:optionAlias "school, children, kids" ;
+    mm:optionDescription "Taking children to school" ;
+    mm:optionLabel "School run" ;
+    mm:optionPhonetic "sierra charlie hotel oscar oscar lima" ;
+    mm:optionValue "SCHOOL_RUN" .
+
+:PrimaryUseSocialDomestic a mm:SelectOption ;
+    mm:optionAlias "social, personal, leisure, domestic, shopping" ;
+    mm:optionDescription "Personal and leisure use" ;
+    mm:optionLabel "Social and domestic" ;
+    mm:optionPhonetic "sierra oscar charlie india alpha lima" ;
+    mm:optionValue "SOCIAL_DOMESTIC" .
+
+:PrimaryUseTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What is the primary use of your vehicle? For example, commuting to work, social and domestic use, business, or the school run." ;
+    mm:ttsVariant1 "What is the primary use of your vehicle? For example, commuting to work, social and domestic use, business, or the school run." ;
+    mm:ttsVariant2 "How do you mainly use your car?" ;
+    mm:ttsVariant3 "What's the main purpose of your vehicle use?" ;
+    mm:ttsVariant4 "Tell me your car's primary use." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:ProtectNCDNo a mm:SelectOption ;
+    mm:optionAlias "no, nope, no thanks" ;
+    mm:optionDescription "No protection needed" ;
+    mm:optionLabel "No" ;
+    mm:optionPhonetic "november oscar" ;
+    mm:optionValue "NO" .
+
+:ProtectNCDQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Protect No Claims Discount" ;
+    :inSection :PolicySection ;
+    :order 34 ;
+    :questionId "q_protect_ncd" ;
+    :questionText "Would you like to protect your no claims discount?" ;
+    :required false ;
+    :slotName "protectNCD" ;
+    mm:hasOption :ProtectNo,
+        :ProtectYes ;
+    mm:hasSelectOption :ProtectNCDNo,
+        :ProtectNCDYes ;
+    mm:hasTTSPrompt :ProtectNCDTTS .
+
+:ProtectNCDTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Would you like to protect your no claims discount for an additional fee?",
+        "Would you like to protect your no claims discount? This costs extra but prevents losing it after a claim." ;
+    mm:ttsVariant1 "Would you like to protect your no claims discount for an additional fee?",
+        "Would you like to protect your no claims discount? This costs extra but prevents losing it after a claim." ;
+    mm:ttsVariant2 "Do you want NCD protection?",
+        "Protect your no claims bonus?" ;
+    mm:ttsVariant3 "NCD protection - yes or no?",
+        "Protect your no claims bonus?" ;
+    mm:ttsVariant4 "Do you want NCD protection?",
+        "NCD protection - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:ProtectNCDYes a mm:SelectOption ;
+    mm:optionAlias "yes, yeah, yep, protect" ;
+    mm:optionDescription "Protect my NCD" ;
+    mm:optionLabel "Yes" ;
+    mm:optionPhonetic "yankee echo sierra" ;
+    mm:optionValue "YES" .
+
+:ProtectNo a mm:SelectOption ;
+    mm:optionDescription "Don't protect NCD" ;
+    mm:optionLabel "No" ;
+    mm:optionValue "NO" .
+
+:ProtectYes a mm:SelectOption ;
+    mm:optionDescription "Protect my NCD" ;
+    mm:optionLabel "Yes" ;
+    mm:optionValue "YES" .
+
+:RegistrationNumberTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Please tell me your vehicle registration number. You can spell it letter by letter." ;
+    mm:ttsVariant1 "Please tell me your vehicle registration number. You can spell it letter by letter." ;
+    mm:ttsVariant2 "What's your car registration? Please spell it out." ;
+    mm:ttsVariant3 "Could you provide your vehicle reg, spelling it if needed?" ;
+    mm:ttsVariant4 "I need your registration number." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:RelChild a mm:SelectOption ;
+    mm:optionAlias "child, son, daughter, kid" ;
+    mm:optionDescription "Son or daughter" ;
+    mm:optionLabel "Child" ;
+    mm:optionPhonetic "charlie hotel india lima delta" ;
+    mm:optionValue "CHILD" .
+
+:RelFriend a mm:SelectOption ;
+    mm:optionAlias "friend" ;
+    mm:optionDescription "Friend or acquaintance" ;
+    mm:optionLabel "Friend" ;
+    mm:optionPhonetic "foxtrot romeo india echo november delta" ;
+    mm:optionValue "FRIEND" .
+
+:RelOther a mm:SelectOption ;
+    mm:optionAlias "other" ;
+    mm:optionDescription "Other relationship" ;
+    mm:optionLabel "Other" ;
+    mm:optionPhonetic "oscar tango hotel echo romeo" ;
+    mm:optionValue "OTHER" .
+
+:RelParent a mm:SelectOption ;
+    mm:optionAlias "parent, mother, father, mum, dad" ;
+    mm:optionDescription "Mother or father" ;
+    mm:optionLabel "Parent" ;
+    mm:optionPhonetic "papa alpha romeo echo november tango" ;
+    mm:optionValue "PARENT" .
+
+:RelPartner a mm:SelectOption ;
+    mm:optionAlias "partner, civil partner, domestic partner" ;
+    mm:optionDescription "Civil partner or domestic partner" ;
+    mm:optionLabel "Partner" ;
+    mm:optionPhonetic "papa alpha romeo tango november echo romeo" ;
+    mm:optionValue "PARTNER" .
+
+:RelSibling a mm:SelectOption ;
+    mm:optionAlias "sibling, brother, sister" ;
+    mm:optionDescription "Brother or sister" ;
+    mm:optionLabel "Sibling" ;
+    mm:optionPhonetic "sierra india bravo lima india november golf" ;
+    mm:optionValue "SIBLING" .
+
+:RelSpouse a mm:SelectOption ;
+    mm:optionAlias "spouse, husband, wife, married" ;
+    mm:optionDescription "Husband or wife" ;
+    mm:optionLabel "Spouse" ;
+    mm:optionPhonetic "sierra papa oscar uniform sierra echo" ;
+    mm:optionValue "SPOUSE" .
+
+:SMSMarketingNo a mm:SelectOption ;
+    mm:optionDescription "No SMS marketing" ;
+    mm:optionLabel "No" ;
+    mm:optionValue "NO" .
+
+:SMSMarketingQuestion a mm:MultimodalQuestion ;
+    rdfs:label "SMS Marketing" ;
+    :inSection :MarketingSection ;
+    :order 71 ;
+    :questionId "q_sms_marketing" ;
+    :questionText "May we contact you by text message?" ;
+    :required false ;
+    :slotName "smsMarketing" ;
+    mm:hasOption :SMSMarketingNo,
+        :SMSMarketingYes ;
+    mm:hasTTSPrompt :SMSMarketingTTS .
+
+:SMSMarketingTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "May we contact you by text message with offers and updates?" ;
+    mm:ttsVariant1 "May we contact you by text message with offers and updates?" ;
+    mm:ttsVariant2 "Do you consent to SMS marketing?" ;
+    mm:ttsVariant3 "Receive text messages from us?" ;
+    mm:ttsVariant4 "SMS marketing consent?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:SMSMarketingYes a mm:SelectOption ;
+    mm:optionDescription "I consent to SMS marketing" ;
+    mm:optionLabel "Yes" ;
+    mm:optionValue "YES" .
+
+:StartDateQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Policy Start Date" ;
+    :inSection :PolicySection ;
+    :order 31 ;
+    :questionId "q_start_date" ;
+    :questionText "When would you like your policy to start?" ;
+    :required true ;
+    :slotName "startDate" ;
+    mm:hasTTSPrompt :StartDateTTS .
+
+:StartDateTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "When would you like your policy to start? Please tell me the date." ;
+    mm:ttsVariant1 "When would you like your policy to start? Please tell me the date." ;
+    mm:ttsVariant2 "What's your preferred start date for the insurance?" ;
+    mm:ttsVariant3 "When should your cover begin?" ;
+    mm:ttsVariant4 "Tell me the start date." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:VehicleMakeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Make" ;
+    :inSection :VehicleDetailsSection ;
+    :order 21 ;
+    :questionId "q_vehicle_make" ;
+    :questionText "What make is your vehicle?" ;
+    :required true ;
+    :slotName "vehicleMake" ;
+    mm:hasOption :MakeAudi,
+        :MakeBMW,
+        :MakeCitroen,
+        :MakeFord,
+        :MakeHonda,
+        :MakeHyundai,
+        :MakeJaguar,
+        :MakeKia,
+        :MakeLandRover,
+        :MakeMazda,
+        :MakeMercedes,
+        :MakeMini,
+        :MakeNissan,
+        :MakePeugeot,
+        :MakeRenault,
+        :MakeSeat,
+        :MakeSkoda,
+        :MakeToyota,
+        :MakeVolkswagen,
+        :MakeVolvo ;
+    mm:hasTTSPrompt :VehicleMakeTTS .
+
+:VehicleMakeTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What make is your vehicle? For example, Toyota, Ford, or BMW." ;
+    mm:ttsVariant1 "What make is your vehicle? For example, Toyota, Ford, or BMW." ;
+    mm:ttsVariant2 "Which manufacturer made your car?" ;
+    mm:ttsVariant3 "What's the make of your vehicle?" ;
+    mm:ttsVariant4 "Tell me your car's make." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:VehicleModelTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What model is your vehicle? For example, Corolla, Focus, or Three Series." ;
+    mm:ttsVariant1 "What model is your vehicle? For example, Corolla, Focus, or Three Series." ;
+    mm:ttsVariant2 "Which model is your car?" ;
+    mm:ttsVariant3 "What's your vehicle model?" ;
+    mm:ttsVariant4 "Tell me the model." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:VehicleRegFAQ1 a mm:FAQ ;
+    mm:faqAnswer "Your vehicle registration number is on your number plates, V5C registration document, or insurance documents." ;
+    mm:faqCategory "vehicle_registration" ;
+    mm:faqQuestion "Where can I find my registration number?" .
+
+:VehicleRegQuestionMM a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Registration (Multimodal)" ;
+    :hasInputMode vocab:VehicleRegInputMode ;
+    :inSection :VehicleDetailsSection ;
+    :order 3 ;
+    :questionId "q_vehicle_reg_mm" ;
+    :questionText "What is your vehicle registration number?" ;
+    :required true ;
+    :slotName "vehicle_registration" ;
+    :spellingRequired true ;
+    mm:hasFAQ :VehicleRegFAQ1 ;
+    mm:hasTTSPrompt :VehicleRegTTS ;
+    mm:hasVisualComponent :VehicleRegVisual .
+
+:VehicleRegTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 0.9 ;
+    mm:ttsText "Please provide your vehicle registration number. You can spell it out using the phonetic alphabet if needed." ;
+    mm:ttsVariant1 "What's your vehicle registration number? Feel free to use the phonetic alphabet to spell it." ;
+    mm:ttsVariant2 "I need your car registration number. You may spell it out if that's easier." ;
+    mm:ttsVariant3 "Could you tell me your vehicle reg number? You can use Alpha, Bravo, Charlie to spell it clearly." ;
+    mm:ttsVariant4 "Please give me your vehicle registration. Spelling it out with the phonetic alphabet helps ensure accuracy." ;
+    mm:ttsVoice "en-GB-Neural2-B" .
+
+:VehicleRegVisual a mm:VisualComponent ;
+    mm:componentData "Example UK number plate showing format: AB12 CDE" ;
+    mm:componentType "image" ;
+    mm:imageUrl "https://example.com/assets/uk-number-plate.png" .
+
+:VehicleTypeCar a mm:SelectOption ;
+    mm:optionDescription "Personal motor car or estate" ;
+    mm:optionLabel "Car" ;
+    mm:optionValue "car" .
+
+:VehicleTypeMotorbike a mm:SelectOption ;
+    mm:optionDescription "Motorcycle or moped" ;
+    mm:optionLabel "Motorbike" ;
+    mm:optionValue "motorbike" .
+
+:VehicleTypeTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Please select your vehicle type from the available options." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:VehicleTypeVan a mm:SelectOption ;
+    mm:optionDescription "Light commercial vehicle or van" ;
+    mm:optionLabel "Van" ;
+    mm:optionValue "van" .
+
+:VehicleValueQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Vehicle Value" ;
+    :inSection :VehicleDetailsSection ;
+    :order 25 ;
+    :questionId "q_vehicle_value" ;
+    :questionText "What is the current value of your vehicle?" ;
+    :required true ;
+    :slotName "vehicleValue" ;
+    mm:hasTTSPrompt :VehicleValueTTS .
+
+:VehicleValueTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What is the current value of your vehicle in pounds?" ;
+    mm:ttsVariant1 "What is the current value of your vehicle in pounds?" ;
+    mm:ttsVariant2 "How much is your car worth?" ;
+    mm:ttsVariant3 "What's your vehicle's current market value?" ;
+    mm:ttsVariant4 "Tell me your car's value." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:VehicleYearTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What year was your vehicle manufactured? For example, two thousand and twenty." ;
+    mm:ttsVariant1 "What year was your vehicle manufactured? For example, two thousand and twenty." ;
+    mm:ttsVariant2 "In which year was your car made?" ;
+    mm:ttsVariant3 "What's your vehicle's year?" ;
+    mm:ttsVariant4 "Tell me the year." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:VoluntaryExcessQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Voluntary Excess" ;
+    :inSection :PolicyOptionsSection ;
+    :order 32 ;
+    :questionId "q_voluntary_excess" ;
+    :questionText "What voluntary excess would you like?" ;
+    :required true ;
+    :slotName "voluntaryExcess" ;
+    mm:hasOption :Excess0,
+        :Excess100,
+        :Excess1000,
+        :Excess200,
+        :Excess300,
+        :Excess500 ;
+    mm:hasTTSPrompt :VoluntaryExcessTTS .
+
+:VoluntaryExcessTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What voluntary excess would you like? This is the amount you pay towards a claim. Options are zero, one hundred, two hundred, three hundred, five hundred, or one thousand pounds." ;
+    mm:ttsVariant1 "What voluntary excess would you like? This is the amount you pay towards a claim. Options are zero, one hundred, two hundred, three hundred, five hundred, or one thousand pounds." ;
+    mm:ttsVariant2 "Choose your voluntary excess amount." ;
+    mm:ttsVariant3 "What excess level do you prefer?" ;
+    mm:ttsVariant4 "Tell me your excess amount." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:WeekendDrivingNo a mm:SelectOption ;
+    mm:optionAlias "no, nope, negative" ;
+    mm:optionDescription "I don't drive on weekends" ;
+    mm:optionLabel "No" ;
+    mm:optionPhonetic "november oscar" ;
+    mm:optionValue "NO" .
+
+:WeekendDrivingTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Do you regularly use your vehicle on weekends?" ;
+    mm:ttsVariant1 "Do you regularly use your vehicle on weekends?" ;
+    mm:ttsVariant2 "Do you drive on Saturdays and Sundays?" ;
+    mm:ttsVariant3 "Do you use your car at weekends?" ;
+    mm:ttsVariant4 "Weekend driving - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:WeekendDrivingYes a mm:SelectOption ;
+    mm:optionAlias "yes, yeah, yep, affirmative" ;
+    mm:optionDescription "I drive on weekends" ;
+    mm:optionLabel "Yes" ;
+    mm:optionPhonetic "yankee echo sierra" ;
+    mm:optionValue "YES" .
+
+:WelcomeNode a :DialogNode ;
+    rdfs:label "Welcome" ;
+    :nextNode :DriversSection ;
+    :order 1 .
+
+:YearsHeldQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Years Licence Held" ;
+    :inSection :DriversSection ;
+    :order 19 ;
+    :questionId "q_years_held" ;
+    :questionText "How many years have you held your licence?" ;
+    :required true ;
+    :slotName "yearsHeld" ;
+    mm:hasTTSPrompt :YearsHeldTTS .
+
+:YearsHeldTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "How many years have you held your driving licence?" ;
+    mm:ttsVariant1 "How many years have you held your driving licence?" ;
+    mm:ttsVariant2 "For how long have you had your licence? Please tell me in years." ;
+    mm:ttsVariant3 "How many years of driving experience do you have?" ;
+    mm:ttsVariant4 "Years you've held your licence?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:YearsInOccupationTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "How many years have you been in your current occupation?" ;
+    mm:ttsVariant1 "How many years have you been in your current occupation?" ;
+    mm:ttsVariant2 "How long have you done this job?" ;
+    mm:ttsVariant3 "Years in your current occupation?" ;
+    mm:ttsVariant4 "Tell me how many years experience you have." ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+:inSection a owl:ObjectProperty ;
+    rdfs:label "in section" ;
+    rdfs:comment "The section this question belongs to" ;
+    rdfs:domain :Question ;
+    rdfs:range :Section .
+
+qc:InReviewState a qc:WorkflowState ;
+    rdfs:label "In Review State" ;
+    qc:allowedTransition qc:RejectedState,
+        qc:RephraseRequestedState,
+        qc:TranscribedState .
+
+qc:PendingState a qc:WorkflowState ;
+    rdfs:label "Pending State" ;
+    qc:allowedTransition qc:InReviewState,
+        qc:RephraseRequestedState .
+
+qc:TranscribedState a qc:WorkflowState ;
+    rdfs:label "Transcribed State" ;
+    qc:allowedTransition qc:RejectedState,
+        qc:ValidatedState .
+
+qc:ValidatedState a qc:WorkflowState ;
+    rdfs:label "Validated State" ;
+    rdfs:comment "Final state - answer accepted" .
+
+vocab:DateInputMode a vocab:InputMode ;
+    rdfs:label "Date Input Mode" ;
+    vocab:supportsLetterByLetterSpelling false ;
+    rdfs:comment "Input configuration for date fields (DD/MM/YYYY or spoken format)" .
+
+vocab:EmailInputMode a vocab:InputMode ;
+    rdfs:label "Email Input Mode" ;
+    vocab:spellingTerminationKeyword "end" ;
+    vocab:spellingTimeout 5 ;
+    vocab:supportsLetterByLetterSpelling true ;
+    vocab:usesSpaceSeparator true ;
+    rdfs:comment "Input configuration for email addresses" .
+
+vocab:LicenceInputMode a vocab:InputMode ;
+    rdfs:label "Driving Licence Input Mode" ;
+    vocab:spellingTerminationKeyword "end" ;
+    vocab:spellingTimeout 5 ;
+    vocab:supportsLetterByLetterSpelling true ;
+    vocab:usesSpaceSeparator true ;
+    rdfs:comment "Input configuration for UK driving licence numbers - supports letter-by-letter spelling" .
+
+vocab:PhoneInputMode a vocab:InputMode ;
+    rdfs:label "Phone Input Mode" ;
+    vocab:spellingTerminationKeyword "end" ;
+    vocab:spellingTimeout 5 ;
+    vocab:supportsLetterByLetterSpelling true ;
+    vocab:usesSpaceSeparator true ;
+    rdfs:comment "Input configuration for UK phone numbers - supports digit-by-digit input" .
+
+vocab:PostcodeInputMode a vocab:InputMode ;
+    rdfs:label "Postcode Input Mode" ;
+    vocab:spellingTerminationKeyword "end" ;
+    vocab:spellingTimeout 5 ;
+    vocab:supportsLetterByLetterSpelling true ;
+    vocab:usesSpaceSeparator true ;
+    rdfs:comment "Input configuration for UK postcodes - supports letter-by-letter spelling" .
+
+conf:ConfidenceScoringRule a owl:Class ;
+    rdfs:label "Confidence Scoring Rule" ;
+    rdfs:comment "Rule for calculating confidence scores" .
+
+:AddressQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Street Address" ;
+    :inSection :AddressSection ;
+    :order 14 ;
+    :questionId "q_street_address" ;
+    :questionText "What is your street address?" ;
+    :required true ;
+    :slotName "street_address" ;
+    mm:hasTTSPrompt :AddressTTS .
+
+:ClaimsNo a mm:SelectOption ;
+    mm:optionAlias "no, nope, none" ;
+    mm:optionDescription "No claims",
+        "No claims or accidents" ;
+    mm:optionLabel "No" ;
+    mm:optionPhonetic "november oscar" ;
+    mm:optionValue "NO" .
+
+:ClaimsYes a mm:SelectOption ;
+    mm:optionAlias "yes, yeah, yep" ;
+    mm:optionDescription "I have had claims or accidents",
+        "Yes, I have claims" ;
+    mm:optionLabel "Yes" ;
+    mm:optionPhonetic "yankee echo sierra" ;
+    mm:optionValue "YES" .
+
+:ConvictionsNo a mm:SelectOption ;
+    mm:optionAlias "no, nope, none, clean licence" ;
+    mm:optionDescription "No convictions or points",
+        "No driving convictions" ;
+    mm:optionLabel "No" ;
+    mm:optionPhonetic "november oscar" ;
+    mm:optionValue "NO" .
+
+:ConvictionsYes a mm:SelectOption ;
+    mm:optionAlias "yes, yeah, yep" ;
+    mm:optionDescription "I have driving convictions",
+        "Yes, I have convictions/points" ;
+    mm:optionLabel "Yes" ;
+    mm:optionPhonetic "yankee echo sierra" ;
+    mm:optionValue "YES" .
+
+:PhoneQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Phone Number" ;
+    :hasInputMode vocab:PhoneInputMode ;
+    :inSection :ContactDetailsSection ;
+    :order 14 ;
+    :questionId "q_phone" ;
+    :questionText "What is your phone number?" ;
+    :required true ;
+    :slotName "phone" ;
+    mm:hasTTSPrompt :PhoneTTS .
+
+:SummaryNode a :DialogNode ;
+    rdfs:label "Summary" ;
+    :order 9 .
+
+qc:RejectedState a qc:WorkflowState ;
+    rdfs:label "Rejected State" ;
+    rdfs:comment "Final state - answer rejected" .
+
+qc:RephraseRequestedState a qc:WorkflowState ;
+    rdfs:label "Rephrase Requested State" ;
+    qc:allowedTransition qc:PendingState ;
+    rdfs:comment "Waiting for user to provide rephrased answer" .
+
+vocab:VehicleRegInputMode a vocab:InputMode ;
+    rdfs:label "Vehicle Registration Input Mode" ;
+    vocab:spellingTerminationKeyword "end" ;
+    vocab:spellingTimeout 5 ;
+    vocab:supportsLetterByLetterSpelling true ;
+    vocab:usesSpaceSeparator true ;
+    rdfs:comment "Input configuration for vehicle registration numbers" .
+
+vocab:YesNoValues a skos:ConceptScheme ;
+    skos:definition "Boolean values with multiple acceptable expressions"@en ;
+    skos:prefLabel "Yes/No Values"@en .
+
+:PostcodeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Postcode" ;
+    :hasInputMode vocab:PostcodeInputMode ;
+    :inSection :AddressSection ;
+    :order 16 ;
+    :questionId "q_postcode" ;
+    :questionText "What is your postcode?" ;
+    :required true ;
+    :slotName "postcode" ;
+    :spellingRequired true ;
+    mm:hasTTSPrompt :PostcodeTTS .
+
+doc:AddressDocument a owl:Class ;
+    rdfs:label "Address Document" ;
+    rdfs:comment "Document that verifies address" ;
+    rdfs:subClassOf doc:Document .
+
+doc:VehicleDocument a owl:Class ;
+    rdfs:label "Vehicle Document" ;
+    rdfs:comment "Document related to vehicle ownership or registration" ;
+    rdfs:subClassOf doc:Document .
+
+qc:OperatorRole a owl:Class ;
+    rdfs:label "Operator Role" ;
+    rdfs:comment "Role configuration for operators in the review system" .
+
+vocab:CoverTypes a skos:ConceptScheme ;
+    skos:definition "Types of insurance coverage available"@en ;
+    skos:prefLabel "Insurance Cover Types"@en .
+
+:ClaimsSection a :Section ;
+    rdfs:label "Claims" ;
+    :nextNode :PaymentSection ;
+    :order 5 ;
+    :sectionDescription "Claims and conviction history" ;
+    :sectionTitle "📋 Claims & Convictions" .
+
+:ContactDetailsSection a :Section ;
+    rdfs:label "Contact Details Section" ;
+    :sectionDescription "How we can reach you" ;
+    :sectionId "section_contact" ;
+    :sectionOrder 2 ;
+    :sectionTitle "Contact Details" .
+
+:Dialog a owl:Class ;
+    rdfs:label "Dialog" ;
+    rdfs:comment "A complete dialog session with a user" .
+
+:PaymentSection a :Section ;
+    rdfs:label "Payment" ;
+    :nextNode :ExtrasSection ;
+    :order 6 ;
+    :sectionDescription "Payment preferences" ;
+    :sectionTitle "💳 Payment Preferences" .
+
+:TTLConfiguration a owl:Class ;
+    rdfs:label "TTL Configuration" ;
+    rdfs:comment "Time-to-live configuration for dialog lifecycle" .
+
+:VehicleSection a :Section ;
+    rdfs:label "Vehicle" ;
+    :nextNode :PolicySection ;
+    :order 3 ;
+    :sectionAlias "About the Car",
+        "Car Details",
+        "Car Information",
+        "My Vehicle",
+        "Vehicle Info" ;
+    :sectionDescription "Vehicle details and specifications" ;
+    :sectionIcon "🚗" ;
+    :sectionPhonetic "Car Details",
+        "Vee Hickle Details" ;
+    :sectionTitle "🚗 Vehicle Details" .
+
+doc:IdentityDocument a owl:Class ;
+    rdfs:label "Identity Document" ;
+    rdfs:comment "Document that verifies identity" ;
+    rdfs:subClassOf doc:Document .
+
+qc:RecordingConfiguration a owl:Class ;
+    rdfs:label "Recording Configuration" ;
+    rdfs:comment "Configuration for audio recording behavior" .
+
+qc:RephraseRequest a owl:Class ;
+    rdfs:label "Rephrase Request" ;
+    rdfs:comment "Request sent back to user to rephrase their answer" .
+
+vocab:UKRegions a skos:ConceptScheme ;
+    skos:definition "Regions of the United Kingdom"@en ;
+    skos:prefLabel "UK Regions"@en .
+
+vocab:VehicleTypes a skos:ConceptScheme ;
+    skos:definition "Classification of vehicle types for insurance purposes"@en ;
+    skos:prefLabel "Vehicle Types"@en .
+
+:ExtrasSection a :Section ;
+    rdfs:label "Extras" ;
+    :nextNode :MarketingSection ;
+    :order 7 ;
+    :sectionDescription "Optional extras and add-ons" ;
+    :sectionTitle "➕ Optional Extras" .
+
+:MarketingSection a :Section ;
+    rdfs:label "Marketing" ;
+    :nextNode :SummaryNode ;
+    :order 8 ;
+    :sectionDescription "Marketing preferences" ;
+    :sectionTitle "📧 Marketing Preferences" .
+
+qc:OperatorReview a owl:Class ;
+    rdfs:label "Operator Review" ;
+    rdfs:comment "Operator review record for low-confidence answers" .
+
+vocab:NameInputMode a vocab:InputMode ;
+    rdfs:label "Name Input Mode" ;
+    vocab:spellingTerminationKeyword "end" ;
+    vocab:spellingTimeout 5 ;
+    vocab:supportsLetterByLetterSpelling true ;
+    vocab:usesSpaceSeparator true ;
+    rdfs:comment "Input configuration for customer name fields - supports letter-by-letter with space separation, say 'end' to finish or 5 second timeout" .
+
+:ClaimTypeSubQuestion a :SubQuestion ;
+    rdfs:label "Claim Type" ;
+    :conditionField "has_claims" ;
+    :conditionOperator "equals" ;
+    :conditionValue "yes" ;
+    :hasOption :ClaimTypeAccident,
+        :ClaimTypeOther,
+        :ClaimTypeTheft,
+        :ClaimTypeVandalism,
+        :ClaimTypeWindscreen ;
+    :inputType "select" ;
+    :order 2 ;
+    :parentQuestion :HasClaimsQuestion ;
+    :questionId "claim_type" ;
+    :questionText "What type of claim was it?" ;
+    :required true ;
+    :showIf "has_claims == yes" ;
+    :slotName "claim_type" .
+
+:PersonalInfoSection a :Section ;
+    rdfs:label "Personal Information Section" ;
+    :sectionDescription "Basic personal details required for your insurance quote" ;
+    :sectionId "section_personal_info" ;
+    :sectionOrder 1 ;
+    :sectionTitle "Personal Information" .
+
+:PolicySection a :Section ;
+    rdfs:label "Policy" ;
+    :nextNode :ClaimsSection ;
+    :order 4 ;
+    :sectionDescription "Policy coverage details" ;
+    :sectionTitle "📄 Policy Coverage" .
+
+doc:Document a owl:Class ;
+    rdfs:label "Document" ;
+    rdfs:comment "A physical or digital document that can provide verification data" .
+
+doc:FieldDocumentMappings a skos:ConceptScheme ;
+    skos:definition "Mappings between data fields and documents that can provide them"@en ;
+    skos:prefLabel "Field to Document Mappings"@en .
+
+conf:ConfidenceScore a owl:Class ;
+    rdfs:label "Confidence Score" ;
+    rdfs:comment "Confidence score for a dialog answer" .
+
+conf:ConfidenceThreshold a owl:Class ;
+    rdfs:label "Confidence Threshold" ;
+    rdfs:comment "Threshold configuration for confidence-based actions" .
+
+:DriversSection a :Section ;
+    rdfs:label "Drivers" ;
+    :nextNode :VehicleSection ;
+    :order 2 ;
+    :sectionAlias "About the Driver",
+        "Driver Details",
+        "Driver Info",
+        "Personal Information",
+        "Who's Driving" ;
+    :sectionDescription "Driver information and details" ;
+    :sectionIcon "👤" ;
+    :sectionPhonetic "Driver Information",
+        "Dryver Info" ;
+    :sectionTitle "👤 Driver Information" .
+
+:HasClaimsQuestion a :Question,
+        mm:MultimodalQuestion ;
+    rdfs:label "Claims or Accidents" ;
+    :hasOption :HasClaimsNo,
+        :HasClaimsYes ;
+    :hasSubQuestion :ClaimAmountSubQuestion,
+        :ClaimDateSubQuestion,
+        :ClaimDescriptionSubQuestion,
+        :ClaimTypeSubQuestion ;
+    :inSection :ClaimsSection ;
+    :inputType "select" ;
+    :order 40 ;
+    :questionId "q_has_claims" ;
+    :questionText "Have you had any claims or accidents in the last 5 years?" ;
+    :required true ;
+    :slotName "hasClaimsOrAccidents" ;
+    mm:hasOption :ClaimsNo,
+        :ClaimsYes ;
+    mm:hasTTSPrompt :HasClaimsTTS .
+
+mm:FAQ a owl:Class ;
+    rdfs:label "Frequently Asked Question" ;
+    rdfs:comment "Common question and answer pair" .
+
+qc:WorkflowState a owl:Class ;
+    rdfs:label "Workflow State" ;
+    rdfs:comment "State in the review workflow" .
+
+:AdditionalDriverFieldGroup a form:FieldGroup ;
+    form:addButtonLabel "Add Another Driver" ;
+    form:groupCollapsible true ;
+    form:groupDefaultCollapsed false ;
+    form:groupDescription "Details for additional driver" ;
+    form:groupId "additional_driver_group" ;
+    form:groupLabel "Additional Driver {index}" ;
+    form:groupOrder 1 ;
+    form:hasQuestion :AdditionalDriverClaimsQuestion,
+        :AdditionalDriverConvictionsQuestion,
+        :AdditionalDriverDOBQuestion,
+        :AdditionalDriverFirstNameQuestion,
+        :AdditionalDriverLastNameQuestion,
+        :AdditionalDriverLicenceTypeQuestion,
+        :AdditionalDriverRelationshipQuestion,
+        :AdditionalDriverYearsHeldQuestion ;
+    form:icon "user" ;
+    form:isRepeatable true ;
+    form:maxOccurs 4 ;
+    form:minOccurs 1 ;
+    form:removeButtonLabel "Remove Driver" .
+
+:DialogNode a owl:Class ;
+    rdfs:label "Dialog Node" ;
+    rdfs:comment "A single node in the dialog flow" .
+
+:OccupationSection a :Section ;
+    rdfs:label "Occupation Section" ;
+    :sectionDescription "Your employment and occupation information" ;
+    :sectionId "section_occupation" ;
+    :sectionOrder 10 ;
+    :sectionTitle "Occupation Details" .
+
+mm:VisualComponent a owl:Class ;
+    rdfs:label "Visual Component" ;
+    rdfs:comment "Visual aid or component for the question" .
+
+:AddressSection a :Section ;
+    rdfs:label "Address Section" ;
+    :sectionDescription "Your current residential address" ;
+    :sectionId "section_address" ;
+    :sectionOrder 3 ;
+    :sectionTitle "Address Information" .
+
+:SubQuestion a owl:Class ;
+    rdfs:label "Sub Question" ;
+    rdfs:comment "A nested question that appears conditionally based on parent answer" ;
+    rdfs:subClassOf :Question .
+
+:slotName a owl:DatatypeProperty ;
+    rdfs:label "slot name" ;
+    rdfs:comment "The slot this question fills in the data model" ;
+    rdfs:domain :Question ;
+    rdfs:range xsd:string .
+
+:PolicyOptionsSection a :Section ;
+    rdfs:label "Policy Options Section" ;
+    :sectionDescription "Choose your coverage level and policy preferences" ;
+    :sectionId "section_policy_options" ;
+    :sectionOrder 7 ;
+    :sectionTitle "Policy Options" .
+
+:DrivingHistorySection a :Section ;
+    rdfs:label "Driving History Section" ;
+    :sectionDescription "Your driving experience and history" ;
+    :sectionId "section_driving" ;
+    :sectionOrder 5 ;
+    :sectionTitle "Driving History" .
+
+vocab:InputMode a owl:Class ;
+    rdfs:label "Input Mode" ;
+    rdfs:comment "Configuration for how input should be collected" .
+
+:UsageMileageSection a :Section ;
+    rdfs:label "Usage and Mileage Section" ;
+    :sectionDescription "How you use your vehicle" ;
+    :sectionId "section_usage" ;
+    :sectionOrder 8 ;
+    :sectionTitle "Usage & Mileage" .
+
+:Answer a owl:Class ;
+    rdfs:label "Answer" ;
+    rdfs:comment "User's response to a question" .
+
+:InsuranceHistorySection a :Section ;
+    rdfs:label "Insurance History Section" ;
+    :sectionDescription "Your previous insurance and claims history" ;
+    :sectionId "section_insurance" ;
+    :sectionOrder 6 ;
+    :sectionTitle "Insurance History" .
+
+:Question a owl:Class ;
+    rdfs:label "Question" ;
+    rdfs:comment "A question node that requires user input" ;
+    rdfs:subClassOf :DialogNode .
+
+:AdditionalDriversSection a :Section ;
+    rdfs:label "Additional Drivers Section" ;
+    :sectionDescription "Other people who will drive the vehicle" ;
+    :sectionId "section_additional_drivers" ;
+    :sectionOrder 9 ;
+    :sectionTitle "Additional Drivers" ;
+    form:hasFieldGroup :AdditionalDriverFieldGroup .
+
+:VehicleDetailsSection a :Section ;
+    rdfs:label "Vehicle Details Section" ;
+    :sectionDescription "Information about the vehicle you want to insure" ;
+    :sectionId "section_vehicle" ;
+    :sectionOrder 4 ;
+    :sectionTitle "Vehicle Details" .
+
+:Section a owl:Class ;
+    rdfs:label "Section" ;
+    rdfs:comment "A grouping of related questions in the dialog" ;
+    rdfs:subClassOf :DialogNode .
+
+vocab:PhoneticAlphabet a skos:ConceptScheme ;
+    skos:definition "Standard phonetic alphabet for clear communication"@en ;
+    skos:prefLabel "NATO Phonetic Alphabet"@en .
+
+mm:TTSPrompt a owl:Class ;
+    rdfs:label "Text-to-Speech Prompt" ;
+    rdfs:comment "Audio prompt configuration" .
+
+mm:MultimodalQuestion a owl:Class ;
+    rdfs:label "Multimodal Question" ;
+    rdfs:comment "Question with multiple input/output modalities" ;
+    rdfs:subClassOf :Question .
+
+mm:SelectOption a owl:Class ;
+    rdfs:label "Select Option" ;
+    rdfs:comment "A selectable option for multiple choice questions" .
+

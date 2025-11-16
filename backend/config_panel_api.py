@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 from dialog_manager import DialogManager
 from csv_select_parser import CSVSelectParser
 from flow_converter import TTLToFlowConverter, FlowToTTLConverter
+from ttl_validator import TTLValidator, TTLCleaner, validate_before_save
 
 # Load environment variables from .env file
 load_dotenv()
@@ -1275,27 +1276,28 @@ async def save_section(request: SectionSaveRequest):
 @app.get("/api/config/sections")
 async def get_all_sections():
     """
-    Get all sections in the dialog
+    Get all sections in the dialog (from golden source: dialog-sections.ttl)
     """
     try:
+        # Load ontology files - using dialog-sections.ttl as golden source
         ontology_paths = [
-            os.path.join(ONTOLOGY_DIR, "dialog.ttl"),
+            os.path.join(ONTOLOGY_DIR, "dialog-sections.ttl"),
             os.path.join(ONTOLOGY_DIR, "dialog-insurance-questions.ttl")
         ]
 
         dialog_manager = DialogManager(ontology_paths)
 
-        # Query for all sections
+        # Query for all sections using sectionId (golden source property)
         query = """
         PREFIX : <http://diggi.io/ontology/dialog#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-        SELECT ?section ?title ?description ?icon ?order
+        SELECT ?section ?sectionId ?title ?description ?icon ?order
         WHERE {
             ?section a :Section ;
-                rdfs:label ?label ;
+                :sectionId ?sectionId ;
                 :sectionTitle ?title ;
-                :order ?order .
+                :sectionOrder ?order .
 
             OPTIONAL { ?section :sectionDescription ?description }
             OPTIONAL { ?section :sectionIcon ?icon }
@@ -1307,9 +1309,8 @@ async def get_all_sections():
 
         sections = []
         for row in results:
-            section_id = str(row.section).split('#')[-1]
             sections.append({
-                "section_id": section_id,
+                "section_id": str(row.sectionId),
                 "title": str(row.title),
                 "description": str(row.description) if row.description else "",
                 "icon": str(row.icon) if row.icon else "",
@@ -1336,9 +1337,11 @@ async def load_flow():
     Load dialog flow from TTL and convert to Flow JSON format for React Flow editor
     """
     try:
+        # Load all required ontology files including the golden source (dialog-sections.ttl)
         ontology_paths = [
-            os.path.join(ONTOLOGY_DIR, "dialog.ttl"),
-            os.path.join(ONTOLOGY_DIR, "dialog-insurance-questions.ttl")
+            os.path.join(ONTOLOGY_DIR, "dialog-sections.ttl"),  # Golden source for sections
+            os.path.join(ONTOLOGY_DIR, "dialog-insurance-questions.ttl"),
+            os.path.join(ONTOLOGY_DIR, "dialog.ttl")
         ]
 
         dialog_manager = DialogManager(ontology_paths)

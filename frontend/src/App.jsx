@@ -1,11 +1,12 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { MessageSquare, UserCog, Menu, X, Settings, Edit3, FolderTree } from 'lucide-react'
+import { MessageSquare, UserCog, Menu, X, Settings, Edit3, FolderTree, GitBranch } from 'lucide-react'
 import MultimodalDialog from './components/MultimodalDialog'
 import OperatorPanel from './components/OperatorPanel'
 import ConfigPanel from './components/ConfigPanel'
 import DialogEditor from './components/DialogEditor'
 import SectionManager from './components/SectionManager'
+import DialogFlowEditor from './components/DialogFlowEditor'
 
 function AppContent() {
   const location = useLocation()
@@ -81,6 +82,17 @@ function AppContent() {
                 >
                   <FolderTree className="h-4 w-4" />
                   Section Manager
+                </Link>
+                <Link
+                  to="/flow"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium ${
+                    location.pathname === '/flow'
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  <GitBranch className="h-4 w-4" />
+                  Flow Editor
                 </Link>
               </div>
             </div>
@@ -163,20 +175,37 @@ function AppContent() {
                 <FolderTree className="h-5 w-5" />
                 Section Manager
               </Link>
+              <Link
+                to="/flow"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium ${
+                  location.pathname === '/flow'
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`}
+              >
+                <GitBranch className="h-5 w-5" />
+                Flow Editor
+              </Link>
             </div>
           </div>
         )}
       </nav>
 
-      <main className="container mx-auto px-4 py-8">
-        <Routes>
-          <Route path="/" element={<MultimodalDialog />} />
-          <Route path="/operator" element={<OperatorPanel />} />
-          <Route path="/config" element={<ConfigPanel />} />
-          <Route path="/editor" element={<DialogEditor />} />
-          <Route path="/sections" element={<SectionManager />} />
-        </Routes>
-      </main>
+      <Routes>
+        <Route path="/flow" element={<DialogFlowEditor />} />
+        <Route path="*" element={
+          <main className="container mx-auto px-4 py-8">
+            <Routes>
+              <Route path="/" element={<MultimodalDialog />} />
+              <Route path="/operator" element={<OperatorPanel />} />
+              <Route path="/config" element={<ConfigPanel />} />
+              <Route path="/editor" element={<DialogEditor />} />
+              <Route path="/sections" element={<SectionManager />} />
+            </Routes>
+          </main>
+        } />
+      </Routes>
     </div>
   )
 }

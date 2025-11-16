@@ -290,34 +290,10 @@
     rdfs:label "Summary" ;
     :order 9 .
 
-# Example: Conditional Logic - Claims Questions
-# Parent question with sub-questions that appear based on answer
+# Example: Conditional Logic - Claims Sub-Questions
+# Sub-questions for :HasClaimsQuestion (defined in dialog-sections.ttl with questionId "q_has_claims")
 
-:HasClaimsQuestion a :Question ;
-    rdfs:label "Has Claims Question" ;
-    :questionId "has_claims" ;
-    :questionText "Have you had any claims in the last 5 years?" ;
-    :slotName "has_claims" ;
-    :inputType "select" ;
-    :required true ;
-    :inSection :ClaimsSection ;
-    :order 1 ;
-    :hasOption :HasClaimsYes, :HasClaimsNo ;
-    :hasSubQuestion :ClaimTypeSubQuestion, :ClaimDateSubQuestion, :ClaimAmountSubQuestion, :ClaimDescriptionSubQuestion .
-
-:HasClaimsYes a :SelectOption ;
-    rdfs:label "Yes" ;
-    :optionValue "yes" ;
-    :optionLabel "Yes" ;
-    :forQuestion :HasClaimsQuestion .
-
-:HasClaimsNo a :SelectOption ;
-    rdfs:label "No" ;
-    :optionValue "no" ;
-    :optionLabel "No" ;
-    :forQuestion :HasClaimsQuestion .
-
-# Sub-Question 1: Claim Type (appears if has_claims == "yes")
+# Sub-Question 1: Claim Type (appears if q_has_claims == "YES")
 :ClaimTypeSubQuestion a :SubQuestion ;
     rdfs:label "Claim Type" ;
     :questionId "claim_type" ;
@@ -327,9 +303,9 @@
     :required true ;
     :parentQuestion :HasClaimsQuestion ;
     :conditionOperator "equals" ;
-    :conditionValue "yes" ;
-    :conditionField "has_claims" ;
-    :showIf "has_claims == yes" ;
+    :conditionValue "YES" ;
+    :conditionField "q_has_claims" ;
+    :showIf "q_has_claims == YES" ;
     :order 2 ;
     :hasOption :ClaimTypeAccident, :ClaimTypeTheft, :ClaimTypeVandalism, :ClaimTypeWindscreen, :ClaimTypeOther .
 
@@ -367,7 +343,7 @@
     :optionLabel "Other" ;
     :forQuestion :ClaimTypeSubQuestion .
 
-# Sub-Question 2: Claim Date (appears if has_claims == "yes")
+# Sub-Question 2: Claim Date (appears if q_has_claims == "YES")
 :ClaimDateSubQuestion a :SubQuestion ;
     rdfs:label "Claim Date" ;
     :questionId "claim_date" ;
@@ -377,12 +353,12 @@
     :required true ;
     :parentQuestion :HasClaimsQuestion ;
     :conditionOperator "equals" ;
-    :conditionValue "yes" ;
-    :conditionField "has_claims" ;
-    :showIf "has_claims == yes" ;
+    :conditionValue "YES" ;
+    :conditionField "q_has_claims" ;
+    :showIf "q_has_claims == YES" ;
     :order 3 .
 
-# Sub-Question 3: Claim Amount (appears if has_claims == "yes")
+# Sub-Question 3: Claim Amount (appears if q_has_claims == "YES")
 :ClaimAmountSubQuestion a :SubQuestion ;
     rdfs:label "Claim Amount" ;
     :questionId "claim_amount" ;
@@ -392,14 +368,14 @@
     :required true ;
     :parentQuestion :HasClaimsQuestion ;
     :conditionOperator "equals" ;
-    :conditionValue "yes" ;
-    :conditionField "has_claims" ;
-    :showIf "has_claims == yes" ;
+    :conditionValue "YES" ;
+    :conditionField "q_has_claims" ;
+    :showIf "q_has_claims == YES" ;
     :order 4 ;
     :validationMin "0" ;
     :validationMax "100000" .
 
-# Sub-Question 4: Claim Description (appears if has_claims == "yes")
+# Sub-Question 4: Claim Description (appears if q_has_claims == "YES")
 :ClaimDescriptionSubQuestion a :SubQuestion ;
     rdfs:label "Claim Description" ;
     :questionId "claim_description" ;
@@ -409,8 +385,8 @@
     :required false ;
     :parentQuestion :HasClaimsQuestion ;
     :conditionOperator "equals" ;
-    :conditionValue "yes" ;
-    :conditionField "has_claims" ;
-    :showIf "has_claims == yes" ;
+    :conditionValue "YES" ;
+    :conditionField "q_has_claims" ;
+    :showIf "q_has_claims == YES" ;
     :order 5 ;
     :validationMaxLength "500" .

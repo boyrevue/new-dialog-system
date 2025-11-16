@@ -1,0 +1,125 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix form: <http://diggi.io/ontology/form#> .
+@prefix mm: <http://diggi.io/ontology/multimodal#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2001/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# =============================================================================
+# CLAIMS REPEATABLE GROUP
+# =============================================================================
+# This file defines a repeatable field group for capturing up to 5 insurance claims.
+# Each claim includes: type, date, amount, and description.
+# =============================================================================
+
+:ClaimsForm a form:Form ;
+    rdfs:label "Claims Form" ;
+    rdfs:comment "Insurance claims history with repeatable claim details" ;
+    form:formId "claims_form" ;
+    form:hasFieldGroup :ClaimsRepeatingGroup .
+
+# Repeatable Field Group for Claim Details (up to 5 claims)
+:ClaimsRepeatingGroup a form:FieldGroup ;
+    rdfs:label "Claim Details" ;
+    rdfs:comment "Group of fields for each individual claim - can be repeated up to 5 times" ;
+    form:groupId "claim_details" ;
+    form:groupLabel "Claim #{index}" ;
+    form:isRepeatable true ;
+    form:minOccurs 1 ;
+    form:maxOccurs 5 ;
+    form:order 1 ;
+    form:hasField :ClaimTypeField,
+                   :ClaimDateField,
+                   :ClaimAmountField,
+                   :ClaimDescriptionField .
+
+# =============================================================================
+# FIELD DEFINITIONS FOR EACH CLAIM
+# =============================================================================
+
+:ClaimTypeField a form:Field ;
+    rdfs:label "Claim Type" ;
+    form:fieldId "claim_type" ;
+    form:inputType "select" ;
+    form:required true ;
+    form:order 1 ;
+    form:hasSelectOption :ClaimTypeAccident,
+                          :ClaimTypeTheft,
+                          :ClaimTypeVandalism,
+                          :ClaimTypeWindscreen,
+                          :ClaimTypeFire,
+                          :ClaimTypeWeather,
+                          :ClaimTypeOther .
+
+:ClaimDateField a form:Field ;
+    rdfs:label "Claim Date" ;
+    form:fieldId "claim_date" ;
+    form:inputType "date" ;
+    form:required true ;
+    form:order 2 ;
+    form:validationRule :DateWithinLast5Years .
+
+:ClaimAmountField a form:Field ;
+    rdfs:label "Claim Amount" ;
+    form:fieldId "claim_amount" ;
+    form:inputType "number" ;
+    form:required true ;
+    form:order 3 ;
+    form:validationRule :PositiveAmount .
+
+:ClaimDescriptionField a form:Field ;
+    rdfs:label "Claim Description" ;
+    form:fieldId "claim_description" ;
+    form:inputType "textarea" ;
+    form:required false ;
+    form:order 4 ;
+    form:placeholder "Please provide a brief description of what happened..." .
+
+# =============================================================================
+# SELECT OPTIONS FOR CLAIM TYPE
+# =============================================================================
+
+:ClaimTypeAccident a form:SelectOption ;
+    form:optionValue "accident" ;
+    form:optionLabel "Accident / Collision" .
+
+:ClaimTypeTheft a form:SelectOption ;
+    form:optionValue "theft" ;
+    form:optionLabel "Theft / Attempted Theft" .
+
+:ClaimTypeVandalism a form:SelectOption ;
+    form:optionValue "vandalism" ;
+    form:optionLabel "Vandalism" .
+
+:ClaimTypeWindscreen a form:SelectOption ;
+    form:optionValue "windscreen" ;
+    form:optionLabel "Windscreen / Glass Damage" .
+
+:ClaimTypeFire a form:SelectOption ;
+    form:optionValue "fire" ;
+    form:optionLabel "Fire Damage" .
+
+:ClaimTypeWeather a form:SelectOption ;
+    form:optionValue "weather" ;
+    form:optionLabel "Weather / Storm Damage" .
+
+:ClaimTypeOther a form:SelectOption ;
+    form:optionValue "other" ;
+    form:optionLabel "Other" .
+
+# =============================================================================
+# VALIDATION RULES
+# =============================================================================
+
+:DateWithinLast5Years a form:ValidationRule ;
+    form:ruleName "date_within_last_5_years" ;
+    form:errorMessage "Claim date must be within the last 5 years" ;
+    form:validationType "date_range" ;
+    form:maxDate "today" ;
+    form:minDate "today-5years" .
+
+:PositiveAmount a form:ValidationRule ;
+    form:ruleName "positive_amount" ;
+    form:errorMessage "Claim amount must be greater than 0" ;
+    form:validationType "min_value" ;
+    form:minValue 1 .

@@ -401,18 +401,25 @@ const MultimodalDialog = () => {
 
   const speakText = (text, ttsConfig = {}, voiceObject = null) => {
     if ('speechSynthesis' in window) {
-      // Chrome bug workaround: only cancel if something is actually queued/playing
-      if (speechSynthesis.speaking || speechSynthesis.pending) {
-        speechSynthesis.cancel();
-      }
+      // CHROME BUG FIX: Always cancel first to prevent stuck "speaking" state
+      // This ensures Chrome doesn't get stuck thinking it's already speaking
+      console.log('speechSynthesis state before cancel:', {
+        speaking: speechSynthesis.speaking,
+        pending: speechSynthesis.pending,
+        paused: speechSynthesis.paused
+      });
 
-      // Wait a moment for cancel to complete, then proceed
-      setTimeout(() => {
-        // Chrome bug workaround: wake up the speech synthesis engine
+      speechSynthesis.cancel();
+
+      // Wait for cancel to complete, then start speaking
+      setTimeout(() => startSpeaking(), 250);
+
+      function startSpeaking() {
+        // CRITICAL: Resume if paused (Chrome often auto-pauses)
         if (speechSynthesis.paused) {
+          console.log('Speech synthesis was paused, resuming...');
           speechSynthesis.resume();
         }
-
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-GB';
         utterance.volume = 1.0; // Ensure full volume
@@ -434,17 +441,22 @@ const MultimodalDialog = () => {
         }
 
         utterance.onstart = () => {
-          console.log('TTS started:', text.substring(0, 50) + '...');
-          console.log('Voice:', utterance.voice?.name, 'Rate:', utterance.rate, 'Pitch:', utterance.pitch);
+          console.log('✅ TTS started:', text.substring(0, 50) + '...');
+          console.log('Voice:', utterance.voice?.name, 'Rate:', utterance.rate, 'Pitch:', utterance.pitch, 'Volume:', utterance.volume);
+          console.log('🔊 Audio should be playing now. If you hear nothing, check:');
+          console.log('1. Chrome tab is not muted (right-click tab to check)');
+          console.log('2. System volume is up');
+          console.log('3. Output device is correct in Chrome settings');
           setIsSpeaking(true);
         };
 
         utterance.onend = () => {
-          console.log('TTS ended');
+          console.log('✅ TTS ended normally');
           setIsSpeaking(false);
         };
 
         utterance.onerror = (event) => {
+          console.error('❌ TTS error:', event.error, 'Character index:', event.charIndex);
           setIsSpeaking(false);
           if (event.error === 'not-allowed') {
             setShowAudioPrompt(true);
@@ -457,6 +469,18 @@ const MultimodalDialog = () => {
           // Silently ignore "canceled" errors - they're expected when stopping TTS
         };
 
+        utterance.onpause = () => {
+          console.warn('⚠️ TTS paused unexpectedly');
+        };
+
+        utterance.onresume = () => {
+          console.log('▶️ TTS resumed');
+        };
+
+        utterance.onboundary = (event) => {
+          console.log('📍 TTS boundary event:', event.name, 'at char', event.charIndex);
+        };
+
         console.log('Speaking:', {
           text: text.substring(0, 50) + '...',
           voice: utterance.voice?.name || 'default',
@@ -464,16 +488,35 @@ const MultimodalDialog = () => {
           pitch: utterance.pitch
         });
 
-        console.log('speechSynthesis state:', {
+        console.log('speechSynthesis state BEFORE speak:', {
           speaking: speechSynthesis.speaking,
           pending: speechSynthesis.pending,
           paused: speechSynthesis.paused
         });
 
+        // CRITICAL FIX: Force resume AGAIN right before speaking (Chrome aggressive pausing workaround)
+        if (speechSynthesis.paused) {
+          speechSynthesis.resume();
+        }
+
         speechSynthesis.speak(utterance);
+
+        // IMPORTANT: Immediately check and resume if Chrome pauses (it often does)
+        setTimeout(() => {
+          if (speechSynthesis.paused) {
+            console.log('Chrome auto-paused speech, forcing resume...');
+            speechSynthesis.resume();
+          }
+        }, 50);
 
         // Chrome bug workaround: check if speech started after a short delay
         setTimeout(() => {
+          console.log('speechSynthesis state AFTER speak:', {
+            speaking: speechSynthesis.speaking,
+            pending: speechSynthesis.pending,
+            paused: speechSynthesis.paused
+          });
+
           if (!speechSynthesis.speaking && !speechSynthesis.pending) {
             console.warn('TTS failed to start, retrying with fresh utterance and default voice...');
             // Retry once with fresh utterance and no explicit voice (let Chrome pick a safe default)
@@ -484,19 +527,27 @@ const MultimodalDialog = () => {
             fallback.volume = 1.0;
             fallback.onstart = () => setIsSpeaking(true);
             fallback.onend = () => setIsSpeaking(false);
-            fallback.onerror = () => {
+            fallback.onerror = (e) => {
               setIsSpeaking(false);
+              console.error('Fallback TTS also failed:', e.error);
               // As a last resort, show the enable audio prompt to request a user gesture
               setShowAudioPrompt(true);
             };
             // Ensure no stale queue remains before retry
-            if (speechSynthesis.speaking || speechSynthesis.pending) {
-              speechSynthesis.cancel();
-            }
-            setTimeout(() => speechSynthesis.speak(fallback), 120);
+            speechSynthesis.cancel();
+            setTimeout(() => {
+              speechSynthesis.speak(fallback);
+              // Force resume for fallback too
+              setTimeout(() => {
+                if (speechSynthesis.paused) {
+                  console.log('Fallback also paused, resuming...');
+                  speechSynthesis.resume();
+                }
+              }, 50);
+            }, 100);
           }
-        }, 250);
-      }, 120); // slightly longer delay after cancel for Chrome stability
+        }, 300);
+      }
     } else {
       console.warn('Speech synthesis not supported');
       setError('Text-to-speech not supported in this browser');
@@ -591,6 +642,12 @@ const MultimodalDialog = () => {
       voice: selectedVoice?.name
     });
     const testText = `Hello! This is a test of the text to speech system using ${selectedVoice ? selectedVoice.name : 'the default voice'}.`;
+
+    // DIAGNOSTIC: Test if ANY voice works by trying system default first
+    if (selectedVoice && selectedVoice.name.includes('Google')) {
+      console.log('⚠️ Testing Google voice. If this fails, will try system voice.');
+    }
+
     speakText(testText, {}, selectedVoice);
   };
 
