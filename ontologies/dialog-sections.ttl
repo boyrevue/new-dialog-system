@@ -2841,36 +2841,6 @@ vocab:usesSpaceSeparator a owl:DatatypeProperty ;
     mm:optionLabel "£500" ;
     mm:optionValue "500" .
 
-:FirstNameQuestion a mm:MultimodalQuestion ;
-    rdfs:label "First Name" ;
-    :hasInputMode vocab:NameInputMode ;
-    :inSection :PersonalInfoSection ;
-    :order 10 ;
-    :questionId "q_first_name" ;
-    :questionText "What is your first name?" ;
-    :required true ;
-    :slotName "firstName" ;
-    :spellingRequired true ;
-    mm:fieldType "text" ;
-    mm:hasTTSPrompt :FirstNameTTS ;
-    mm:helpText "Please provide your legal first name as it appears on your ID" ;
-    mm:maxLength 50 ;
-    mm:minLength 2 ;
-    mm:placeholder "Enter your first name" ;
-    mm:uiHint "half-width" ;
-    mm:validationMessage "First name must contain only letters" ;
-    mm:validationRule "isAlpha" .
-
-:FirstNameTTS a mm:TTSPrompt ;
-    mm:ttsPitch 1.0 ;
-    mm:ttsRate 1.0 ;
-    mm:ttsText "Please tell me your first name." ;
-    mm:ttsVariant1 "Please tell me your first name." ;
-    mm:ttsVariant2 "Could you provide your first name, please?" ;
-    mm:ttsVariant3 "What's your first name?" ;
-    mm:ttsVariant4 "I need your first name." ;
-    mm:ttsVoice "en-GB-Neural2-A" .
-
 :HasAdditionalDriversNo a mm:SelectOption ;
     mm:optionAlias "no, nope, negative" ;
     mm:optionDescription "No additional drivers" ;

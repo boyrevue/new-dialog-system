@@ -19,7 +19,7 @@
     :required true ;
     :spellingRequired true ;
     :order 10 ;
-    :inSection :DriversSection ;
+    :inSection :PersonalInfoSection ;
     :hasInputMode vocab:NameInputMode ;
     mm:hasTTSPrompt :FirstNameTTS ;
     mm:fieldType "text" ;
