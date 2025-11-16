@@ -1,0 +1,33 @@
+{
+  "summary": {
+    "total_questions": 0,
+    "loaded_files": 7,
+    "archivable_files": 5,
+    "issues_count": 0
+  },
+  "issues": [],
+  "question_locations": {},
+  "files": {
+    "loaded": [
+      "dialog-documents.ttl",
+      "dialog-insurance-questions.ttl",
+      "dialog-multimodal.ttl",
+      "dialog-sections.ttl",
+      "dialog-validation.ttl",
+      "dialog-vocabularies.ttl",
+      "dialog.ttl"
+    ],
+    "archivable": [
+      "dialog-claims-repeatable.ttl",
+      "dialog-confidence.ttl",
+      "dialog-forms.ttl",
+      "dialog-tts-asr-index.ttl",
+      "dialog-vehicle-modifications.ttl"
+    ],
+    "backups": [
+      "dialog-sections.ttl.backup",
+      "dialog-validation.ttl.backup",
+      "dialog.ttl.backup"
+    ]
+  }
+}

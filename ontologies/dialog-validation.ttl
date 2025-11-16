@@ -268,3 +268,24 @@ val:PostcodeMatchesRegion a sh:NodeShape ;
             }
         """ ;
     ] .
+
+# Ontology Structure Validation
+# Ensures questions have exactly one :inSection and one :order value
+
+val:QuestionStructureShape a sh:NodeShape ;
+    rdfs:label "Question Structure Validation" ;
+    rdfs:comment "Ensures each question has exactly one section and order value" ;
+    sh:targetClass <http://example.org/multimodal#MultimodalQuestion> ;
+    sh:property [
+        sh:path :inSection ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "Each question must have exactly one :inSection value" ;
+    ] ;
+    sh:property [
+        sh:path :order ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:integer ;
+        sh:message "Each question must have exactly one :order value (integer)" ;
+    ] .

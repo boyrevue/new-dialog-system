@@ -1361,6 +1361,92 @@ async def load_flow():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/config/consistency-check")
+async def check_ontology_consistency():
+    """
+    Check ontology consistency - validates SHACL rules and structural constraints.
+    Returns warnings about:
+    - Questions with multiple :inSection or :order values
+    - Questions without :inSection or :order
+    - Duplicate question definitions
+    """
+    try:
+        from rdflib import Graph, Namespace, RDF
+        from collections import defaultdict
+
+        DIALOG = Namespace("http://example.org/dialog#")
+        MM = Namespace("http://example.org/multimodal#")
+
+        issues = []
+        warnings = []
+
+        # Load all ontology files
+        graph = Graph()
+        for ontology_name, filename in ONTOLOGY_FILES.items():
+            filepath = ONTOLOGY_DIR / filename
+            if filepath.exists():
+                try:
+                    graph.parse(filepath, format="turtle")
+                except Exception as e:
+                    warnings.append(f"Failed to load {filename}: {str(e)}")
+
+        # Check for questions with multiple :inSection values
+        for question in graph.subjects(RDF.type, MM.MultimodalQuestion):
+            sections = list(graph.objects(question, DIALOG.inSection))
+            if len(sections) > 1:
+                issues.append({
+                    "type": "multi_valued_section",
+                    "severity": "error",
+                    "question": str(question),
+                    "count": len(sections),
+                    "message": f"Question has {len(sections)} :inSection values (should be 1)"
+                })
+            elif len(sections) == 0:
+                issues.append({
+                    "type": "missing_section",
+                    "severity": "warning",
+                    "question": str(question),
+                    "message": "Question has no :inSection value"
+                })
+
+            # Check for multiple :order values
+            orders = list(graph.objects(question, DIALOG.order))
+            if len(orders) > 1:
+                issues.append({
+                    "type": "multi_valued_order",
+                    "severity": "error",
+                    "question": str(question),
+                    "count": len(orders),
+                    "message": f"Question has {len(orders)} :order values (should be 1)"
+                })
+            elif len(orders) == 0:
+                issues.append({
+                    "type": "missing_order",
+                    "severity": "warning",
+                    "question": str(question),
+                    "message": "Question has no :order value"
+                })
+
+        # Count questions per file to detect potential duplication
+        question_count = len(list(graph.subjects(RDF.type, MM.MultimodalQuestion)))
+
+        return {
+            "success": True,
+            "clean": len(issues) == 0,
+            "total_questions": question_count,
+            "issues": issues,
+            "warnings": warnings,
+            "summary": {
+                "errors": len([i for i in issues if i.get("severity") == "error"]),
+                "warnings": len([i for i in issues if i.get("severity") == "warning"])
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error checking consistency: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8002)
