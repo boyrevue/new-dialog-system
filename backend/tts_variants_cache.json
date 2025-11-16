@@ -1,0 +1,92 @@
+{
+  "q_first_name": {
+    "variants": [
+      "What is your first name?",
+      "Could you tell me your first name?",
+      "Please provide your first name.",
+      "I need your first name."
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-15 21:59:09.861409\"}"
+  },
+  "q_last_name": {
+    "variants": [
+      "What is your last name?",
+      "Could you tell me your last name?",
+      "Please provide your last name.",
+      "I need your last name."
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-15 21:59:28.730727\"}"
+  },
+  "q_date_of_birth": {
+    "variants": [
+      "What is your date of birth?",
+      "Could you tell me your date of birth?",
+      "Please provide your date of birth.",
+      "I need your date of birth."
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-15 21:59:38.497048\"}"
+  },
+  "q_email": {
+    "variants": [
+      "What is your email address?",
+      "Could you tell me your email address?",
+      "Please provide your email address.",
+      "I need your email address."
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-15 21:59:57.296018\"}"
+  },
+  "q_phone": {
+    "variants": [
+      "What is your phone number?",
+      "Could you tell me your phone number?",
+      "Please provide your phone number.",
+      "I need your phone number."
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-15 22:00:11.746018\"}"
+  },
+  "q_ncd_years": {
+    "variants": [
+      "Can you tell me the number of years you've had a no claims discount?",
+      "For how many years have you been receiving the no claims discount?",
+      "I'd appreciate if you could share the length of time you've been enjoying your no claims discount.",
+      "Your no claims discount has been active for how many years?"
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-16 01:02:33.197850\"}"
+  },
+  "q_previous_insurance": {
+    "variants": [
+      "Have you maintained uninterrupted auto insurance over the past year?",
+      "In the last 12 months, did you have a continuous coverage of car insurance?",
+      "Just checking, you've kept your car insurance going without a break for the last year, right?",
+      "Is your car insurance coverage continuous for the past year?"
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-16 01:02:57.099731\"}"
+  },
+  "q_street_address": {
+    "variants": [
+      "Could you please provide your street address?",
+      "I would need to know your street address, would you mind sharing it?",
+      "Hey there, could you tell me what your street address is?",
+      "Street address, please?"
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-16 01:03:22.221336\"}"
+  },
+  "q_vehicle_year": {
+    "variants": [
+      "Could you tell me the manufacturing year of your vehicle?",
+      "In what year was your vehicle made?",
+      "Can you share with me the year your car rolled off the production line?",
+      "Your vehicle's production year, please?"
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-16 01:05:01.980967\"}"
+  },
+  "q_vehicle_make": {
+    "variants": [
+      "Can you tell me the make of your vehicle?",
+      "I would like to know the vehicle make, could you provide it?",
+      "Hey, just wondering, what's the make of your car?",
+      "Vehicle's make, please?"
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-16 01:05:27.202306\"}"
+  }
+}

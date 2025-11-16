@@ -1,0 +1,345 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix ins: <http://insurance.example.org/ontology#> .
+@prefix veh: <http://vehicle.example.org/ontology#> .
+
+# ============================================================================
+# VEHICLE INSURANCE ONTOLOGY
+# Hierarchical structure: Section → Question → Field → Vehicle Specs
+# ============================================================================
+
+<http://insurance.example.org/ontology>
+    a owl:Ontology ;
+    rdfs:label "Vehicle Insurance Ontology"@en ;
+    rdfs:comment "Hierarchical ontology for vehicle insurance data collection"@en ;
+    owl:versionInfo "1.0" .
+
+# ============================================================================
+# CLASSES
+# ============================================================================
+
+ins:Section a owl:Class ;
+    rdfs:label "Insurance Section"@en ;
+    rdfs:comment "Top-level grouping for related questions"@en .
+
+ins:Question a owl:Class ;
+    rdfs:label "Insurance Question"@en ;
+    rdfs:comment "Question asked to user"@en .
+
+ins:Field a owl:Class ;
+    rdfs:label "Data Field"@en ;
+    rdfs:comment "Field to collect data"@en .
+
+veh:Manufacturer a owl:Class ;
+    rdfs:label "Vehicle Manufacturer"@en ;
+    rdfs:comment "Car manufacturer (Level 1)"@en .
+
+veh:Model a owl:Class ;
+    rdfs:label "Vehicle Model"@en ;
+    rdfs:comment "Car model (Level 2)"@en .
+
+veh:VehicleSpec a owl:Class ;
+    rdfs:label "Vehicle Specification"@en ;
+    rdfs:comment "Technical specifications of a vehicle"@en .
+
+# ============================================================================
+# PROPERTIES
+# ============================================================================
+
+ins:hasQuestion a owl:ObjectProperty ;
+    rdfs:domain ins:Section ;
+    rdfs:range ins:Question ;
+    rdfs:label "has question"@en .
+
+ins:hasField a owl:ObjectProperty ;
+    rdfs:domain ins:Question ;
+    rdfs:range ins:Field ;
+    rdfs:label "has field"@en .
+
+veh:hasModel a owl:ObjectProperty ;
+    rdfs:domain veh:Manufacturer ;
+    rdfs:range veh:Model ;
+    rdfs:label "has model"@en .
+
+veh:hasSpec a owl:ObjectProperty ;
+    rdfs:domain veh:Model ;
+    rdfs:range veh:VehicleSpec ;
+    rdfs:label "has specification"@en .
+
+# Specification Properties
+veh:engineSize a owl:DatatypeProperty ;
+    rdfs:domain veh:VehicleSpec ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "engine size"@en ;
+    rdfs:comment "Engine size in litres"@en .
+
+veh:fuelType a owl:DatatypeProperty ;
+    rdfs:domain veh:VehicleSpec ;
+    rdfs:range xsd:string ;
+    rdfs:label "fuel type"@en .
+
+veh:numberOfDoors a owl:DatatypeProperty ;
+    rdfs:domain veh:VehicleSpec ;
+    rdfs:range xsd:integer ;
+    rdfs:label "number of doors"@en .
+
+veh:numberOfSeats a owl:DatatypeProperty ;
+    rdfs:domain veh:VehicleSpec ;
+    rdfs:range xsd:integer ;
+    rdfs:label "number of seats"@en .
+
+veh:transmission a owl:DatatypeProperty ;
+    rdfs:domain veh:VehicleSpec ;
+    rdfs:range xsd:string ;
+    rdfs:label "transmission"@en .
+
+veh:bodyType a owl:DatatypeProperty ;
+    rdfs:domain veh:VehicleSpec ;
+    rdfs:range xsd:string ;
+    rdfs:label "body type"@en .
+
+veh:insuranceGroup a owl:DatatypeProperty ;
+    rdfs:domain veh:VehicleSpec ;
+    rdfs:range xsd:integer ;
+    rdfs:label "insurance group"@en ;
+    rdfs:comment "UK insurance group (1-50)"@en .
+
+# ============================================================================
+# VEHICLE MANUFACTURERS (Level 1)
+# ============================================================================
+
+veh:Toyota a veh:Manufacturer ;
+    rdfs:label "Toyota"@en ;
+    skos:prefLabel "Toyota"@en .
+
+veh:BMW a veh:Manufacturer ;
+    rdfs:label "BMW"@en ;
+    skos:prefLabel "BMW"@en .
+
+veh:Mercedes a veh:Manufacturer ;
+    rdfs:label "Mercedes-Benz"@en ;
+    skos:prefLabel "Mercedes"@en ;
+    skos:altLabel "Merc"@en .
+
+veh:Ford a veh:Manufacturer ;
+    rdfs:label "Ford"@en ;
+    skos:prefLabel "Ford"@en .
+
+veh:Volkswagen a veh:Manufacturer ;
+    rdfs:label "Volkswagen"@en ;
+    skos:prefLabel "Volkswagen"@en ;
+    skos:altLabel "VW"@en .
+
+veh:Audi a veh:Manufacturer ;
+    rdfs:label "Audi"@en ;
+    skos:prefLabel "Audi"@en .
+
+veh:Honda a veh:Manufacturer ;
+    rdfs:label "Honda"@en ;
+    skos:prefLabel "Honda"@en .
+
+veh:Nissan a veh:Manufacturer ;
+    rdfs:label "Nissan"@en ;
+    skos:prefLabel "Nissan"@en .
+
+# ============================================================================
+# VEHICLE MODELS (Level 2) with Specifications
+# ============================================================================
+
+# Toyota Models
+veh:ToyotaCorolla a veh:Model ;
+    rdfs:label "Corolla"@en ;
+    skos:prefLabel "Corolla"@en ;
+    veh:manufacturer veh:Toyota ;
+    veh:hasSpec veh:ToyotaCorollaSpec .
+
+veh:ToyotaCorollaSpec a veh:VehicleSpec ;
+    veh:engineSize 1.8 ;
+    veh:fuelType "Petrol" ;
+    veh:numberOfDoors 4 ;
+    veh:numberOfSeats 5 ;
+    veh:transmission "Manual" ;
+    veh:bodyType "Saloon" ;
+    veh:insuranceGroup 15 .
+
+veh:ToyotaPrius a veh:Model ;
+    rdfs:label "Prius"@en ;
+    skos:prefLabel "Prius"@en ;
+    veh:manufacturer veh:Toyota ;
+    veh:hasSpec veh:ToyotaPriusSpec .
+
+veh:ToyotaPriusSpec a veh:VehicleSpec ;
+    veh:engineSize 1.8 ;
+    veh:fuelType "Hybrid" ;
+    veh:numberOfDoors 5 ;
+    veh:numberOfSeats 5 ;
+    veh:transmission "Automatic" ;
+    veh:bodyType "Hatchback" ;
+    veh:insuranceGroup 18 .
+
+# BMW Models
+veh:BMW3Series a veh:Model ;
+    rdfs:label "3 Series"@en ;
+    skos:prefLabel "3 Series"@en ;
+    veh:manufacturer veh:BMW ;
+    veh:hasSpec veh:BMW3SeriesSpec .
+
+veh:BMW3SeriesSpec a veh:VehicleSpec ;
+    veh:engineSize 2.0 ;
+    veh:fuelType "Diesel" ;
+    veh:numberOfDoors 4 ;
+    veh:numberOfSeats 5 ;
+    veh:transmission "Automatic" ;
+    veh:bodyType "Saloon" ;
+    veh:insuranceGroup 28 .
+
+veh:BMWX5 a veh:Model ;
+    rdfs:label "X5"@en ;
+    skos:prefLabel "X5"@en ;
+    veh:manufacturer veh:BMW ;
+    veh:hasSpec veh:BMWX5Spec .
+
+veh:BMWX5Spec a veh:VehicleSpec ;
+    veh:engineSize 3.0 ;
+    veh:fuelType "Diesel" ;
+    veh:numberOfDoors 5 ;
+    veh:numberOfSeats 7 ;
+    veh:transmission "Automatic" ;
+    veh:bodyType "SUV" ;
+    veh:insuranceGroup 42 .
+
+# Mercedes Models
+veh:MercedesCClass a veh:Model ;
+    rdfs:label "C-Class"@en ;
+    skos:prefLabel "C-Class"@en ;
+    veh:manufacturer veh:Mercedes ;
+    veh:hasSpec veh:MercedesCClassSpec .
+
+veh:MercedesCClassSpec a veh:VehicleSpec ;
+    veh:engineSize 2.0 ;
+    veh:fuelType "Petrol" ;
+    veh:numberOfDoors 4 ;
+    veh:numberOfSeats 5 ;
+    veh:transmission "Automatic" ;
+    veh:bodyType "Saloon" ;
+    veh:insuranceGroup 30 .
+
+# Ford Models
+veh:FordFiesta a veh:Model ;
+    rdfs:label "Fiesta"@en ;
+    skos:prefLabel "Fiesta"@en ;
+    veh:manufacturer veh:Ford ;
+    veh:hasSpec veh:FordFiestaSpec .
+
+veh:FordFiestaSpec a veh:VehicleSpec ;
+    veh:engineSize 1.0 ;
+    veh:fuelType "Petrol" ;
+    veh:numberOfDoors 5 ;
+    veh:numberOfSeats 5 ;
+    veh:transmission "Manual" ;
+    veh:bodyType "Hatchback" ;
+    veh:insuranceGroup 8 .
+
+veh:FordFocus a veh:Model ;
+    rdfs:label "Focus"@en ;
+    skos:prefLabel "Focus"@en ;
+    veh:manufacturer veh:Ford ;
+    veh:hasSpec veh:FordFocusSpec .
+
+veh:FordFocusSpec a veh:VehicleSpec ;
+    veh:engineSize 1.5 ;
+    veh:fuelType "Diesel" ;
+    veh:numberOfDoors 5 ;
+    veh:numberOfSeats 5 ;
+    veh:transmission "Manual" ;
+    veh:bodyType "Hatchback" ;
+    veh:insuranceGroup 12 .
+
+# Volkswagen Models
+veh:VWGolf a veh:Model ;
+    rdfs:label "Golf"@en ;
+    skos:prefLabel "Golf"@en ;
+    veh:manufacturer veh:Volkswagen ;
+    veh:hasSpec veh:VWGolfSpec .
+
+veh:VWGolfSpec a veh:VehicleSpec ;
+    veh:engineSize 1.4 ;
+    veh:fuelType "Petrol" ;
+    veh:numberOfDoors 5 ;
+    veh:numberOfSeats 5 ;
+    veh:transmission "Manual" ;
+    veh:bodyType "Hatchback" ;
+    veh:insuranceGroup 14 .
+
+# ============================================================================
+# FUEL TYPES (SKOS Controlled Vocabulary)
+# ============================================================================
+
+veh:FuelTypeScheme a skos:ConceptScheme ;
+    rdfs:label "Fuel Types"@en .
+
+veh:Petrol a skos:Concept ;
+    skos:prefLabel "Petrol"@en ;
+    skos:inScheme veh:FuelTypeScheme .
+
+veh:Diesel a skos:Concept ;
+    skos:prefLabel "Diesel"@en ;
+    skos:inScheme veh:FuelTypeScheme .
+
+veh:Electric a skos:Concept ;
+    skos:prefLabel "Electric"@en ;
+    skos:altLabel "EV"@en ;
+    skos:inScheme veh:FuelTypeScheme .
+
+veh:Hybrid a skos:Concept ;
+    skos:prefLabel "Hybrid"@en ;
+    skos:altLabel "Petrol-Electric"@en ;
+    skos:inScheme veh:FuelTypeScheme .
+
+veh:PlugInHybrid a skos:Concept ;
+    skos:prefLabel "Plug-in Hybrid"@en ;
+    skos:altLabel "PHEV"@en ;
+    skos:inScheme veh:FuelTypeScheme .
+
+# ============================================================================
+# BODY TYPES (SKOS Controlled Vocabulary)
+# ============================================================================
+
+veh:BodyTypeScheme a skos:ConceptScheme ;
+    rdfs:label "Body Types"@en .
+
+veh:Hatchback a skos:Concept ;
+    skos:prefLabel "Hatchback"@en ;
+    skos:inScheme veh:BodyTypeScheme .
+
+veh:Saloon a skos:Concept ;
+    skos:prefLabel "Saloon"@en ;
+    skos:altLabel "Sedan"@en ;
+    skos:inScheme veh:BodyTypeScheme .
+
+veh:Estate a skos:Concept ;
+    skos:prefLabel "Estate"@en ;
+    skos:altLabel "Station Wagon"@en ;
+    skos:inScheme veh:BodyTypeScheme .
+
+veh:SUV a skos:Concept ;
+    skos:prefLabel "SUV"@en ;
+    skos:altLabel "Sport Utility Vehicle"@en ;
+    skos:inScheme veh:BodyTypeScheme .
+
+veh:Coupe a skos:Concept ;
+    skos:prefLabel "Coupe"@en ;
+    skos:inScheme veh:BodyTypeScheme .
+
+veh:Convertible a skos:Concept ;
+    skos:prefLabel "Convertible"@en ;
+    skos:altLabel "Cabriolet"@en ;
+    skos:inScheme veh:BodyTypeScheme .
+
+veh:MPV a skos:Concept ;
+    skos:prefLabel "MPV"@en ;
+    skos:altLabel "People Carrier"@en ;
+    skos:inScheme veh:BodyTypeScheme .

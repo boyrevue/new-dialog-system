@@ -1,6 +1,7 @@
 @prefix : <http://diggi.io/ontology/dialog#> .
 @prefix mm: <http://diggi.io/ontology/multimodal#> .
 @prefix vocab: <http://diggi.io/ontology/vocabularies#> .
+@prefix form: <http://diggi.io/ontology/form#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -20,7 +21,15 @@
     :order 10 ;
     :inSection :DriversSection ;
     :hasInputMode vocab:NameInputMode ;
-    mm:hasTTSPrompt :FirstNameTTS .
+    mm:hasTTSPrompt :FirstNameTTS ;
+    mm:fieldType "text" ;
+    mm:placeholder "Enter your first name" ;
+    mm:helpText "Please provide your legal first name as it appears on your ID" ;
+    mm:minLength 2 ;
+    mm:maxLength 50 ;
+    mm:validationRule "isAlpha" ;
+    mm:validationMessage "First name must contain only letters" ;
+    mm:uiHint "half-width" .
 
 :FirstNameTTS a mm:TTSPrompt ;
     mm:ttsText "Please tell me your first name." ;
@@ -379,7 +388,7 @@
     :slotName "annualMileage" ;
     :required true ;
     :order 24 ;
-    :inSection :VehicleSection ;
+    :inSection :UsageMileageSection ;
     mm:hasTTSPrompt :AnnualMileageTTS .
 
 :AnnualMileageTTS a mm:TTSPrompt ;
@@ -1014,3 +1023,1304 @@
     mm:optionValue "NO" ;
     mm:optionLabel "No" ;
     mm:optionDescription "No postal marketing" .
+
+# ============================================================================
+# ADDITIONAL USAGE QUESTIONS
+# ============================================================================
+
+# Q: Primary Use of Vehicle
+:PrimaryUseQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Primary Use" ;
+    :questionId "q_primary_use" ;
+    :questionText "What is the primary use of your vehicle?" ;
+    :slotName "primaryUse" ;
+    :required true ;
+    :order 25 ;
+    :inSection :UsageMileageSection ;
+    mm:hasTTSPrompt :PrimaryUseTTS ;
+    mm:hasSelectOption :PrimaryUseCommuting, :PrimaryUseSocialDomestic, :PrimaryUseBusiness, :PrimaryUseSchoolRun .
+
+:PrimaryUseTTS a mm:TTSPrompt ;
+    mm:ttsText "What is the primary use of your vehicle? For example, commuting to work, social and domestic use, business, or the school run." ;
+    mm:ttsVariant1 "What is the primary use of your vehicle? For example, commuting to work, social and domestic use, business, or the school run." ;
+    mm:ttsVariant2 "How do you mainly use your car?" ;
+    mm:ttsVariant3 "What's the main purpose of your vehicle use?" ;
+    mm:ttsVariant4 "Tell me your car's primary use." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:PrimaryUseCommuting a mm:SelectOption ;
+    mm:optionValue "COMMUTING" ;
+    mm:optionLabel "Commuting to work" ;
+    mm:optionDescription "Driving to and from work" ;
+    mm:optionAlias "commute, work, office" ;
+    mm:optionPhonetic "charlie oscar mike mike uniform tango echo" .
+
+:PrimaryUseSocialDomestic a mm:SelectOption ;
+    mm:optionValue "SOCIAL_DOMESTIC" ;
+    mm:optionLabel "Social and domestic" ;
+    mm:optionDescription "Personal and leisure use" ;
+    mm:optionAlias "social, personal, leisure, domestic, shopping" ;
+    mm:optionPhonetic "sierra oscar charlie india alpha lima" .
+
+:PrimaryUseBusiness a mm:SelectOption ;
+    mm:optionValue "BUSINESS" ;
+    mm:optionLabel "Business use" ;
+    mm:optionDescription "Work-related travel" ;
+    mm:optionAlias "business, work travel, commercial" ;
+    mm:optionPhonetic "bravo uniform sierra india november echo sierra sierra" .
+
+:PrimaryUseSchoolRun a mm:SelectOption ;
+    mm:optionValue "SCHOOL_RUN" ;
+    mm:optionLabel "School run" ;
+    mm:optionDescription "Taking children to school" ;
+    mm:optionAlias "school, children, kids" ;
+    mm:optionPhonetic "sierra charlie hotel oscar oscar lima" .
+
+# Q: Commute Distance (Conditional)
+:CommuteDistanceQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Commute Distance" ;
+    :questionId "q_commute_distance" ;
+    :questionText "How many miles is your one-way commute to work?" ;
+    :slotName "commuteDistance" ;
+    :required false ;
+    :order 26 ;
+    :inSection :UsageMileageSection ;
+    mm:hasTTSPrompt :CommuteDistanceTTS .
+
+:CommuteDistanceTTS a mm:TTSPrompt ;
+    mm:ttsText "How many miles is your one-way commute to work?" ;
+    mm:ttsVariant1 "How many miles is your one-way commute to work?" ;
+    mm:ttsVariant2 "What's the distance to your workplace?" ;
+    mm:ttsVariant3 "How far do you travel to work?" ;
+    mm:ttsVariant4 "Tell me your commute distance in miles." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q: Has Another Vehicle
+:HasAnotherVehicleQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Other Vehicles" ;
+    :questionId "q_has_another_vehicle" ;
+    :questionText "Do you have access to another vehicle?" ;
+    :slotName "hasAnotherVehicle" ;
+    :required true ;
+    :order 27 ;
+    :inSection :UsageMileageSection ;
+    mm:hasTTSPrompt :HasAnotherVehicleTTS ;
+    mm:hasSelectOption :AnotherVehicleYes, :AnotherVehicleNo .
+
+:HasAnotherVehicleTTS a mm:TTSPrompt ;
+    mm:ttsText "Do you have access to another vehicle? This could be a car owned by you or a household member." ;
+    mm:ttsVariant1 "Do you have access to another vehicle? This could be a car owned by you or a household member." ;
+    mm:ttsVariant2 "Do you have another car available to you?" ;
+    mm:ttsVariant3 "Can you access any other vehicles?" ;
+    mm:ttsVariant4 "Do you have a second vehicle?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:AnotherVehicleYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "I have access to another vehicle" ;
+    mm:optionAlias "yes, yeah, yep, affirmative" ;
+    mm:optionPhonetic "yankee echo sierra" .
+
+:AnotherVehicleNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No other vehicle available" ;
+    mm:optionAlias "no, nope, negative" ;
+    mm:optionPhonetic "november oscar" .
+
+# Q: Days Per Week Driven
+:DaysPerWeekQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Days Driven Per Week" ;
+    :questionId "q_days_per_week" ;
+    :questionText "How many days per week do you typically drive this vehicle?" ;
+    :slotName "daysPerWeek" ;
+    :required true ;
+    :order 28 ;
+    :inSection :UsageMileageSection ;
+    mm:hasTTSPrompt :DaysPerWeekTTS ;
+    mm:hasSelectOption :Days1, :Days2, :Days3, :Days4, :Days5, :Days6, :Days7 .
+
+:DaysPerWeekTTS a mm:TTSPrompt ;
+    mm:ttsText "How many days per week do you typically drive this vehicle?" ;
+    mm:ttsVariant1 "How many days per week do you typically drive this vehicle?" ;
+    mm:ttsVariant2 "On how many days each week do you use your car?" ;
+    mm:ttsVariant3 "How often do you drive each week?" ;
+    mm:ttsVariant4 "Tell me the number of days you drive per week." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:Days1 a mm:SelectOption ;
+    mm:optionValue "1" ;
+    mm:optionLabel "1 day" ;
+    mm:optionDescription "Drive once per week" ;
+    mm:optionAlias "one, 1" ;
+    mm:optionPhonetic "oscar november echo" .
+
+:Days2 a mm:SelectOption ;
+    mm:optionValue "2" ;
+    mm:optionLabel "2 days" ;
+    mm:optionDescription "Drive twice per week" ;
+    mm:optionAlias "two, 2" ;
+    mm:optionPhonetic "tango whiskey oscar" .
+
+:Days3 a mm:SelectOption ;
+    mm:optionValue "3" ;
+    mm:optionLabel "3 days" ;
+    mm:optionDescription "Drive three times per week" ;
+    mm:optionAlias "three, 3" ;
+    mm:optionPhonetic "tango hotel romeo echo echo" .
+
+:Days4 a mm:SelectOption ;
+    mm:optionValue "4" ;
+    mm:optionLabel "4 days" ;
+    mm:optionDescription "Drive four times per week" ;
+    mm:optionAlias "four, 4" ;
+    mm:optionPhonetic "foxtrot oscar uniform romeo" .
+
+:Days5 a mm:SelectOption ;
+    mm:optionValue "5" ;
+    mm:optionLabel "5 days" ;
+    mm:optionDescription "Drive five times per week" ;
+    mm:optionAlias "five, 5" ;
+    mm:optionPhonetic "foxtrot india victor echo" .
+
+:Days6 a mm:SelectOption ;
+    mm:optionValue "6" ;
+    mm:optionLabel "6 days" ;
+    mm:optionDescription "Drive six times per week" ;
+    mm:optionAlias "six, 6" ;
+    mm:optionPhonetic "sierra india xray" .
+
+:Days7 a mm:SelectOption ;
+    mm:optionValue "7" ;
+    mm:optionLabel "7 days" ;
+    mm:optionDescription "Drive every day" ;
+    mm:optionAlias "seven, 7, daily, every day" ;
+    mm:optionPhonetic "sierra echo victor echo november" .
+
+# Q: Weekend Driving
+:WeekendDrivingQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Weekend Driving" ;
+    :questionId "q_weekend_driving" ;
+    :questionText "Do you regularly use your vehicle on weekends?" ;
+    :slotName "weekendDriving" ;
+    :required true ;
+    :order 29 ;
+    :inSection :UsageMileageSection ;
+    mm:hasTTSPrompt :WeekendDrivingTTS ;
+    mm:hasSelectOption :WeekendDrivingYes, :WeekendDrivingNo .
+
+:WeekendDrivingTTS a mm:TTSPrompt ;
+    mm:ttsText "Do you regularly use your vehicle on weekends?" ;
+    mm:ttsVariant1 "Do you regularly use your vehicle on weekends?" ;
+    mm:ttsVariant2 "Do you drive on Saturdays and Sundays?" ;
+    mm:ttsVariant3 "Do you use your car at weekends?" ;
+    mm:ttsVariant4 "Weekend driving - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:WeekendDrivingYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "I drive on weekends" ;
+    mm:optionAlias "yes, yeah, yep, affirmative" ;
+    mm:optionPhonetic "yankee echo sierra" .
+
+:WeekendDrivingNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "I don't drive on weekends" ;
+    mm:optionAlias "no, nope, negative" ;
+    mm:optionPhonetic "november oscar" .
+
+# ============================================================================
+# ADDITIONAL DRIVERS SECTION
+# ============================================================================
+
+# Repeatable Field Group for Additional Driver Details (Questions 32-39)
+:AdditionalDriversSection form:hasFieldGroup :AdditionalDriverFieldGroup .
+
+:AdditionalDriverFieldGroup a form:FieldGroup ;
+    form:groupId "additional_driver_group" ;
+    form:groupLabel "Additional Driver {index}" ;
+    form:groupDescription "Details for additional driver" ;
+    form:groupOrder 1 ;
+    form:isRepeatable true ;
+    form:minOccurs 1 ;
+    form:maxOccurs 4 ;
+    form:addButtonLabel "Add Another Driver" ;
+    form:removeButtonLabel "Remove Driver" ;
+    form:groupCollapsible true ;
+    form:groupDefaultCollapsed false ;
+    form:icon "user" ;
+    form:hasQuestion :AdditionalDriverFirstNameQuestion,
+                     :AdditionalDriverLastNameQuestion,
+                     :AdditionalDriverDOBQuestion,
+                     :AdditionalDriverRelationshipQuestion,
+                     :AdditionalDriverLicenceTypeQuestion,
+                     :AdditionalDriverYearsHeldQuestion,
+                     :AdditionalDriverClaimsQuestion,
+                     :AdditionalDriverConvictionsQuestion .
+
+# Q: Has Additional Drivers
+:HasAdditionalDriversQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Additional Drivers" ;
+    :questionId "q_has_additional_drivers" ;
+    :questionText "Will anyone else be driving this vehicle?" ;
+    :slotName "hasAdditionalDrivers" ;
+    :required true ;
+    :order 30 ;
+    :inSection :AdditionalDriversSection ;
+    mm:hasTTSPrompt :HasAdditionalDriversTTS ;
+    mm:hasSelectOption :HasAdditionalDriversYes, :HasAdditionalDriversNo .
+
+:HasAdditionalDriversTTS a mm:TTSPrompt ;
+    mm:ttsText "Will anyone else be driving this vehicle? This could be a spouse, partner, or family member." ;
+    mm:ttsVariant1 "Will anyone else be driving this vehicle? This could be a spouse, partner, or family member." ;
+    mm:ttsVariant2 "Do you have any additional drivers?" ;
+    mm:ttsVariant3 "Will other people drive your car?" ;
+    mm:ttsVariant4 "Any other named drivers?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:HasAdditionalDriversYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "Yes, I have additional drivers" ;
+    mm:optionAlias "yes, yeah, yep, affirmative" ;
+    mm:optionPhonetic "yankee echo sierra" .
+
+:HasAdditionalDriversNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No additional drivers" ;
+    mm:optionAlias "no, nope, negative" ;
+    mm:optionPhonetic "november oscar" .
+
+# Q: Number of Additional Drivers
+:AdditionalDriverCountQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Number of Additional Drivers" ;
+    :questionId "q_additional_driver_count" ;
+    :questionText "How many additional drivers would you like to add?" ;
+    :slotName "additionalDriverCount" ;
+    :required false ;
+    :order 31 ;
+    :inSection :AdditionalDriversSection ;
+    mm:hasTTSPrompt :AdditionalDriverCountTTS ;
+    mm:hasSelectOption :DriverCount1, :DriverCount2, :DriverCount3, :DriverCount4 .
+
+:AdditionalDriverCountTTS a mm:TTSPrompt ;
+    mm:ttsText "How many additional drivers would you like to add to the policy?" ;
+    mm:ttsVariant1 "How many additional drivers would you like to add to the policy?" ;
+    mm:ttsVariant2 "How many other people will drive the vehicle?" ;
+    mm:ttsVariant3 "Number of additional drivers?" ;
+    mm:ttsVariant4 "Tell me how many additional drivers." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:DriverCount1 a mm:SelectOption ;
+    mm:optionValue "1" ;
+    mm:optionLabel "1 driver" ;
+    mm:optionDescription "One additional driver" ;
+    mm:optionAlias "one, 1" ;
+    mm:optionPhonetic "oscar november echo" .
+
+:DriverCount2 a mm:SelectOption ;
+    mm:optionValue "2" ;
+    mm:optionLabel "2 drivers" ;
+    mm:optionDescription "Two additional drivers" ;
+    mm:optionAlias "two, 2" ;
+    mm:optionPhonetic "tango whiskey oscar" .
+
+:DriverCount3 a mm:SelectOption ;
+    mm:optionValue "3" ;
+    mm:optionLabel "3 drivers" ;
+    mm:optionDescription "Three additional drivers" ;
+    mm:optionAlias "three, 3" ;
+    mm:optionPhonetic "tango hotel romeo echo echo" .
+
+:DriverCount4 a mm:SelectOption ;
+    mm:optionValue "4" ;
+    mm:optionLabel "4 drivers" ;
+    mm:optionDescription "Four additional drivers" ;
+    mm:optionAlias "four, 4" ;
+    mm:optionPhonetic "foxtrot oscar uniform romeo" .
+
+# Q: Additional Driver First Name
+:AdditionalDriverFirstNameQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driver First Name" ;
+    :questionId "q_add_driver_first_name" ;
+    :questionText "What is the additional driver's first name?" ;
+    :slotName "additionalDriverFirstName" ;
+    :required false ;
+    :spellingRequired true ;
+    :order 32 ;
+    :inSection :AdditionalDriversSection ;
+    :hasInputMode vocab:NameInputMode ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasTTSPrompt :AdditionalDriverFirstNameTTS .
+
+:AdditionalDriverFirstNameTTS a mm:TTSPrompt ;
+    mm:ttsText "What is the additional driver's first name?" ;
+    mm:ttsVariant1 "What is the additional driver's first name?" ;
+    mm:ttsVariant2 "Please tell me their first name." ;
+    mm:ttsVariant3 "First name of the additional driver?" ;
+    mm:ttsVariant4 "What's their first name?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q: Additional Driver Last Name
+:AdditionalDriverLastNameQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driver Last Name" ;
+    :questionId "q_add_driver_last_name" ;
+    :questionText "What is the additional driver's last name?" ;
+    :slotName "additionalDriverLastName" ;
+    :required false ;
+    :spellingRequired true ;
+    :order 33 ;
+    :inSection :AdditionalDriversSection ;
+    :hasInputMode vocab:NameInputMode ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasTTSPrompt :AdditionalDriverLastNameTTS .
+
+:AdditionalDriverLastNameTTS a mm:TTSPrompt ;
+    mm:ttsText "What is the additional driver's last name or surname?" ;
+    mm:ttsVariant1 "What is the additional driver's last name or surname?" ;
+    mm:ttsVariant2 "Please tell me their surname." ;
+    mm:ttsVariant3 "Last name of the additional driver?" ;
+    mm:ttsVariant4 "What's their surname?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q: Additional Driver Date of Birth
+:AdditionalDriverDOBQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driver Date of Birth" ;
+    :questionId "q_add_driver_dob" ;
+    :questionText "What is the additional driver's date of birth?" ;
+    :slotName "additionalDriverDOB" ;
+    :required false ;
+    :order 34 ;
+    :inSection :AdditionalDriversSection ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasTTSPrompt :AdditionalDriverDOBTTS .
+
+:AdditionalDriverDOBTTS a mm:TTSPrompt ;
+    mm:ttsText "What is the additional driver's date of birth? Please say it as day, month, year." ;
+    mm:ttsVariant1 "What is the additional driver's date of birth? Please say it as day, month, year." ;
+    mm:ttsVariant2 "When were they born? Day, month, year please." ;
+    mm:ttsVariant3 "Additional driver's date of birth?" ;
+    mm:ttsVariant4 "Tell me their birth date." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q: Additional Driver Relationship
+:AdditionalDriverRelationshipQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Relationship to Driver" ;
+    :questionId "q_add_driver_relationship" ;
+    :questionText "What is the additional driver's relationship to you?" ;
+    :slotName "additionalDriverRelationship" ;
+    :required false ;
+    :order 35 ;
+    :inSection :AdditionalDriversSection ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasTTSPrompt :AdditionalDriverRelationshipTTS ;
+    mm:hasSelectOption :RelSpouse, :RelPartner, :RelChild, :RelParent, :RelSibling, :RelFriend, :RelOther .
+
+:AdditionalDriverRelationshipTTS a mm:TTSPrompt ;
+    mm:ttsText "What is the additional driver's relationship to you? For example, spouse, partner, child, parent, or friend." ;
+    mm:ttsVariant1 "What is the additional driver's relationship to you? For example, spouse, partner, child, parent, or friend." ;
+    mm:ttsVariant2 "How are they related to you?" ;
+    mm:ttsVariant3 "What's their relationship?" ;
+    mm:ttsVariant4 "Tell me their relationship to you." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:RelSpouse a mm:SelectOption ;
+    mm:optionValue "SPOUSE" ;
+    mm:optionLabel "Spouse" ;
+    mm:optionDescription "Husband or wife" ;
+    mm:optionAlias "spouse, husband, wife, married" ;
+    mm:optionPhonetic "sierra papa oscar uniform sierra echo" .
+
+:RelPartner a mm:SelectOption ;
+    mm:optionValue "PARTNER" ;
+    mm:optionLabel "Partner" ;
+    mm:optionDescription "Civil partner or domestic partner" ;
+    mm:optionAlias "partner, civil partner, domestic partner" ;
+    mm:optionPhonetic "papa alpha romeo tango november echo romeo" .
+
+:RelChild a mm:SelectOption ;
+    mm:optionValue "CHILD" ;
+    mm:optionLabel "Child" ;
+    mm:optionDescription "Son or daughter" ;
+    mm:optionAlias "child, son, daughter, kid" ;
+    mm:optionPhonetic "charlie hotel india lima delta" .
+
+:RelParent a mm:SelectOption ;
+    mm:optionValue "PARENT" ;
+    mm:optionLabel "Parent" ;
+    mm:optionDescription "Mother or father" ;
+    mm:optionAlias "parent, mother, father, mum, dad" ;
+    mm:optionPhonetic "papa alpha romeo echo november tango" .
+
+:RelSibling a mm:SelectOption ;
+    mm:optionValue "SIBLING" ;
+    mm:optionLabel "Sibling" ;
+    mm:optionDescription "Brother or sister" ;
+    mm:optionAlias "sibling, brother, sister" ;
+    mm:optionPhonetic "sierra india bravo lima india november golf" .
+
+:RelFriend a mm:SelectOption ;
+    mm:optionValue "FRIEND" ;
+    mm:optionLabel "Friend" ;
+    mm:optionDescription "Friend or acquaintance" ;
+    mm:optionAlias "friend" ;
+    mm:optionPhonetic "foxtrot romeo india echo november delta" .
+
+:RelOther a mm:SelectOption ;
+    mm:optionValue "OTHER" ;
+    mm:optionLabel "Other" ;
+    mm:optionDescription "Other relationship" ;
+    mm:optionAlias "other" ;
+    mm:optionPhonetic "oscar tango hotel echo romeo" .
+
+# Q: Additional Driver Licence Type
+:AdditionalDriverLicenceTypeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driver Licence Type" ;
+    :questionId "q_add_driver_licence_type" ;
+    :questionText "What type of driving licence does the additional driver have?" ;
+    :slotName "additionalDriverLicenceType" ;
+    :required false ;
+    :order 36 ;
+    :inSection :AdditionalDriversSection ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasTTSPrompt :AdditionalDriverLicenceTypeTTS ;
+    mm:hasSelectOption :AddDriverLicenceUKFull, :AddDriverLicenceUKProvisional, :AddDriverLicenceEU, :AddDriverLicenceInternational .
+
+:AdditionalDriverLicenceTypeTTS a mm:TTSPrompt ;
+    mm:ttsText "What type of driving licence does the additional driver have? UK full, UK provisional, European Union, or International?" ;
+    mm:ttsVariant1 "What type of driving licence does the additional driver have? UK full, UK provisional, European Union, or International?" ;
+    mm:ttsVariant2 "What's their licence type?" ;
+    mm:ttsVariant3 "Type of driving licence?" ;
+    mm:ttsVariant4 "Tell me their licence type." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:AddDriverLicenceUKFull a mm:SelectOption ;
+    mm:optionValue "UK_FULL" ;
+    mm:optionLabel "UK Full" ;
+    mm:optionDescription "Full UK driving licence" ;
+    mm:optionAlias "uk full, full uk, full" ;
+    mm:optionPhonetic "uniform kilo foxtrot uniform lima lima" .
+
+:AddDriverLicenceUKProvisional a mm:SelectOption ;
+    mm:optionValue "UK_PROVISIONAL" ;
+    mm:optionLabel "UK Provisional" ;
+    mm:optionDescription "UK provisional licence" ;
+    mm:optionAlias "uk provisional, provisional" ;
+    mm:optionPhonetic "uniform kilo papa romeo oscar victor india sierra india oscar november alpha lima" .
+
+:AddDriverLicenceEU a mm:SelectOption ;
+    mm:optionValue "EU" ;
+    mm:optionLabel "European Union" ;
+    mm:optionDescription "EU licence" ;
+    mm:optionAlias "eu, european, europe" ;
+    mm:optionPhonetic "echo uniform" .
+
+:AddDriverLicenceInternational a mm:SelectOption ;
+    mm:optionValue "INTERNATIONAL" ;
+    mm:optionLabel "International" ;
+    mm:optionDescription "International licence" ;
+    mm:optionAlias "international, foreign, overseas" ;
+    mm:optionPhonetic "india november tango echo romeo november alpha tango india oscar november alpha lima" .
+
+# Q: Additional Driver Years Held
+:AdditionalDriverYearsHeldQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Years Licence Held" ;
+    :questionId "q_add_driver_years_held" ;
+    :questionText "How many years has the additional driver held their licence?" ;
+    :slotName "additionalDriverYearsHeld" ;
+    :required false ;
+    :order 37 ;
+    :inSection :AdditionalDriversSection ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasTTSPrompt :AdditionalDriverYearsHeldTTS .
+
+:AdditionalDriverYearsHeldTTS a mm:TTSPrompt ;
+    mm:ttsText "How many years has the additional driver held their licence?" ;
+    mm:ttsVariant1 "How many years has the additional driver held their licence?" ;
+    mm:ttsVariant2 "How long have they had their licence?" ;
+    mm:ttsVariant3 "Years of driving experience?" ;
+    mm:ttsVariant4 "How many years licensed?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q: Additional Driver Claims
+:AdditionalDriverClaimsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driver Has Claims" ;
+    :questionId "q_add_driver_claims" ;
+    :questionText "Has the additional driver made any insurance claims in the last 5 years?" ;
+    :slotName "additionalDriverClaims" ;
+    :required false ;
+    :order 38 ;
+    :inSection :AdditionalDriversSection ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasTTSPrompt :AdditionalDriverClaimsTTS ;
+    mm:hasSelectOption :AddDriverClaimsYes, :AddDriverClaimsNo .
+
+:AdditionalDriverClaimsTTS a mm:TTSPrompt ;
+    mm:ttsText "Has the additional driver made any insurance claims in the last 5 years?" ;
+    mm:ttsVariant1 "Has the additional driver made any insurance claims in the last 5 years?" ;
+    mm:ttsVariant2 "Any claims in the past 5 years?" ;
+    mm:ttsVariant3 "Have they made any claims?" ;
+    mm:ttsVariant4 "Claims history - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:AddDriverClaimsYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "Yes, they have claims" ;
+    mm:optionAlias "yes, yeah, yep, affirmative" ;
+    mm:optionPhonetic "yankee echo sierra" .
+
+:AddDriverClaimsNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No claims" ;
+    mm:optionAlias "no, nope, negative" ;
+    mm:optionPhonetic "november oscar" .
+
+# Q: Additional Driver Convictions
+:AdditionalDriverConvictionsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driver Has Convictions" ;
+    :questionId "q_add_driver_convictions" ;
+    :questionText "Does the additional driver have any driving convictions or penalty points?" ;
+    :slotName "additionalDriverConvictions" ;
+    :required false ;
+    :order 39 ;
+    :inSection :AdditionalDriversSection ;
+    form:inFieldGroup :AdditionalDriverFieldGroup ;
+    mm:hasTTSPrompt :AdditionalDriverConvictionsTTS ;
+    mm:hasSelectOption :AddDriverConvictionsYes, :AddDriverConvictionsNo .
+
+:AdditionalDriverConvictionsTTS a mm:TTSPrompt ;
+    mm:ttsText "Does the additional driver have any driving convictions or penalty points on their licence?" ;
+    mm:ttsVariant1 "Does the additional driver have any driving convictions or penalty points on their licence?" ;
+    mm:ttsVariant2 "Any convictions or points?" ;
+    mm:ttsVariant3 "Do they have penalty points?" ;
+    mm:ttsVariant4 "Convictions - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:AddDriverConvictionsYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "Yes, they have convictions" ;
+    mm:optionAlias "yes, yeah, yep, affirmative" ;
+    mm:optionPhonetic "yankee echo sierra" .
+
+:AddDriverConvictionsNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No convictions" ;
+    mm:optionAlias "no, nope, negative" ;
+    mm:optionPhonetic "november oscar" .
+
+# ============================================================================
+# OCCUPATION SECTION
+# ============================================================================
+
+# Q: Employment Status
+:EmploymentStatusQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Employment Status" ;
+    :questionId "q_employment_status" ;
+    :questionText "What is your current employment status?" ;
+    :slotName "employmentStatus" ;
+    :required true ;
+    :order 40 ;
+    :inSection :OccupationSection ;
+    mm:hasTTSPrompt :EmploymentStatusTTS ;
+    mm:hasSelectOption :EmpFullTime, :EmpPartTime, :EmpSelfEmployed, :EmpUnemployed, :EmpRetired, :EmpStudent, :EmpHomemaker .
+
+:EmploymentStatusTTS a mm:TTSPrompt ;
+    mm:ttsText "What is your current employment status? For example, employed full-time, part-time, self-employed, retired, student, or unemployed." ;
+    mm:ttsVariant1 "What is your current employment status? For example, employed full-time, part-time, self-employed, retired, student, or unemployed." ;
+    mm:ttsVariant2 "What's your employment status?" ;
+    mm:ttsVariant3 "Are you employed, self-employed, retired, or a student?" ;
+    mm:ttsVariant4 "Tell me your employment status." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:EmpFullTime a mm:SelectOption ;
+    mm:optionValue "FULL_TIME" ;
+    mm:optionLabel "Employed full-time" ;
+    mm:optionDescription "Working full-time" ;
+    mm:optionAlias "full time, employed, working" ;
+    mm:optionPhonetic "foxtrot uniform lima lima tango india mike echo" .
+
+:EmpPartTime a mm:SelectOption ;
+    mm:optionValue "PART_TIME" ;
+    mm:optionLabel "Employed part-time" ;
+    mm:optionDescription "Working part-time" ;
+    mm:optionAlias "part time" ;
+    mm:optionPhonetic "papa alpha romeo tango tango india mike echo" .
+
+:EmpSelfEmployed a mm:SelectOption ;
+    mm:optionValue "SELF_EMPLOYED" ;
+    mm:optionLabel "Self-employed" ;
+    mm:optionDescription "Self-employed or freelance" ;
+    mm:optionAlias "self employed, freelance, contractor" ;
+    mm:optionPhonetic "sierra echo lima foxtrot echo mike papa lima oscar yankee echo delta" .
+
+:EmpUnemployed a mm:SelectOption ;
+    mm:optionValue "UNEMPLOYED" ;
+    mm:optionLabel "Unemployed" ;
+    mm:optionDescription "Currently unemployed" ;
+    mm:optionAlias "unemployed, not working" ;
+    mm:optionPhonetic "uniform november echo mike papa lima oscar yankee echo delta" .
+
+:EmpRetired a mm:SelectOption ;
+    mm:optionValue "RETIRED" ;
+    mm:optionLabel "Retired" ;
+    mm:optionDescription "Retired from work" ;
+    mm:optionAlias "retired" ;
+    mm:optionPhonetic "romeo echo tango india romeo echo delta" .
+
+:EmpStudent a mm:SelectOption ;
+    mm:optionValue "STUDENT" ;
+    mm:optionLabel "Student" ;
+    mm:optionDescription "Full-time student" ;
+    mm:optionAlias "student, studying" ;
+    mm:optionPhonetic "sierra tango uniform delta echo november tango" .
+
+:EmpHomemaker a mm:SelectOption ;
+    mm:optionValue "HOMEMAKER" ;
+    mm:optionLabel "Homemaker" ;
+    mm:optionDescription "Homemaker or housewife/househusband" ;
+    mm:optionAlias "homemaker, housewife, househusband, stay at home" ;
+    mm:optionPhonetic "hotel oscar mike echo mike alpha kilo echo romeo" .
+
+# Q: Occupation
+:OccupationQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Occupation" ;
+    :questionId "q_occupation" ;
+    :questionText "What is your occupation or job title?" ;
+    :slotName "occupation" ;
+    :required false ;
+    :order 41 ;
+    :inSection :OccupationSection ;
+    mm:hasTTSPrompt :OccupationTTS ;
+    mm:hasSelectOption :OccAccountant, :OccTeacher, :OccNurse, :OccEngineer, :OccManager, :OccDriver, :OccRetail, :OccTrade, :OccAdmin, :OccOther .
+
+:OccupationTTS a mm:TTSPrompt ;
+    mm:ttsText "What is your occupation or job title? Please choose the option that best matches your role." ;
+    mm:ttsVariant1 "What is your occupation or job title? Please choose the option that best matches your role." ;
+    mm:ttsVariant2 "What's your job or occupation?" ;
+    mm:ttsVariant3 "Tell me your job title." ;
+    mm:ttsVariant4 "What do you do for work?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:OccAccountant a mm:SelectOption ;
+    mm:optionValue "ACCOUNTANT" ;
+    mm:optionLabel "Accountant / Finance" ;
+    mm:optionDescription "Accounting or finance professional" ;
+    mm:optionAlias "accountant, finance, financial" ;
+    mm:optionPhonetic "alpha charlie charlie oscar uniform november tango alpha november tango" .
+
+:OccTeacher a mm:SelectOption ;
+    mm:optionValue "TEACHER" ;
+    mm:optionLabel "Teacher / Educator" ;
+    mm:optionDescription "Teaching or education" ;
+    mm:optionAlias "teacher, educator, professor, lecturer" ;
+    mm:optionPhonetic "tango echo alpha charlie hotel echo romeo" .
+
+:OccNurse a mm:SelectOption ;
+    mm:optionValue "NURSE" ;
+    mm:optionLabel "Nurse / Healthcare" ;
+    mm:optionDescription "Nursing or healthcare professional" ;
+    mm:optionAlias "nurse, healthcare, medical, doctor" ;
+    mm:optionPhonetic "november uniform romeo sierra echo" .
+
+:OccEngineer a mm:SelectOption ;
+    mm:optionValue "ENGINEER" ;
+    mm:optionLabel "Engineer" ;
+    mm:optionDescription "Engineering professional" ;
+    mm:optionAlias "engineer, engineering" ;
+    mm:optionPhonetic "echo november golf india november echo echo romeo" .
+
+:OccManager a mm:SelectOption ;
+    mm:optionValue "MANAGER" ;
+    mm:optionLabel "Manager / Director" ;
+    mm:optionDescription "Management or director role" ;
+    mm:optionAlias "manager, director, executive" ;
+    mm:optionPhonetic "mike alpha november alpha golf echo romeo" .
+
+:OccDriver a mm:SelectOption ;
+    mm:optionValue "DRIVER" ;
+    mm:optionLabel "Driver / Delivery" ;
+    mm:optionDescription "Professional driver or delivery" ;
+    mm:optionAlias "driver, delivery, courier, taxi" ;
+    mm:optionPhonetic "delta romeo india victor echo romeo" .
+
+:OccRetail a mm:SelectOption ;
+    mm:optionValue "RETAIL" ;
+    mm:optionLabel "Retail / Sales" ;
+    mm:optionDescription "Retail or sales work" ;
+    mm:optionAlias "retail, sales, shop, store" ;
+    mm:optionPhonetic "romeo echo tango alpha india lima" .
+
+:OccTrade a mm:SelectOption ;
+    mm:optionValue "TRADE" ;
+    mm:optionLabel "Skilled Trade" ;
+    mm:optionDescription "Electrician, plumber, carpenter, etc." ;
+    mm:optionAlias "trade, tradesman, electrician, plumber, builder, carpenter" ;
+    mm:optionPhonetic "tango romeo alpha delta echo" .
+
+:OccAdmin a mm:SelectOption ;
+    mm:optionValue "ADMIN" ;
+    mm:optionLabel "Administrative / Office" ;
+    mm:optionDescription "Administrative or office work" ;
+    mm:optionAlias "admin, administrator, office, clerical" ;
+    mm:optionPhonetic "alpha delta mike india november" .
+
+:OccOther a mm:SelectOption ;
+    mm:optionValue "OTHER" ;
+    mm:optionLabel "Other occupation" ;
+    mm:optionDescription "Other occupation not listed" ;
+    mm:optionAlias "other" ;
+    mm:optionPhonetic "oscar tango hotel echo romeo" .
+
+# Q: Industry/Business Sector
+:IndustrySectorQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Industry Sector" ;
+    :questionId "q_industry_sector" ;
+    :questionText "Which industry or business sector do you work in?" ;
+    :slotName "industrySector" ;
+    :required false ;
+    :order 42 ;
+    :inSection :OccupationSection ;
+    mm:hasTTSPrompt :IndustrySectorTTS ;
+    mm:hasSelectOption :IndEducation, :IndHealthcare, :IndFinance, :IndRetail, :IndManufacturing, :IndConstruction, :IndIT, :IndHospitality, :IndPublicSector, :IndOther .
+
+:IndustrySectorTTS a mm:TTSPrompt ;
+    mm:ttsText "Which industry or business sector do you work in? For example, education, healthcare, finance, retail, or IT." ;
+    mm:ttsVariant1 "Which industry or business sector do you work in? For example, education, healthcare, finance, retail, or IT." ;
+    mm:ttsVariant2 "What industry do you work in?" ;
+    mm:ttsVariant3 "Which sector are you employed in?" ;
+    mm:ttsVariant4 "Tell me your industry." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:IndEducation a mm:SelectOption ;
+    mm:optionValue "EDUCATION" ;
+    mm:optionLabel "Education" ;
+    mm:optionDescription "Education sector" ;
+    mm:optionAlias "education, school, university" ;
+    mm:optionPhonetic "echo delta uniform charlie alpha tango india oscar november" .
+
+:IndHealthcare a mm:SelectOption ;
+    mm:optionValue "HEALTHCARE" ;
+    mm:optionLabel "Healthcare / Medical" ;
+    mm:optionDescription "Healthcare and medical services" ;
+    mm:optionAlias "healthcare, medical, nhs, hospital" ;
+    mm:optionPhonetic "hotel echo alpha lima tango hotel charlie alpha romeo echo" .
+
+:IndFinance a mm:SelectOption ;
+    mm:optionValue "FINANCE" ;
+    mm:optionLabel "Finance / Banking" ;
+    mm:optionDescription "Financial services and banking" ;
+    mm:optionAlias "finance, banking, insurance" ;
+    mm:optionPhonetic "foxtrot india november alpha november charlie echo" .
+
+:IndRetail a mm:SelectOption ;
+    mm:optionValue "RETAIL" ;
+    mm:optionLabel "Retail" ;
+    mm:optionDescription "Retail sector" ;
+    mm:optionAlias "retail, shop, store" ;
+    mm:optionPhonetic "romeo echo tango alpha india lima" .
+
+:IndManufacturing a mm:SelectOption ;
+    mm:optionValue "MANUFACTURING" ;
+    mm:optionLabel "Manufacturing" ;
+    mm:optionDescription "Manufacturing and production" ;
+    mm:optionAlias "manufacturing, factory, production" ;
+    mm:optionPhonetic "mike alpha november uniform foxtrot alpha charlie tango uniform romeo india november golf" .
+
+:IndConstruction a mm:SelectOption ;
+    mm:optionValue "CONSTRUCTION" ;
+    mm:optionLabel "Construction" ;
+    mm:optionDescription "Construction industry" ;
+    mm:optionAlias "construction, building" ;
+    mm:optionPhonetic "charlie oscar november sierra tango romeo uniform charlie tango india oscar november" .
+
+:IndIT a mm:SelectOption ;
+    mm:optionValue "IT" ;
+    mm:optionLabel "IT / Technology" ;
+    mm:optionDescription "Information technology" ;
+    mm:optionAlias "it, tech, technology, software" ;
+    mm:optionPhonetic "india tango" .
+
+:IndHospitality a mm:SelectOption ;
+    mm:optionValue "HOSPITALITY" ;
+    mm:optionLabel "Hospitality / Tourism" ;
+    mm:optionDescription "Hotels, restaurants, tourism" ;
+    mm:optionAlias "hospitality, hotel, restaurant, tourism" ;
+    mm:optionPhonetic "hotel oscar sierra papa india tango alpha lima india tango yankee" .
+
+:IndPublicSector a mm:SelectOption ;
+    mm:optionValue "PUBLIC_SECTOR" ;
+    mm:optionLabel "Public Sector / Government" ;
+    mm:optionDescription "Government and public services" ;
+    mm:optionAlias "public sector, government, civil service" ;
+    mm:optionPhonetic "papa uniform bravo lima india charlie sierra echo charlie tango oscar romeo" .
+
+:IndOther a mm:SelectOption ;
+    mm:optionValue "OTHER" ;
+    mm:optionLabel "Other industry" ;
+    mm:optionDescription "Other industry not listed" ;
+    mm:optionAlias "other" ;
+    mm:optionPhonetic "oscar tango hotel echo romeo" .
+
+# Q: Employer Name
+:EmployerNameQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Employer Name" ;
+    :questionId "q_employer_name" ;
+    :questionText "What is the name of your employer or company?" ;
+    :slotName "employerName" ;
+    :required false ;
+    :spellingRequired true ;
+    :order 43 ;
+    :inSection :OccupationSection ;
+    mm:hasTTSPrompt :EmployerNameTTS .
+
+:EmployerNameTTS a mm:TTSPrompt ;
+    mm:ttsText "What is the name of your employer or company?" ;
+    mm:ttsVariant1 "What is the name of your employer or company?" ;
+    mm:ttsVariant2 "Who do you work for?" ;
+    mm:ttsVariant3 "Tell me your employer's name." ;
+    mm:ttsVariant4 "Company name?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q: Years in Current Occupation
+:YearsInOccupationQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Years in Occupation" ;
+    :questionId "q_years_in_occupation" ;
+    :questionText "How many years have you been in your current occupation?" ;
+    :slotName "yearsInOccupation" ;
+    :required false ;
+    :order 44 ;
+    :inSection :OccupationSection ;
+    mm:hasTTSPrompt :YearsInOccupationTTS .
+
+:YearsInOccupationTTS a mm:TTSPrompt ;
+    mm:ttsText "How many years have you been in your current occupation?" ;
+    mm:ttsVariant1 "How many years have you been in your current occupation?" ;
+    mm:ttsVariant2 "How long have you done this job?" ;
+    mm:ttsVariant3 "Years in your current occupation?" ;
+    mm:ttsVariant4 "Tell me how many years experience you have." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# ============================================================================
+# INSURANCE HISTORY & CLAIMS SECTION
+# ============================================================================
+
+# Q: Previous Insurance
+:PreviousInsuranceQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Previous Insurance" ;
+    :questionId "q_previous_insurance" ;
+    :questionText "Have you had continuous car insurance for the last 12 months?" ;
+    :slotName "previousInsurance" ;
+    :required true ;
+    :order 45 ;
+    :inSection :InsuranceHistorySection ;
+    mm:hasTTSPrompt :PreviousInsuranceTTS ;
+    mm:hasSelectOption :PrevInsYes, :PrevInsNo .
+
+:PreviousInsuranceTTS a mm:TTSPrompt ;
+    mm:ttsText "Have you had continuous car insurance for the last 12 months without a break?" ;
+    mm:ttsVariant1 "Have you had continuous car insurance for the last 12 months without a break?" ;
+    mm:ttsVariant2 "Have you been insured for the past year?" ;
+    mm:ttsVariant3 "Continuous insurance in the last 12 months?" ;
+    mm:ttsVariant4 "Were you insured last year?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:PrevInsYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "Yes, continuous insurance" ;
+    mm:optionAlias "yes, yeah, yep, affirmative" ;
+    mm:optionPhonetic "yankee echo sierra" .
+
+:PrevInsNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No continuous insurance" ;
+    mm:optionAlias "no, nope, negative" ;
+    mm:optionPhonetic "november oscar" .
+
+# Q: Previous Insurer
+:PreviousInsurerQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Previous Insurer" ;
+    :questionId "q_previous_insurer" ;
+    :questionText "Who was your previous car insurance provider?" ;
+    :slotName "previousInsurer" ;
+    :required false ;
+    :spellingRequired true ;
+    :order 46 ;
+    :inSection :InsuranceHistorySection ;
+    mm:hasTTSPrompt :PreviousInsurerTTS .
+
+:PreviousInsurerTTS a mm:TTSPrompt ;
+    mm:ttsText "Who was your previous car insurance provider or company?" ;
+    mm:ttsVariant1 "Who was your previous car insurance provider or company?" ;
+    mm:ttsVariant2 "Name of your last insurer?" ;
+    mm:ttsVariant3 "Who insured you previously?" ;
+    mm:ttsVariant4 "Previous insurance company name?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q: No Claims Discount (NCD) Years
+:NCDYearsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "No Claims Discount" ;
+    :questionId "q_ncd_years" ;
+    :questionText "How many years of no claims discount do you have?" ;
+    :slotName "ncdYears" ;
+    :required true ;
+    :order 47 ;
+    :inSection :InsuranceHistorySection ;
+    mm:hasTTSPrompt :NCDYearsTTS ;
+    mm:hasSelectOption :NCD0, :NCD1, :NCD2, :NCD3, :NCD4, :NCD5, :NCD6Plus .
+
+:NCDYearsTTS a mm:TTSPrompt ;
+    mm:ttsText "How many years of no claims discount or no claims bonus do you have?" ;
+    mm:ttsVariant1 "How many years of no claims discount or no claims bonus do you have?" ;
+    mm:ttsVariant2 "Years of no claims discount?" ;
+    mm:ttsVariant3 "How many years NCD?" ;
+    mm:ttsVariant4 "Tell me your no claims bonus." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:NCD0 a mm:SelectOption ;
+    mm:optionValue "0" ;
+    mm:optionLabel "0 years" ;
+    mm:optionDescription "No discount" ;
+    mm:optionAlias "zero, 0, none" ;
+    mm:optionPhonetic "zulu echo romeo oscar" .
+
+:NCD1 a mm:SelectOption ;
+    mm:optionValue "1" ;
+    mm:optionLabel "1 year" ;
+    mm:optionDescription "1 year no claims" ;
+    mm:optionAlias "one, 1" ;
+    mm:optionPhonetic "oscar november echo" .
+
+:NCD2 a mm:SelectOption ;
+    mm:optionValue "2" ;
+    mm:optionLabel "2 years" ;
+    mm:optionDescription "2 years no claims" ;
+    mm:optionAlias "two, 2" ;
+    mm:optionPhonetic "tango whiskey oscar" .
+
+:NCD3 a mm:SelectOption ;
+    mm:optionValue "3" ;
+    mm:optionLabel "3 years" ;
+    mm:optionDescription "3 years no claims" ;
+    mm:optionAlias "three, 3" ;
+    mm:optionPhonetic "tango hotel romeo echo echo" .
+
+:NCD4 a mm:SelectOption ;
+    mm:optionValue "4" ;
+    mm:optionLabel "4 years" ;
+    mm:optionDescription "4 years no claims" ;
+    mm:optionAlias "four, 4" ;
+    mm:optionPhonetic "foxtrot oscar uniform romeo" .
+
+:NCD5 a mm:SelectOption ;
+    mm:optionValue "5" ;
+    mm:optionLabel "5 years" ;
+    mm:optionDescription "5 years no claims" ;
+    mm:optionAlias "five, 5" ;
+    mm:optionPhonetic "foxtrot india victor echo" .
+
+:NCD6Plus a mm:SelectOption ;
+    mm:optionValue "6+" ;
+    mm:optionLabel "6+ years" ;
+    mm:optionDescription "6 or more years no claims" ;
+    mm:optionAlias "six, 6, six plus, more than five" ;
+    mm:optionPhonetic "sierra india xray papa lima uniform sierra" .
+
+# Q: Protect NCD
+:ProtectNCDQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Protect No Claims Discount" ;
+    :questionId "q_protect_ncd" ;
+    :questionText "Would you like to protect your no claims discount?" ;
+    :slotName "protectNCD" ;
+    :required false ;
+    :order 48 ;
+    :inSection :InsuranceHistorySection ;
+    mm:hasTTSPrompt :ProtectNCDTTS ;
+    mm:hasSelectOption :ProtectNCDYes, :ProtectNCDNo .
+
+:ProtectNCDTTS a mm:TTSPrompt ;
+    mm:ttsText "Would you like to protect your no claims discount? This costs extra but prevents losing it after a claim." ;
+    mm:ttsVariant1 "Would you like to protect your no claims discount? This costs extra but prevents losing it after a claim." ;
+    mm:ttsVariant2 "Protect your no claims bonus?" ;
+    mm:ttsVariant3 "NCD protection - yes or no?" ;
+    mm:ttsVariant4 "Do you want NCD protection?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:ProtectNCDYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "Protect my NCD" ;
+    mm:optionAlias "yes, yeah, yep, protect" ;
+    mm:optionPhonetic "yankee echo sierra" .
+
+:ProtectNCDNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No protection needed" ;
+    mm:optionAlias "no, nope, no thanks" ;
+    mm:optionPhonetic "november oscar" .
+
+# Q: Claims in Last 5 Years
+:ClaimsLast5YearsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Claims History" ;
+    :questionId "q_claims_last_5_years" ;
+    :questionText "Have you made any insurance claims in the last 5 years?" ;
+    :slotName "claimsLast5Years" ;
+    :required true ;
+    :order 49 ;
+    :inSection :InsuranceHistorySection ;
+    mm:hasTTSPrompt :ClaimsLast5YearsTTS ;
+    mm:hasSelectOption :ClaimsYes, :ClaimsNo .
+
+:ClaimsLast5YearsTTS a mm:TTSPrompt ;
+    mm:ttsText "Have you made any motor insurance claims in the last 5 years? This includes claims where you were not at fault." ;
+    mm:ttsVariant1 "Have you made any motor insurance claims in the last 5 years? This includes claims where you were not at fault." ;
+    mm:ttsVariant2 "Any insurance claims in the past 5 years?" ;
+    mm:ttsVariant3 "Have you claimed on your insurance?" ;
+    mm:ttsVariant4 "Claims in last 5 years - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:ClaimsYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "Yes, I have claims" ;
+    mm:optionAlias "yes, yeah, yep" ;
+    mm:optionPhonetic "yankee echo sierra" .
+
+:ClaimsNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No claims" ;
+    mm:optionAlias "no, nope, none" ;
+    mm:optionPhonetic "november oscar" .
+
+# Q: Number of Claims
+:NumberOfClaimsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Number of Claims" ;
+    :questionId "q_number_of_claims" ;
+    :questionText "How many claims have you made in the last 5 years?" ;
+    :slotName "numberOfClaims" ;
+    :required false ;
+    :order 50 ;
+    :inSection :InsuranceHistorySection ;
+    mm:hasTTSPrompt :NumberOfClaimsTTS ;
+    mm:hasSelectOption :Claims1, :Claims2, :Claims3, :Claims4Plus .
+
+:NumberOfClaimsTTS a mm:TTSPrompt ;
+    mm:ttsText "How many claims have you made in the last 5 years?" ;
+    mm:ttsVariant1 "How many claims have you made in the last 5 years?" ;
+    mm:ttsVariant2 "Number of claims?" ;
+    mm:ttsVariant3 "How many claims?" ;
+    mm:ttsVariant4 "Tell me the number of claims." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:Claims1 a mm:SelectOption ;
+    mm:optionValue "1" ;
+    mm:optionLabel "1 claim" ;
+    mm:optionDescription "One claim" ;
+    mm:optionAlias "one, 1" ;
+    mm:optionPhonetic "oscar november echo" .
+
+:Claims2 a mm:SelectOption ;
+    mm:optionValue "2" ;
+    mm:optionLabel "2 claims" ;
+    mm:optionDescription "Two claims" ;
+    mm:optionAlias "two, 2" ;
+    mm:optionPhonetic "tango whiskey oscar" .
+
+:Claims3 a mm:SelectOption ;
+    mm:optionValue "3" ;
+    mm:optionLabel "3 claims" ;
+    mm:optionDescription "Three claims" ;
+    mm:optionAlias "three, 3" ;
+    mm:optionPhonetic "tango hotel romeo echo echo" .
+
+:Claims4Plus a mm:SelectOption ;
+    mm:optionValue "4+" ;
+    mm:optionLabel "4+ claims" ;
+    mm:optionDescription "Four or more claims" ;
+    mm:optionAlias "four, 4, more than three" ;
+    mm:optionPhonetic "foxtrot oscar uniform romeo papa lima uniform sierra" .
+
+# Q: Convictions/Penalty Points
+:ConvictionsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driving Convictions" ;
+    :questionId "q_convictions" ;
+    :questionText "Do you have any driving convictions or penalty points on your licence?" ;
+    :slotName "hasConvictions" ;
+    :required true ;
+    :order 51 ;
+    :inSection :InsuranceHistorySection ;
+    mm:hasTTSPrompt :ConvictionsTTS ;
+    mm:hasSelectOption :ConvictionsYes, :ConvictionsNo .
+
+:ConvictionsTTS a mm:TTSPrompt ;
+    mm:ttsText "Do you have any driving convictions or penalty points on your licence? This includes speeding tickets, driving bans, or other motoring offences." ;
+    mm:ttsVariant1 "Do you have any driving convictions or penalty points on your licence? This includes speeding tickets, driving bans, or other motoring offences." ;
+    mm:ttsVariant2 "Any penalty points or convictions?" ;
+    mm:ttsVariant3 "Do you have points on your licence?" ;
+    mm:ttsVariant4 "Convictions or points - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:ConvictionsYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "Yes, I have convictions/points" ;
+    mm:optionAlias "yes, yeah, yep" ;
+    mm:optionPhonetic "yankee echo sierra" .
+
+:ConvictionsNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No convictions or points" ;
+    mm:optionAlias "no, nope, none, clean licence" ;
+    mm:optionPhonetic "november oscar" .
+
+# Q: Number of Penalty Points
+:PenaltyPointsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Penalty Points" ;
+    :questionId "q_penalty_points" ;
+    :questionText "How many penalty points do you currently have on your licence?" ;
+    :slotName "penaltyPoints" ;
+    :required false ;
+    :order 52 ;
+    :inSection :InsuranceHistorySection ;
+    mm:hasTTSPrompt :PenaltyPointsTTS ;
+    mm:hasSelectOption :Points3, :Points6, :Points9, :Points12Plus .
+
+:PenaltyPointsTTS a mm:TTSPrompt ;
+    mm:ttsText "How many penalty points do you currently have on your driving licence?" ;
+    mm:ttsVariant1 "How many penalty points do you currently have on your driving licence?" ;
+    mm:ttsVariant2 "Number of penalty points?" ;
+    mm:ttsVariant3 "How many points?" ;
+    mm:ttsVariant4 "Tell me your points total." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:Points3 a mm:SelectOption ;
+    mm:optionValue "3" ;
+    mm:optionLabel "3 points" ;
+    mm:optionDescription "Three points" ;
+    mm:optionAlias "three, 3" ;
+    mm:optionPhonetic "tango hotel romeo echo echo" .
+
+:Points6 a mm:SelectOption ;
+    mm:optionValue "6" ;
+    mm:optionLabel "6 points" ;
+    mm:optionDescription "Six points" ;
+    mm:optionAlias "six, 6" ;
+    mm:optionPhonetic "sierra india xray" .
+
+:Points9 a mm:SelectOption ;
+    mm:optionValue "9" ;
+    mm:optionLabel "9 points" ;
+    mm:optionDescription "Nine points" ;
+    mm:optionAlias "nine, 9" ;
+    mm:optionPhonetic "november india november echo" .
+
+:Points12Plus a mm:SelectOption ;
+    mm:optionValue "12+" ;
+    mm:optionLabel "12+ points" ;
+    mm:optionDescription "Twelve or more points" ;
+    mm:optionAlias "twelve, 12, more than nine" ;
+    mm:optionPhonetic "tango whiskey echo lima victor echo papa lima uniform sierra" .
+
+# Q: Licence Cancelled or Refused
+:LicenceCancelledQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Licence Cancelled/Refused" ;
+    :questionId "q_licence_cancelled" ;
+    :questionText "Has your licence ever been cancelled, suspended, or refused?" ;
+    :slotName "licenceCancelled" ;
+    :required true ;
+    :order 53 ;
+    :inSection :InsuranceHistorySection ;
+    mm:hasTTSPrompt :LicenceCancelledTTS ;
+    mm:hasSelectOption :LicenceCancelledYes, :LicenceCancelledNo .
+
+:LicenceCancelledTTS a mm:TTSPrompt ;
+    mm:ttsText "Has your driving licence ever been cancelled, suspended, revoked, or refused by the authorities?" ;
+    mm:ttsVariant1 "Has your driving licence ever been cancelled, suspended, revoked, or refused by the authorities?" ;
+    mm:ttsVariant2 "Ever had your licence cancelled or suspended?" ;
+    mm:ttsVariant3 "Licence ever refused or revoked?" ;
+    mm:ttsVariant4 "Licence cancellation - yes or no?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+:LicenceCancelledYes a mm:SelectOption ;
+    mm:optionValue "YES" ;
+    mm:optionLabel "Yes" ;
+    mm:optionDescription "Yes, it has been cancelled/refused" ;
+    mm:optionAlias "yes, yeah, yep" ;
+    mm:optionPhonetic "yankee echo sierra" .
+
+:LicenceCancelledNo a mm:SelectOption ;
+    mm:optionValue "NO" ;
+    mm:optionLabel "No" ;
+    mm:optionDescription "No, never cancelled or refused" ;
+    mm:optionAlias "no, nope, never" ;
+    mm:optionPhonetic "november oscar" .

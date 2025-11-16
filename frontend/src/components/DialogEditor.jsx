@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, Button, TextInput, Textarea, Label, Select, Badge, Alert, ToggleSwitch } from 'flowbite-react';
+import { Card, Button, TextInput, Textarea, Label, Select, Badge, Alert, ToggleSwitch, Modal } from 'flowbite-react';
 import {
   Save,
   RefreshCw,
@@ -49,7 +49,10 @@ import {
   Layers,
   Move,
   Copy,
-  Settings
+  Settings,
+  Info,
+  Sparkles,
+  Code
 } from 'lucide-react';
 import WorkflowEditor from './WorkflowEditor';
 
@@ -71,6 +74,23 @@ const DialogEditor = () => {
   // Form Builder - Dropped Fields
   const [droppedFields, setDroppedFields] = useState([]);
   const [draggedField, setDraggedField] = useState(null);
+
+  // Field Settings Modal
+  const [selectedFieldForSettings, setSelectedFieldForSettings] = useState(null);
+  const [showFieldSettings, setShowFieldSettings] = useState(false);
+  const [showFieldHelp, setShowFieldHelp] = useState(false);
+  const [selectedFieldIndex, setSelectedFieldIndex] = useState(null);
+
+  // Word-to-Format Mappings for ASR
+  const [wordMappings, setWordMappings] = useState([{ spokenWord: '', format: '' }]);
+
+  // Select List Options
+  const [selectOptions, setSelectOptions] = useState([{ label: '', value: '', ontologyUri: '' }]);
+
+  // Configuration Editor State
+  const [configTab, setConfigTab] = useState('json'); // 'json' or 'ttl'
+  const [jsonConfig, setJsonConfig] = useState('');
+  const [ttlConfig, setTtlConfig] = useState('');
 
   useEffect(() => {
     loadQuestions();
@@ -141,12 +161,14 @@ const DialogEditor = () => {
 
       if (!response.ok) throw new Error('Failed to save question');
 
+      const result = await response.json();
+
       setSuccess('Question saved successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+
       await loadQuestions();
       setSelectedQuestion(null);
       setEditedQuestion(null);
-
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError('Failed to save question: ' + err.message);
     } finally {
@@ -505,15 +527,39 @@ const DialogEditor = () => {
                             <div className="font-semibold text-sm text-gray-100">{field.label}</div>
                             <div className="text-xs text-gray-400">{field.id}</div>
                           </div>
-                          <button
-                            onClick={() => {
-                              setDroppedFields(droppedFields.filter((_, i) => i !== index));
-                            }}
-                            className="p-2 hover:bg-red-900/30 rounded transition-colors"
-                            title="Remove field"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-400 hover:text-red-300" />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                setSelectedFieldForSettings(field);
+                                setSelectedFieldIndex(index);
+                                setShowFieldHelp(true);
+                              }}
+                              className="p-2 hover:bg-blue-900/30 rounded transition-colors"
+                              title="Field help & FAQ"
+                            >
+                              <Info className="w-4 h-4 text-blue-400 hover:text-blue-300" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedFieldForSettings(field);
+                                setSelectedFieldIndex(index);
+                                setShowFieldSettings(true);
+                              }}
+                              className="p-2 hover:bg-gray-700/50 rounded transition-colors"
+                              title="Field settings"
+                            >
+                              <Settings className="w-4 h-4 text-gray-400 hover:text-gray-300" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setDroppedFields(droppedFields.filter((_, i) => i !== index));
+                              }}
+                              className="p-2 hover:bg-red-900/30 rounded transition-colors"
+                              title="Remove field"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-400 hover:text-red-300" />
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
@@ -686,20 +732,22 @@ const DialogEditor = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
+                <label htmlFor="toggle-required" className="flex items-center gap-2 cursor-pointer">
                   <ToggleSwitch
+                    id="toggle-required"
                     checked={editedQuestion.required || false}
                     onChange={(checked) => handleFieldChange('required', checked)}
                     label="Required"
                   />
-                </div>
-                <div className="flex items-center gap-2">
+                </label>
+                <label htmlFor="toggle-spelling-required" className="flex items-center gap-2 cursor-pointer">
                   <ToggleSwitch
+                    id="toggle-spelling-required"
                     checked={editedQuestion.spelling_required || false}
                     onChange={(checked) => handleFieldChange('spelling_required', checked)}
                     label="Spelling Required (Uses Phonetic Alphabet)"
                   />
-                </div>
+                </label>
               </div>
 
               <div>
@@ -726,6 +774,22 @@ const DialogEditor = () => {
                 <Volume2 className="w-5 h-5" />
                 Text-to-Speech Configuration
               </h3>
+
+              <Alert color="info">
+                <div className="flex items-start gap-3">
+                  <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold mb-2">Best Maintained TTS Libraries</h4>
+                    <ul className="text-sm space-y-1">
+                      <li><strong>Coqui TTS</strong> (https://github.com/coqui-ai/TTS) - 34k+ stars, actively maintained, supports 1100+ languages</li>
+                      <li><strong>Mozilla TTS</strong> - Original project (archived, use Coqui TTS instead)</li>
+                      <li><strong>pyttsx3</strong> - Offline TTS, cross-platform</li>
+                      <li><strong>gTTS</strong> (Google TTS) - Simple cloud-based TTS</li>
+                      <li><strong>Azure Speech SDK</strong> - Enterprise-grade with neural voices</li>
+                    </ul>
+                  </div>
+                </div>
+              </Alert>
 
               <div>
                 <Label htmlFor="tts-text">Main TTS Text</Label>
@@ -835,6 +899,8 @@ const DialogEditor = () => {
                 </div>
               </div>
             </div>
+
+            {/* ASR Word Mapping Configuration */}
           </div>
         )}
 
@@ -1015,6 +1081,754 @@ const DialogEditor = () => {
           </div>
         </Card>
       </div>
+
+      {/* Field Help/FAQ Modal */}
+      <Modal
+        show={showFieldHelp}
+        onClose={() => setShowFieldHelp(false)}
+        size="lg"
+      >
+        <div className="p-6">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">
+            Field Help & FAQ - {selectedFieldForSettings?.label}
+          </h3>
+          <div className="space-y-4">
+            <Alert color="info">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="font-semibold mb-2">How to fill this field correctly</h4>
+                  <p className="text-sm mb-3">
+                    This section provides helpful information about what data is expected in this field
+                    and how to provide it accurately.
+                  </p>
+
+                  <h5 className="font-semibold text-sm mb-2">Examples of valid answers:</h5>
+                  <ul className="list-disc list-inside text-sm space-y-1 mb-3">
+                    <li>For text fields: Enter alphanumeric characters</li>
+                    <li>For date fields: Use DD/MM/YYYY format or speak naturally</li>
+                    <li>For number fields: Enter digits only</li>
+                  </ul>
+
+                  <h5 className="font-semibold text-sm mb-2">Speech Recognition Tips:</h5>
+                  <div className="bg-white p-3 rounded-lg text-sm">
+                    <p className="mb-2">When using voice input, try these phrases:</p>
+                    <ul className="list-disc list-inside space-y-1 text-gray-700">
+                      <li>"Type the value" - for spelling out answers</li>
+                      <li>"Use numbers" - for numerical values</li>
+                      <li>"Say the date as..." - for date inputs</li>
+                    </ul>
+                  </div>
+
+                  <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <p className="text-xs text-yellow-900">
+                      <strong>Note:</strong> All help content is editable in the Field Settings panel.
+                      These are placeholder instructions that will be customized per field.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Alert>
+          </div>
+          <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
+            <Button color="light" onClick={() => setShowFieldHelp(false)}>
+              Close
+            </Button>
+            <Button
+              color="blue"
+              onClick={() => {
+                setShowFieldHelp(false);
+                setShowFieldSettings(true);
+              }}
+            >
+              Edit Help Content
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Field Settings Modal - Comprehensive Configuration */}
+      <Modal
+        show={showFieldSettings}
+        onClose={() => setShowFieldSettings(false)}
+        size="6xl"
+      >
+        <div className="p-6">
+          <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
+            <Settings className="w-6 h-6" />
+            Field Settings - {selectedFieldForSettings?.label}
+          </h3>
+          {selectedFieldForSettings && (
+            <div className="space-y-6">
+              {/* Basic Metadata Section */}
+              <Card>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  Basic Metadata
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="field-label">Field Label</Label>
+                    <TextInput
+                      id="field-label"
+                      defaultValue={selectedFieldForSettings.label}
+                      placeholder="Enter field label"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="field-key">Internal Key</Label>
+                    <TextInput
+                      id="field-key"
+                      defaultValue={selectedFieldForSettings.id}
+                      placeholder="field_key"
+                      className="font-mono"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="field-type">Field Type</Label>
+                    <Select id="field-type" defaultValue={selectedFieldForSettings.id}>
+                      <option value="text">Text Input</option>
+                      <option value="textarea">Text Area</option>
+                      <option value="number">Number</option>
+                      <option value="email">Email</option>
+                      <option value="phone">Phone</option>
+                      <option value="date">Date</option>
+                      <option value="select">Select/Dropdown</option>
+                      <option value="checkbox">Checkbox</option>
+                      <option value="radio">Radio</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="field-placeholder">Placeholder</Label>
+                    <TextInput
+                      id="field-placeholder"
+                      placeholder="enter the question"
+                    />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <ToggleSwitch
+                      id="toggle-field-required"
+                      label="Required Field"
+                      defaultChecked={selectedFieldForSettings.required || false}
+                    />
+                  </div>
+                </div>
+              </Card>
+
+              {/* Validation Rules Section - Zod Powered */}
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    Validation Rules (Zod-Powered)
+                  </h3>
+                  <Badge color="success">Recommended: Zod</Badge>
+                </div>
+
+                <Alert color="info" className="mb-4">
+                  <p className="text-sm">
+                    <strong>Using Zod:</strong> The fastest, most secure validation library for 2025.
+                    TypeScript-first with automatic type inference. Perfect for both frontend and backend validation.
+                  </p>
+                </Alert>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label>Validation Library Predicates</Label>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {['isDigit', 'isNumber', 'isInteger', 'isFloat', 'isDate', 'isPastDate', 'isFutureDate', 'isMonth', 'isDayOfMonth', 'isLeapYear', 'isPostcode', 'isEmail', 'isPhone', 'isUKPostcode', 'isUKDrivingLicence', 'isUKDrivingLicenceCategory', 'isUKDrivingOffenceCode', 'isUKCarRegistration'].map((pred) => (
+                        <label key={pred} className="flex items-center gap-2 p-2 bg-white rounded border border-green-200 hover:bg-green-50 cursor-pointer">
+                          <input type="checkbox" className="rounded" />
+                          <span className="text-sm font-mono text-gray-700">{pred}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-xs text-gray-700 font-semibold mb-2">Date/Time Validators:</p>
+                      <ul className="text-xs text-gray-600 space-y-1">
+                        <li><span className="font-mono text-blue-700">isMonth</span>: Validates month number (1-12)</li>
+                        <li><span className="font-mono text-blue-700">isDayOfMonth</span>: Validates day based on month and leap year (e.g., Feb 29 only in leap years)</li>
+                        <li><span className="font-mono text-blue-700">isLeapYear</span>: Validates if a year is a leap year (divisible by 4, except century years must be divisible by 400)</li>
+                      </ul>
+                    </div>
+                    <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                      <p className="text-xs text-gray-700 font-semibold mb-2">UK-Specific Validators:</p>
+                      <ul className="text-xs text-gray-600 space-y-1">
+                        <li><span className="font-mono text-purple-700">isUKPostcode</span>: Validates UK postcode format (e.g., SW1A 1AA, M1 1AE, CR2 6XH)</li>
+                        <li><span className="font-mono text-purple-700">isUKDrivingLicence</span>: Validates UK driving licence number (16-character format)</li>
+                        <li><span className="font-mono text-purple-700">isUKDrivingLicenceCategory</span>: Validates licence categories (A, A1, A2, AM, B, BE, C, C1, C1E, CE, D, D1, D1E, DE, f, g, h, k, l, n, p, q)</li>
+                        <li><span className="font-mono text-purple-700">isUKDrivingOffenceCode</span>: Validates UK driving offence codes (e.g., SP30, CD10, DR10, IN10, MS50, TT99)</li>
+                        <li><span className="font-mono text-purple-700">isUKCarRegistration</span>: Validates UK vehicle registration (e.g., AB12 CDE, AB12CDE)</li>
+                      </ul>
+                      <details className="mt-2">
+                        <summary className="text-xs font-semibold text-purple-800 cursor-pointer hover:text-purple-900">View UK Driving Offence Codes</summary>
+                        <div className="mt-2 p-2 bg-white rounded text-xs space-y-1">
+                          <p><strong>Accident Offences (AC):</strong> AC10-AC30 (Fail to stop, report, give info)</p>
+                          <p><strong>Disqualified Driver (BA):</strong> BA10-BA60 (Driving whilst disqualified)</p>
+                          <p><strong>Careless Driving (CD):</strong> CD10-CD99 (Careless/inconsiderate driving, death by careless)</p>
+                          <p><strong>Construction & Use (CU):</strong> CU10-CU80 (Unsafe vehicle, weight/load issues)</p>
+                          <p><strong>Reckless/Dangerous (DD):</strong> DD10-DD90 (Dangerous driving, causing death)</p>
+                          <p><strong>Drink/Drugs (DR):</strong> DR10-DR90 (Drink/drug driving, refusal to provide specimen)</p>
+                          <p><strong>Insurance (IN):</strong> IN10 (No insurance)</p>
+                          <p><strong>Licence (LC):</strong> LC20-LC50 (No/invalid licence)</p>
+                          <p><strong>Misc (MS):</strong> MS10-MS90 (Traffic light, no MOT, mobile phone)</p>
+                          <p><strong>Motorway (MW):</strong> MW10 (Motorway offences)</p>
+                          <p><strong>Pedestrian Crossing (PC):</strong> PC10-PC30 (Pedestrian crossing offences)</p>
+                          <p><strong>Speed Limits (SP):</strong> SP10-SP60 (Speeding offences)</p>
+                          <p><strong>Traffic Direction (TS):</strong> TS10-TS70 (Traffic sign/light offences)</p>
+                          <p><strong>Theft (UT):</strong> UT50 (Aggravated vehicle taking)</p>
+                          <p><strong>Totting Up (TT):</strong> TT99 (Disqualified under totting up)</p>
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="min-length">Min Length</Label>
+                    <TextInput
+                      id="min-length"
+                      type="number"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="max-length">Max Length</Label>
+                    <TextInput
+                      id="max-length"
+                      type="number"
+                      placeholder="255"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="number-range">Number Range (min - max)</Label>
+                    <div className="flex gap-2">
+                      <TextInput
+                        id="range-min"
+                        type="number"
+                        placeholder="Min"
+                      />
+                      <span className="flex items-center px-2">-</span>
+                      <TextInput
+                        id="range-max"
+                        type="number"
+                        placeholder="Max"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="custom-regex">Custom Regex Pattern</Label>
+                    <TextInput
+                      id="custom-regex"
+                      placeholder="^[A-Z]{2}\d{2}\s?\d{3}$"
+                      className="font-mono"
+                    />
+                    <p className="text-xs text-gray-600 mt-1">
+                      Add custom regex for complex validation patterns
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="error-message">Custom Error Message</Label>
+                    <TextInput
+                      id="error-message"
+                      placeholder="Please enter a valid value"
+                    />
+                  </div>
+                </div>
+              </Card>
+
+              {/* TTS Grammar & Configuration Section */}
+              <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Volume2 className="w-5 h-5 text-purple-600" />
+                  TTS Grammar & Configuration
+                </h3>
+
+                <Alert color="info" className="mb-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold mb-2">Best Maintained TTS Libraries</h4>
+                      <ul className="text-xs space-y-1">
+                        <li><strong>Coqui TTS</strong> (https://github.com/coqui-ai/TTS) - 34k+ stars, actively maintained, supports 1100+ languages</li>
+                        <li><strong>Mozilla TTS</strong> - Original project (archived, use Coqui TTS instead)</li>
+                        <li><strong>pyttsx3</strong> - Offline TTS, cross-platform</li>
+                        <li><strong>gTTS</strong> (Google TTS) - Simple cloud-based TTS</li>
+                        <li><strong>Azure Speech SDK</strong> - Enterprise-grade with neural voices</li>
+                      </ul>
+                    </div>
+                  </div>
+                </Alert>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="tts-text">Text-to-Speech Prompt</Label>
+                    <Textarea
+                      id="tts-text"
+                      rows={2}
+                      placeholder="Please provide your answer..."
+                    />
+                  </div>
+                </div>
+              </Card>
+
+              {/* ASR Configuration Section */}
+              <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-200">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Mic className="w-5 h-5 text-indigo-600" />
+                  ASR Configuration
+                </h3>
+
+                <Alert color="info" className="mb-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold mb-2">Best Maintained ASR Libraries</h4>
+                      <ul className="text-xs space-y-1">
+                        <li><strong>Whisper (OpenAI)</strong> (https://github.com/openai/whisper) - 70k+ stars, SOTA accuracy, multilingual</li>
+                        <li><strong>vosk-api</strong> - Offline ASR, lightweight, 20+ languages</li>
+                        <li><strong>DeepSpeech (Mozilla)</strong> - Archived, use Coqui STT instead</li>
+                        <li><strong>Coqui STT</strong> (https://github.com/coqui-ai/STT) - Fork of DeepSpeech, actively maintained</li>
+                        <li><strong>Google Cloud Speech-to-Text</strong> - Enterprise-grade cloud ASR</li>
+                        <li><strong>Azure Speech SDK</strong> - Enterprise with real-time streaming</li>
+                      </ul>
+                    </div>
+                  </div>
+                </Alert>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="asr-grammar">ASR Grammar Patterns</Label>
+                    <Textarea
+                      id="asr-grammar"
+                      rows={4}
+                      placeholder="Enter expected phrases, one per line:
+yes | no
+accept | decline
+{month} {day} {year}"
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-600 mt-1">
+                      Define grammar patterns for speech recognition. Supports JSGF, GRXML, ABNF, and regex formats.
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label>Grammar Variants</Label>
+                    <div className="space-y-2">
+                      <Button size="sm" color="purple">
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Grammar Variant
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Select List Data Management */}
+              <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <List className="w-5 h-5 text-blue-600" />
+                  Select List Options
+                </h3>
+
+                <Alert color="info" className="mb-4">
+                  <p className="text-sm">
+                    Configure dropdown/select options. Define display labels, internal values, and link to ontology terms if needed.
+                  </p>
+                </Alert>
+
+                <div className="space-y-3">
+                  {selectOptions.map((option, index) => (
+                    <div key={index} className="flex gap-2">
+                      <TextInput
+                        placeholder="Display Label"
+                        className="flex-1"
+                        value={option.label}
+                        onChange={(e) => {
+                          const newOptions = [...selectOptions];
+                          newOptions[index].label = e.target.value;
+                          setSelectOptions(newOptions);
+                        }}
+                      />
+                      <TextInput
+                        placeholder="Internal Value"
+                        className="flex-1 font-mono"
+                        value={option.value}
+                        onChange={(e) => {
+                          const newOptions = [...selectOptions];
+                          newOptions[index].value = e.target.value;
+                          setSelectOptions(newOptions);
+                        }}
+                      />
+                      <TextInput
+                        placeholder="Ontology URI (optional)"
+                        className="flex-1 font-mono text-xs"
+                        value={option.ontologyUri}
+                        onChange={(e) => {
+                          const newOptions = [...selectOptions];
+                          newOptions[index].ontologyUri = e.target.value;
+                          setSelectOptions(newOptions);
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        color="light"
+                        onClick={() => {
+                          if (selectOptions.length > 1) {
+                            setSelectOptions(selectOptions.filter((_, i) => i !== index));
+                          }
+                        }}
+                        disabled={selectOptions.length === 1}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    size="sm"
+                    color="blue"
+                    onClick={() => {
+                      setSelectOptions([...selectOptions, { label: '', value: '', ontologyUri: '' }]);
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Option
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Mapping & Transformation Rules */}
+              <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <ArrowRight className="w-5 h-5 text-amber-600" />
+                  Mapping & Transformation Rules
+                </h3>
+
+                <p className="text-sm text-gray-700 mb-4">
+                  Define how raw form values are transformed into internal representations.
+                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label>Transformation Type</Label>
+                    <Select>
+                      <option>No transformation</option>
+                      <option>Date format conversion (DD/MM/YYYY → YYYY-MM-DD)</option>
+                      <option>Case conversion (uppercase/lowercase)</option>
+                      <option>Whitespace normalization</option>
+                      <option>Boolean mapping ("Yes"/"No" → true/false)</option>
+                      <option>Custom mapping (editable below)</option>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Word-to-Format Mappings (ASR Support)</Label>
+                    <div className="bg-white p-4 rounded-lg border border-amber-200 space-y-2">
+                      {wordMappings.map((mapping, index) => (
+                        <div key={index} className="flex gap-2 items-center">
+                          <TextInput
+                            placeholder="Spoken word (e.g., 'march')"
+                            className="flex-1"
+                            value={mapping.spokenWord}
+                            onChange={(e) => {
+                              const newMappings = [...wordMappings];
+                              newMappings[index].spokenWord = e.target.value;
+                              setWordMappings(newMappings);
+                            }}
+                          />
+                          <span className="text-gray-500">→</span>
+                          <TextInput
+                            placeholder="Format (e.g., '03')"
+                            className="flex-1"
+                            value={mapping.format}
+                            onChange={(e) => {
+                              const newMappings = [...wordMappings];
+                              newMappings[index].format = e.target.value;
+                              setWordMappings(newMappings);
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            color="light"
+                            onClick={() => {
+                              if (wordMappings.length > 1) {
+                                setWordMappings(wordMappings.filter((_, i) => i !== index));
+                              }
+                            }}
+                            disabled={wordMappings.length === 1}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        size="sm"
+                        color="amber"
+                        onClick={() => {
+                          setWordMappings([...wordMappings, { spokenWord: '', format: '' }]);
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Mapping
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-2">
+                      Examples: "march" → "03", "third" → "3", "nineteen sixty one" → "1961"
+                    </p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* FAQ/Help Content Editor */}
+              <Card className="bg-gradient-to-br from-cyan-50 to-sky-50 border-cyan-200">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Info className="w-5 h-5 text-cyan-600" />
+                  Field Help & FAQ Content
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="help-description">Field Description</Label>
+                    <Textarea
+                      id="help-description"
+                      rows={2}
+                      placeholder="Explain what this field is for..."
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="help-how-to-fill">How to Fill Correctly</Label>
+                    <Textarea
+                      id="help-how-to-fill"
+                      rows={3}
+                      placeholder="Provide instructions on how to fill this field correctly..."
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="help-examples">Valid Examples</Label>
+                    <Textarea
+                      id="help-examples"
+                      rows={3}
+                      placeholder="Example 1: ...
+Example 2: ...
+Example 3: ..."
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="help-asr-hints">ASR/TTS Hints</Label>
+                    <Textarea
+                      id="help-asr-hints"
+                      rows={2}
+                      placeholder="Voice input tips, e.g., 'Say the date as twenty-third of April twenty twenty-four'"
+                    />
+                  </div>
+                </div>
+              </Card>
+
+              {/* Editable Configuration Tabs - JSON Schema & TTL */}
+              <Card className="bg-gray-50 border-gray-300">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Code className="w-5 h-5 text-gray-600" />
+                  Field Configuration (Editable)
+                </h3>
+
+                {/* Tab Navigation */}
+                <div className="flex gap-2 mb-4 border-b border-gray-300">
+                  <button
+                    onClick={() => setConfigTab('json')}
+                    className={`px-4 py-2 font-medium transition-colors ${
+                      configTab === 'json'
+                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    JSON Schema
+                  </button>
+                  <button
+                    onClick={() => setConfigTab('ttl')}
+                    className={`px-4 py-2 font-medium transition-colors ${
+                      configTab === 'ttl'
+                        ? 'text-purple-600 border-b-2 border-purple-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    TTL (Turtle)
+                  </button>
+                </div>
+
+                {/* JSON Schema Tab */}
+                {configTab === 'json' && (
+                  <div>
+                    <Textarea
+                      rows={12}
+                      className="font-mono text-xs bg-gray-900 text-green-400"
+                      value={jsonConfig || JSON.stringify({
+                        fieldId: selectedFieldForSettings.id,
+                        label: selectedFieldForSettings.label,
+                        type: selectedFieldForSettings.id,
+                        required: selectedFieldForSettings.required || false,
+                        validation: {
+                          library: "zod",
+                          predicates: {
+                            isDigit: false,
+                            isNumber: false,
+                            isEmail: false,
+                            isUKPostcode: false,
+                            isUKDrivingLicence: false,
+                            isVehicleReg: false,
+                            isAlpha: false,
+                            isAlphanumeric: false,
+                            isDate: false,
+                            isPhoneNumber: false
+                          },
+                          minLength: null,
+                          maxLength: null,
+                          minValue: null,
+                          maxValue: null,
+                          pattern: null,
+                          customErrorMessage: null
+                        },
+                        tts: {
+                          grammarText: "",
+                          library: "coqui-tts",
+                          ssml: null,
+                          voice: "en-GB-Neural2-A",
+                          rate: 1.0,
+                          pitch: 1.0
+                        },
+                        asr: {
+                          grammarPatterns: "",
+                          library: "whisper",
+                          grammarVariants: "",
+                          confidenceThreshold: 0.85,
+                          languageModel: null
+                        },
+                        selectOptions: selectOptions,
+                        mapping: {
+                          transformationType: "none",
+                          wordToFormatRules: wordMappings.map(m => ({
+                            spoken: m.spokenWord,
+                            formatted: m.format
+                          })),
+                          transformationScript: null
+                        },
+                        help: {
+                          fieldDescription: "",
+                          howToFill: "",
+                          validExamples: [],
+                          invalidExamples: [],
+                          asrHints: "",
+                          commonMistakes: ""
+                        }
+                      }, null, 2)}
+                      onChange={(e) => setJsonConfig(e.target.value)}
+                    />
+                    <p className="text-xs text-gray-600 mt-2">
+                      Edit the JSON schema directly. Changes will be synced to the UI and TTL format.
+                    </p>
+                  </div>
+                )}
+
+                {/* TTL Tab */}
+                {configTab === 'ttl' && (
+                  <div>
+                    <Textarea
+                      rows={12}
+                      className="font-mono text-xs bg-gray-900 text-cyan-400"
+                      value={ttlConfig || `@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix mm: <http://diggi.io/ontology/multimodal#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:${selectedFieldForSettings.id} a mm:MultimodalQuestion ;
+    rdfs:label "${selectedFieldForSettings.label}" ;
+    :questionId "${selectedFieldForSettings.id}" ;
+    :required ${selectedFieldForSettings.required || false} ;
+
+    # Basic Field Properties
+    mm:fieldType "text" ;
+    mm:placeholder "enter the question" ;
+    mm:helpText "" ;
+    mm:defaultValue "" ;
+    mm:uiHint "full-width" ;
+
+    # Validation
+    mm:validationRule "" ;
+    mm:validationMessage "" ;
+    mm:minLength 0 ;
+    mm:maxLength 255 ;
+    mm:pattern "" ;
+
+    # Validation Predicates
+    mm:isDigit false ;
+    mm:isNumber false ;
+    mm:isEmail false ;
+    mm:isUKPostcode false ;
+    mm:isUKDrivingLicence false ;
+    mm:isVehicleReg false ;
+    mm:isAlpha false ;
+    mm:isAlphanumeric false ;
+    mm:isDate false ;
+    mm:isPhoneNumber false ;
+
+    # TTS Configuration
+    mm:ttsGrammarText "" ;
+    mm:ttsLibrary "coqui-tts" ;
+    mm:ttsSSML "" ;
+
+    # ASR Configuration
+    mm:asrGrammarPatterns "" ;
+    mm:asrLibrary "whisper" ;
+    mm:asrGrammarVariants "" ;
+    mm:asrConfidenceThreshold 0.85 ;
+    mm:asrLanguageModel "" ;
+
+    # Mapping and Transformation
+    mm:transformationType "none" ;
+    mm:wordToFormatMapping "[]" ;
+    mm:transformationScript "" ;
+
+    # Help Content
+    mm:fieldDescription "" ;
+    mm:howToFill "" ;
+    mm:validExamples "[]" ;
+    mm:invalidExamples "[]" ;
+    mm:asrHints "" ;
+    mm:commonMistakes "" .
+`}
+                      onChange={(e) => setTtlConfig(e.target.value)}
+                    />
+                    <p className="text-xs text-gray-600 mt-2">
+                      Edit the TTL (Turtle) format directly. Changes will be synced to the UI and JSON schema.
+                    </p>
+                  </div>
+                )}
+              </Card>
+            </div>
+          )}
+          <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
+            <Button color="light" onClick={() => setShowFieldSettings(false)}>
+              Cancel
+            </Button>
+            <Button
+              color="success"
+              onClick={() => {
+                setSuccess('Field settings saved successfully!');
+                setShowFieldSettings(false);
+                // TODO: Implement save logic
+              }}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save Field Settings
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

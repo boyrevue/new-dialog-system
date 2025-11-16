@@ -4,7 +4,7 @@ Generates diverse phrasings for TTS prompts to improve user experience
 """
 
 import os
-import openai
+from openai import OpenAI
 from typing import List, Dict
 import logging
 
@@ -26,8 +26,9 @@ class TTSVariantGenerator:
         self.api_key = api_key or os.getenv('OPENAI_API_KEY')
         if not self.api_key:
             logger.warning("No OpenAI API key provided. TTS variant generation will not work.")
+            self.client = None
         else:
-            openai.api_key = self.api_key
+            self.client = OpenAI(api_key=self.api_key)
 
     def generate_variants(self, original_text: str, question_context: str = None) -> List[str]:
         """
@@ -47,7 +48,7 @@ class TTSVariantGenerator:
         try:
             prompt = self._build_prompt(original_text, question_context)
 
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {

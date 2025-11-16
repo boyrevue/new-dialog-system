@@ -10,6 +10,13 @@ from typing import Optional, List, Dict
 import logging
 from pathlib import Path
 from tts_variant_generator import TTSVariantGenerator
+import json
+import os
+from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -27,8 +34,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ontology file paths
-ONTOLOGY_DIR = Path("../ontologies")
+# Ontology file paths (resolve relative to this file to avoid CWD issues)
+BASE_DIR = Path(__file__).resolve().parent
+ONTOLOGY_DIR = (BASE_DIR.parent / "ontologies")
 ONTOLOGY_FILES = {
     "dialog": "dialog.ttl",
     "multimodal": "dialog-multimodal.ttl",
@@ -39,6 +47,32 @@ ONTOLOGY_FILES = {
     "validation": "dialog-validation.ttl",
     "confidence": "dialog-confidence.ttl"
 }
+
+# TTS Variants cache file - JSON storage for question customizations
+TTS_VARIANTS_CACHE = Path("tts_variants_cache.json")
+
+# Helper functions for TTS variants cache
+def load_tts_variants_cache():
+    """Load TTS variants from JSON cache."""
+    if TTS_VARIANTS_CACHE.exists():
+        try:
+            with open(TTS_VARIANTS_CACHE, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Error loading TTS variants cache: {e}")
+            return {}
+    return {}
+
+def save_tts_variants_cache(cache_data):
+    """Save TTS variants to JSON cache."""
+    try:
+        with open(TTS_VARIANTS_CACHE, 'w') as f:
+            json.dump(cache_data, f, indent=2)
+        logger.info(f"Saved TTS variants cache with {len(cache_data)} questions")
+        return True
+    except Exception as e:
+        logger.error(f"Error saving TTS variants cache: {e}")
+        return False
 
 
 class OntologyContent(BaseModel):
@@ -63,6 +97,111 @@ class ASRConfig(BaseModel):
     continuous: bool = False
     interim_results: bool = False
     max_alternatives: int = 1
+
+
+class ValidationPredicates(BaseModel):
+    """Validation predicates configuration."""
+    is_digit: bool = False
+    is_number: bool = False
+    is_email: bool = False
+    is_uk_postcode: bool = False
+    is_uk_driving_licence: bool = False
+    is_vehicle_reg: bool = False
+    is_alpha: bool = False
+    is_alphanumeric: bool = False
+    is_date: bool = False
+    is_phone_number: bool = False
+
+
+class ValidationConfig(BaseModel):
+    """Validation configuration for a field."""
+    predicates: ValidationPredicates = ValidationPredicates()
+    min_length: Optional[int] = None
+    max_length: Optional[int] = None
+    min_value: Optional[float] = None
+    max_value: Optional[float] = None
+    pattern: Optional[str] = None
+    custom_error_message: Optional[str] = None
+
+
+class TTSConfig(BaseModel):
+    """TTS configuration for a field."""
+    grammar_text: Optional[str] = None
+    library: Optional[str] = None  # coqui-tts, pyttsx3, gtts, azure-speech
+    ssml: Optional[str] = None
+    voice: Optional[str] = None
+    rate: Optional[float] = None
+    pitch: Optional[float] = None
+
+
+class ASRConfig(BaseModel):
+    """ASR configuration for a field."""
+    grammar_patterns: Optional[str] = None  # JSGF, GRXML, ABNF, regex
+    library: Optional[str] = None  # whisper, vosk-api, coqui-stt, google-cloud-speech
+    grammar_variants: Optional[str] = None  # pipe-separated phrases
+    confidence_threshold: Optional[float] = None
+    language_model: Optional[str] = None
+
+
+class SelectOption(BaseModel):
+    """Select option configuration."""
+    label: str
+    value: str
+    ontology_uri: Optional[str] = None
+
+
+class MappingRule(BaseModel):
+    """Word-to-format mapping rule."""
+    spoken: str
+    formatted: str
+
+
+class MappingConfig(BaseModel):
+    """Mapping and transformation configuration."""
+    transformation_type: str = "none"  # none, word-to-format, custom, lookup
+    word_to_format_rules: List[MappingRule] = []
+    transformation_script: Optional[str] = None
+
+
+class HelpContent(BaseModel):
+    """Help and documentation content."""
+    field_description: Optional[str] = None
+    how_to_fill: Optional[str] = None
+    valid_examples: List[str] = []
+    invalid_examples: List[str] = []
+    asr_hints: Optional[str] = None
+    common_mistakes: Optional[str] = None
+
+
+class FieldSettings(BaseModel):
+    """Comprehensive field settings for a question."""
+    # Basic metadata
+    field_id: Optional[str] = None
+    label: Optional[str] = None
+    internal_key: Optional[str] = None
+    field_type: Optional[str] = None
+    placeholder: Optional[str] = None
+    required: bool = False
+    default_value: Optional[str] = None
+    ui_hint: Optional[str] = None
+
+    # Validation
+    validation: ValidationConfig = ValidationConfig()
+
+    # TTS configuration
+    tts: TTSConfig = TTSConfig()
+
+    # ASR configuration
+    asr: ASRConfig = ASRConfig()
+
+    # Select options (for select/radio/checkbox fields)
+    select_options: List[SelectOption] = []
+
+    # Mapping and transformation
+    mapping: MappingConfig = MappingConfig()
+
+    # Help content
+    help: HelpContent = HelpContent()
 
 
 @app.get("/api/config/health")
@@ -155,40 +294,36 @@ async def update_ontology(ontology_type: str, data: OntologyContent):
 
 @app.get("/api/config/questions")
 async def list_questions():
-    """List all questions with their TTS/ASR configurations and sections."""
+    """List ALL questions from TTL with their TTS/ASR configurations and sections."""
     from dialog_manager import DialogManager
 
     ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
     dialog_manager = DialogManager(ontology_paths)
 
-    flow = dialog_manager.get_dialog_flow("InsuranceQuoteDialog")
+    # Get ALL questions from TTL (not just those in dialog flow)
+    questions = dialog_manager.get_all_questions()
+
+    # Get sections
     sections = dialog_manager.get_all_sections()
-    questions_by_section = dialog_manager.get_questions_by_section()
 
-    questions = []
+    # Build questions_by_section from the section info already in each question
+    questions_by_section = {}
+    for question in questions:
+        if question.get("section") and question["section"].get("section_id"):
+            section_id = question["section"]["section_id"]
+            if section_id not in questions_by_section:
+                questions_by_section[section_id] = []
+            questions_by_section[section_id].append(question)
 
-    for node in flow:
-        if "question_id" in node:
-            question_id = node["question_id"]
-            features = dialog_manager.get_multimodal_features(question_id)
-            threshold, priority = dialog_manager.get_confidence_threshold(question_id)
-
-            # Get section for this question
-            section_info = dialog_manager.get_section_for_question(question_id)
-
-            questions.append({
-                "question_id": question_id,
-                "question_text": node["question_text"],
-                "slot_name": node["slot_name"],
-                "required": node["required"],
-                "tts": features["tts"],
-                "visual_components": features["visual_components"],
-                "select_options": features["select_options"],
-                "faqs": features["faqs"],
-                "confidence_threshold": threshold,
-                "priority": priority,
-                "section": section_info
-            })
+    # Merge cached TTS variants into questions
+    cache = load_tts_variants_cache()
+    for question in questions:
+        question_id = question["question_id"]
+        if question_id in cache and "variants" in cache[question_id]:
+            if question.get("tts"):
+                question["tts"]["variants"] = cache[question_id]["variants"]
+            else:
+                question["tts"] = {"variants": cache[question_id]["variants"]}
 
     return {
         "questions": questions,
@@ -321,6 +456,59 @@ async def get_question_metadata(question_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class TTSConfig(BaseModel):
+    """TTS configuration for a question."""
+    text: Optional[str] = None
+    voice: Optional[str] = None
+    rate: Optional[float] = None
+    pitch: Optional[float] = None
+    variants: Optional[List[str]] = None
+
+
+class QuestionUpdate(BaseModel):
+    """Request to update a question's properties."""
+    question_text: Optional[str] = None
+    slot_name: Optional[str] = None
+    required: Optional[bool] = None
+    tts_text: Optional[str] = None
+    tts_voice: Optional[str] = None
+    tts_rate: Optional[float] = None
+    tts_pitch: Optional[float] = None
+    tts: Optional[TTSConfig] = None
+
+
+@app.post("/api/config/question/{question_id}")
+async def update_question(question_id: str, question_data: QuestionUpdate):
+    """
+    Update a question's properties.
+    This endpoint is used by the Dialog Editor to save question changes.
+    """
+    try:
+        logger.info(f"Updating question {question_id} with data: {question_data.dict(exclude_none=True)}")
+
+        # Save TTS variants to JSON cache if provided
+        if question_data.tts and question_data.tts.variants:
+            cache = load_tts_variants_cache()
+            cache[question_id] = {
+                "variants": question_data.tts.variants,
+                "updated_at": json.dumps({"timestamp": str(datetime.now())})
+            }
+            if save_tts_variants_cache(cache):
+                logger.info(f"Saved TTS variants for question {question_id}")
+            else:
+                logger.warning(f"Failed to save TTS variants for question {question_id}")
+
+        return {
+            "success": True,
+            "question_id": question_id,
+            "message": "Question updated successfully",
+            "updated_fields": question_data.dict(exclude_none=True)
+        }
+    except Exception as e:
+        logger.error(f"Error updating question: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 class QuestionMetadataUpdate(BaseModel):
     """Request to update question metadata."""
     mandatory_field: Optional[bool] = None
@@ -396,6 +584,320 @@ async def update_shacl_rules(data: SHACLUpdate):
             backup_path.rename(validation_file)
         logger.error(f"Error updating SHACL rules: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# Section Management Endpoints
+# ============================================================================
+
+class QuestionSectionUpdate(BaseModel):
+    """Request to update question's section assignment."""
+    section_id: str
+    update_owl: bool = True
+
+
+class QuestionOrderUpdate(BaseModel):
+    """Request to update question's order within section."""
+    section_id: str
+    new_order: int
+    update_owl: bool = True
+
+
+class SectionCreate(BaseModel):
+    """Request to create a new section."""
+    section_id: str
+    section_title: str
+    section_description: str
+    section_order: int
+    semantic_aliases: Optional[List[str]] = []
+    skos_labels: Optional[List[str]] = []
+
+
+class SectionUpdate(BaseModel):
+    """Request to update section properties."""
+    section_title: Optional[str] = None
+    section_description: Optional[str] = None
+    section_order: Optional[int] = None
+    semantic_aliases: Optional[List[str]] = None
+    skos_labels: Optional[List[str]] = None
+
+
+class AliasGenerateRequest(BaseModel):
+    """Request to generate semantic aliases using OpenAI."""
+    section_title: str
+    section_description: Optional[str] = None
+
+
+@app.put("/api/config/question/{question_id}/section")
+async def update_question_section(question_id: str, data: QuestionSectionUpdate):
+    """
+    Move a question to a different section.
+    Updates the :inSection relationship in the ontology.
+    """
+    from dialog_manager import DialogManager
+
+    try:
+        ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
+        dialog_manager = DialogManager(ontology_paths)
+
+        # Update the section assignment
+        success = dialog_manager.update_question_section(
+            question_id=question_id,
+            section_id=data.section_id
+        )
+
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to update question section")
+
+        # Save updated ontology
+        sections_file = ONTOLOGY_DIR / ONTOLOGY_FILES["sections"]
+        dialog_manager.save_graph_to_file(str(sections_file))
+
+        logger.info(f"Moved question {question_id} to section {data.section_id}")
+
+        return {
+            "success": True,
+            "question_id": question_id,
+            "section_id": data.section_id,
+            "owl_updated": data.update_owl
+        }
+
+    except Exception as e:
+        logger.error(f"Error updating question section: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/api/config/question/{question_id}/order")
+async def update_question_order(question_id: str, data: QuestionOrderUpdate):
+    """
+    Update the order of a question within its section.
+    Updates the :order property in the ontology.
+    """
+    from dialog_manager import DialogManager
+
+    try:
+        ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
+        dialog_manager = DialogManager(ontology_paths)
+
+        # Update the question order
+        success = dialog_manager.update_question_order(
+            question_id=question_id,
+            new_order=data.new_order
+        )
+
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to update question order")
+
+        # Save updated ontology
+        questions_file = ONTOLOGY_DIR / ONTOLOGY_FILES["insurance_questions"]
+        dialog_manager.save_graph_to_file(str(questions_file))
+
+        logger.info(f"Updated order for question {question_id} to {data.new_order}")
+
+        return {
+            "success": True,
+            "question_id": question_id,
+            "new_order": data.new_order,
+            "owl_updated": data.update_owl
+        }
+
+    except Exception as e:
+        logger.error(f"Error updating question order: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/config/section/create")
+async def create_section(data: SectionCreate):
+    """
+    Create a new section with OWL/SKOS metadata.
+    Adds section definition to dialog-sections.ttl.
+    """
+    from dialog_manager import DialogManager
+
+    try:
+        ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
+        dialog_manager = DialogManager(ontology_paths)
+
+        # Create the new section
+        success = dialog_manager.create_section(
+            section_id=data.section_id,
+            section_title=data.section_title,
+            section_description=data.section_description,
+            section_order=data.section_order,
+            semantic_aliases=data.semantic_aliases,
+            skos_labels=data.skos_labels
+        )
+
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to create section")
+
+        # Save updated ontology
+        sections_file = ONTOLOGY_DIR / ONTOLOGY_FILES["sections"]
+        dialog_manager.save_graph_to_file(str(sections_file))
+
+        logger.info(f"Created new section: {data.section_id}")
+
+        return {
+            "success": True,
+            "section_id": data.section_id,
+            "message": "Section created with OWL/SKOS relationships"
+        }
+
+    except Exception as e:
+        logger.error(f"Error creating section: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/api/config/section/{section_id}/update")
+async def update_section(section_id: str, data: SectionUpdate):
+    """
+    Update an existing section's properties.
+    Modifies section metadata in dialog-sections.ttl.
+    """
+    from dialog_manager import DialogManager
+
+    try:
+        ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
+        dialog_manager = DialogManager(ontology_paths)
+
+        # Update the section
+        success = dialog_manager.update_section(
+            section_id=section_id,
+            updates=data.dict(exclude_none=True)
+        )
+
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Section not found: {section_id}")
+
+        # Save updated ontology
+        sections_file = ONTOLOGY_DIR / ONTOLOGY_FILES["sections"]
+        dialog_manager.save_graph_to_file(str(sections_file))
+
+        logger.info(f"Updated section: {section_id}")
+
+        return {
+            "success": True,
+            "section_id": section_id,
+            "updates": data.dict(exclude_none=True)
+        }
+
+    except Exception as e:
+        logger.error(f"Error updating section: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/config/section/{section_id}")
+async def delete_section(section_id: str):
+    """
+    Delete a section.
+    Questions will be unassigned from the section.
+    """
+    from dialog_manager import DialogManager
+
+    try:
+        ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
+        dialog_manager = DialogManager(ontology_paths)
+
+        # Delete the section
+        success = dialog_manager.delete_section(section_id)
+
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Section not found: {section_id}")
+
+        # Save updated ontology
+        sections_file = ONTOLOGY_DIR / ONTOLOGY_FILES["sections"]
+        dialog_manager.save_graph_to_file(str(sections_file))
+
+        logger.info(f"Deleted section: {section_id}")
+
+        return {
+            "success": True,
+            "section_id": section_id,
+            "message": "Section deleted, questions unassigned"
+        }
+
+    except Exception as e:
+        logger.error(f"Error deleting section: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/config/section/generate-aliases")
+async def generate_section_aliases(request: AliasGenerateRequest):
+    """
+    Generate semantic aliases for a section using OpenAI.
+    Returns a list of suggested aliases based on the section title and description.
+    """
+    try:
+        import os
+        from openai import OpenAI
+
+        # Check if OpenAI API key is available
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise HTTPException(
+                status_code=500,
+                detail="OpenAI API key not configured. Set OPENAI_API_KEY environment variable."
+            )
+
+        client = OpenAI(api_key=api_key)
+
+        # Build prompt
+        prompt = f"""Generate semantic aliases for a dialog section with the following details:
+
+Title: {request.section_title}
+Description: {request.section_description or 'N/A'}
+
+Generate 8-12 alternative names and phrases that users might use to refer to this section. Include:
+- Synonyms and variations
+- Informal/conversational versions
+- Common abbreviations
+- Related terms
+
+Return ONLY a JSON array of strings, no other text. Example: ["alias 1", "alias 2", "alias 3"]"""
+
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that generates semantic aliases for dialog sections. Return only JSON arrays."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=300
+        )
+
+        # Parse response
+        import json
+        content = response.choices[0].message.content.strip()
+
+        # Try to parse as JSON
+        try:
+            aliases = json.loads(content)
+            if not isinstance(aliases, list):
+                raise ValueError("Response is not a list")
+        except json.JSONDecodeError:
+            # If not valid JSON, try to extract from markdown code block
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+                aliases = json.loads(content)
+            elif "```" in content:
+                content = content.split("```")[1].split("```")[0].strip()
+                aliases = json.loads(content)
+            else:
+                raise ValueError("Could not parse OpenAI response as JSON")
+
+        logger.info(f"Generated {len(aliases)} aliases for section '{request.section_title}'")
+
+        return {
+            "success": True,
+            "aliases": aliases,
+            "count": len(aliases)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating aliases: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate aliases: {str(e)}")
 
 
 if __name__ == "__main__":

@@ -45,6 +45,9 @@ const MultimodalDialog = () => {
   const [operatorMessages, setOperatorMessages] = useState([]);
   const [helpMessage, setHelpMessage] = useState('');
   const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [showAudioPrompt, setShowAudioPrompt] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const recognitionRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -55,8 +58,14 @@ const MultimodalDialog = () => {
   // Initialize TTS voices
   useEffect(() => {
     const loadVoices = () => {
-      const voices = speechSynthesis.getVoices();
-      console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+      const allVoices = speechSynthesis.getVoices();
+
+      // Filter to only English and German voices
+      const voices = allVoices.filter(v =>
+        v.lang.startsWith('en') || v.lang.startsWith('de')
+      );
+
+      console.log('Available English & German voices:', voices.map(v => `${v.name} (${v.lang})`));
       setAvailableVoices(voices);
 
       // Load saved preferences
@@ -76,12 +85,30 @@ const MultimodalDialog = () => {
       }
 
       if (voices.length > 0) {
-        // Try to find Google English Female voice
+        // Try to find Google UK English Female voice specifically
         let defaultVoice = voices.find(v =>
           v.name.toLowerCase().includes('google') &&
+          v.name.toLowerCase().includes('uk') &&
           v.name.toLowerCase().includes('female') &&
-          v.lang.startsWith('en')
+          v.lang === 'en-GB'
         );
+
+        // Fallback to any Google UK English voice
+        if (!defaultVoice) {
+          defaultVoice = voices.find(v =>
+            v.name.toLowerCase().includes('google') &&
+            v.lang === 'en-GB'
+          );
+        }
+
+        // Fallback to any Google English Female voice
+        if (!defaultVoice) {
+          defaultVoice = voices.find(v =>
+            v.name.toLowerCase().includes('google') &&
+            v.name.toLowerCase().includes('female') &&
+            v.lang.startsWith('en')
+          );
+        }
 
         // Fallback to any Google English voice
         if (!defaultVoice) {
@@ -96,6 +123,11 @@ const MultimodalDialog = () => {
           defaultVoice = voices.find(v => v.lang.startsWith('en'));
         }
 
+        // Fallback to first German voice
+        if (!defaultVoice) {
+          defaultVoice = voices.find(v => v.lang.startsWith('de'));
+        }
+
         // Final fallback
         if (!defaultVoice && voices.length > 0) {
           defaultVoice = voices[0];
@@ -103,7 +135,7 @@ const MultimodalDialog = () => {
 
         if (defaultVoice) {
           setSelectedVoice(defaultVoice);
-          console.log('Selected default voice:', defaultVoice.name);
+          console.log('Selected default voice:', defaultVoice.name, '(lang:', defaultVoice.lang + ')');
         }
       }
     };
@@ -155,8 +187,12 @@ const MultimodalDialog = () => {
             errorMessage += 'No microphone found. Please connect a microphone.';
             break;
           case 'network':
-            errorMessage += 'Network error occurred.';
+            errorMessage = 'Network error: Speech recognition service temporarily unavailable. You can use Type mode or try again.';
             break;
+          case 'aborted':
+            // Don't show error for aborted - user likely stopped it
+            setIsRecording(false);
+            return;
           default:
             errorMessage += event.error;
         }
@@ -283,17 +319,79 @@ const MultimodalDialog = () => {
       setConfidence(null);
       setCurrentVariantIndex(0); // Reset variant index for new question
 
-      // Play TTS if available - with a small delay to ensure voices are loaded
-      if (data.tts && data.tts.text) {
-        console.log('Question loaded with TTS:', data.tts);
+      // AUTOPLAY DISABLED - TTS will only play on demand via Test Voice or Rephrase buttons
+      // Play TTS if available - wait for voices to load first
+      // if (data.tts && data.tts.text) {
+      //   console.log('Question loaded with TTS:', data.tts);
 
-        // Small delay to ensure voices are loaded and DOM is ready
-        setTimeout(() => {
-          speakText(data.tts.text, data.tts);
-        }, 300);
-      } else {
-        console.log('No TTS data for question:', data);
-      }
+      //   // Wait for voices AND selectedVoice state to be ready
+      //   const waitForVoicesAndState = () => {
+      //     const voices = speechSynthesis.getVoices().filter(v =>
+      //       v.lang.startsWith('en') || v.lang.startsWith('de')
+      //     );
+
+      //     if (voices.length > 0) {
+      //       // Find the default voice (same logic as loadVoices)
+      //       let voiceToUse = voices.find(v =>
+      //         v.name.toLowerCase().includes('google') &&
+      //         v.name.toLowerCase().includes('uk') &&
+      //         v.name.toLowerCase().includes('female') &&
+      //         v.lang === 'en-GB'
+      //       );
+
+      //       if (!voiceToUse) {
+      //         voiceToUse = voices.find(v =>
+      //           v.name.toLowerCase().includes('google') &&
+      //           v.lang === 'en-GB'
+      //         );
+      //       }
+
+      //       if (voiceToUse) {
+      //         // Set state and pass voice object directly to bypass state timing issues
+      //         setSelectedVoice(voiceToUse);
+      //         setTimeout(() => {
+      //           speakText(data.tts.text, data.tts, voiceToUse);
+      //         }, 50);
+      //       } else {
+      //         speakText(data.tts.text, data.tts);
+      //       }
+      //     } else {
+      //       // Voices not loaded yet, wait a bit and try again
+      //       setTimeout(waitForVoicesAndState, 100);
+      //     }
+      //   };
+      //   waitForVoicesAndState();
+      // } else {
+      //   // Fallback: Speak the question text if no TTS configured
+      //   console.log('No TTS data configured, speaking question text:', data.question_text);
+      //
+      //   const waitForVoicesAndState = () => {
+      //     const voices = speechSynthesis.getVoices().filter(v =>
+      //       v.lang.startsWith('en') || v.lang.startsWith('de')
+      //     );
+      //
+      //     if (voices.length > 0) {
+      //       let voiceToUse = voices.find(v =>
+      //         v.name.toLowerCase().includes('google') &&
+      //         v.name.toLowerCase().includes('uk') &&
+      //         v.name.toLowerCase().includes('female') &&
+      //         v.lang === 'en-GB'
+      //       );
+      //
+      //       if (voiceToUse) {
+      //         setSelectedVoice(voiceToUse);
+      //         setTimeout(() => {
+      //           speakText(data.question_text, {}, voiceToUse);
+      //         }, 50);
+      //       } else {
+      //         speakText(data.question_text, {});
+      //       }
+      //     } else {
+      //       setTimeout(waitForVoicesAndState, 100);
+      //     }
+      //   };
+      //   waitForVoicesAndState();
+      // }
     } catch (err) {
       setError('Failed to load question: ' + err.message);
     } finally {
@@ -301,50 +399,104 @@ const MultimodalDialog = () => {
     }
   };
 
-  const speakText = (text, ttsConfig = {}) => {
+  const speakText = (text, ttsConfig = {}, voiceObject = null) => {
     if ('speechSynthesis' in window) {
-      // Cancel any ongoing speech
-      speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-GB';
-
-      // Use configured rate and pitch, with TTS config override
-      utterance.rate = ttsConfig.rate !== undefined ? ttsConfig.rate : ttsRate;
-      utterance.pitch = ttsConfig.pitch !== undefined ? ttsConfig.pitch : ttsPitch;
-
-      // Use selected voice from settings, or from TTS config, or default
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-      } else if (ttsConfig.voice && availableVoices.length > 0) {
-        const voice = availableVoices.find(v => v.name.includes(ttsConfig.voice));
-        if (voice) {
-          utterance.voice = voice;
-        }
+      // Chrome bug workaround: only cancel if something is actually queued/playing
+      if (speechSynthesis.speaking || speechSynthesis.pending) {
+        speechSynthesis.cancel();
       }
 
-      utterance.onstart = () => {
-        console.log('TTS started:', text.substring(0, 50) + '...');
-        console.log('Voice:', utterance.voice?.name, 'Rate:', utterance.rate, 'Pitch:', utterance.pitch);
-      };
+      // Wait a moment for cancel to complete, then proceed
+      setTimeout(() => {
+        // Chrome bug workaround: wake up the speech synthesis engine
+        if (speechSynthesis.paused) {
+          speechSynthesis.resume();
+        }
 
-      utterance.onend = () => {
-        console.log('TTS ended');
-      };
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-GB';
+        utterance.volume = 1.0; // Ensure full volume
 
-      utterance.onerror = (event) => {
-        console.error('TTS error:', event.error, event);
-        setError(`Text-to-speech error: ${event.error}`);
-      };
+        // Use configured rate and pitch, with TTS config override
+        utterance.rate = ttsConfig.rate !== undefined ? ttsConfig.rate : ttsRate;
+        utterance.pitch = ttsConfig.pitch !== undefined ? ttsConfig.pitch : ttsPitch;
 
-      console.log('Speaking:', {
-        text: text.substring(0, 50) + '...',
-        voice: utterance.voice?.name || 'default',
-        rate: utterance.rate,
-        pitch: utterance.pitch
-      });
+        // Use voice in this priority: voiceObject param > selectedVoice state > TTS config
+        if (voiceObject) {
+          utterance.voice = voiceObject;
+        } else if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        } else if (ttsConfig.voice && availableVoices.length > 0) {
+          const voice = availableVoices.find(v => v.name.includes(ttsConfig.voice));
+          if (voice) {
+            utterance.voice = voice;
+          }
+        }
 
-      speechSynthesis.speak(utterance);
+        utterance.onstart = () => {
+          console.log('TTS started:', text.substring(0, 50) + '...');
+          console.log('Voice:', utterance.voice?.name, 'Rate:', utterance.rate, 'Pitch:', utterance.pitch);
+          setIsSpeaking(true);
+        };
+
+        utterance.onend = () => {
+          console.log('TTS ended');
+          setIsSpeaking(false);
+        };
+
+        utterance.onerror = (event) => {
+          setIsSpeaking(false);
+          if (event.error === 'not-allowed') {
+            setShowAudioPrompt(true);
+            setError(null); // Don't show error, show the audio prompt instead
+          } else if (event.error !== 'canceled') {
+            // Log and show only actual errors (not "canceled" which is expected)
+            console.error('TTS error:', event.error);
+            setError(`Text-to-speech error: ${event.error}`);
+          }
+          // Silently ignore "canceled" errors - they're expected when stopping TTS
+        };
+
+        console.log('Speaking:', {
+          text: text.substring(0, 50) + '...',
+          voice: utterance.voice?.name || 'default',
+          rate: utterance.rate,
+          pitch: utterance.pitch
+        });
+
+        console.log('speechSynthesis state:', {
+          speaking: speechSynthesis.speaking,
+          pending: speechSynthesis.pending,
+          paused: speechSynthesis.paused
+        });
+
+        speechSynthesis.speak(utterance);
+
+        // Chrome bug workaround: check if speech started after a short delay
+        setTimeout(() => {
+          if (!speechSynthesis.speaking && !speechSynthesis.pending) {
+            console.warn('TTS failed to start, retrying with fresh utterance and default voice...');
+            // Retry once with fresh utterance and no explicit voice (let Chrome pick a safe default)
+            const fallback = new SpeechSynthesisUtterance(text);
+            fallback.lang = navigator.language || 'en-GB';
+            fallback.rate = ttsConfig.rate !== undefined ? ttsConfig.rate : ttsRate;
+            fallback.pitch = ttsConfig.pitch !== undefined ? ttsConfig.pitch : ttsPitch;
+            fallback.volume = 1.0;
+            fallback.onstart = () => setIsSpeaking(true);
+            fallback.onend = () => setIsSpeaking(false);
+            fallback.onerror = () => {
+              setIsSpeaking(false);
+              // As a last resort, show the enable audio prompt to request a user gesture
+              setShowAudioPrompt(true);
+            };
+            // Ensure no stale queue remains before retry
+            if (speechSynthesis.speaking || speechSynthesis.pending) {
+              speechSynthesis.cancel();
+            }
+            setTimeout(() => speechSynthesis.speak(fallback), 120);
+          }
+        }, 250);
+      }, 120); // slightly longer delay after cancel for Chrome stability
     } else {
       console.warn('Speech synthesis not supported');
       setError('Text-to-speech not supported in this browser');
@@ -438,8 +590,8 @@ const MultimodalDialog = () => {
       pitch: ttsPitch,
       voice: selectedVoice?.name
     });
-    const testText = "This is a test of the text to speech system.";
-    speakText(testText, {});
+    const testText = `Hello! This is a test of the text to speech system using ${selectedVoice ? selectedVoice.name : 'the default voice'}.`;
+    speakText(testText, {}, selectedVoice);
   };
 
   const startSpeechRecognition = useCallback(() => {
@@ -583,8 +735,16 @@ const MultimodalDialog = () => {
       return;
     }
 
+    // Cancel any ongoing speech first
+    if (speechSynthesis.speaking) {
+      console.log('Canceling ongoing speech');
+      speechSynthesis.cancel();
+    }
+
     // Get TTS variants if available
     const tts = currentQuestion.tts;
+    console.log('Current question TTS data:', tts);
+
     if (tts) {
       const variants = [];
 
@@ -595,6 +755,8 @@ const MultimodalDialog = () => {
       if (tts.variant3) variants.push(tts.variant3);
       if (tts.variant4) variants.push(tts.variant4);
 
+      console.log('TTS variants found:', variants.length, variants);
+
       if (variants.length > 0) {
         // Cycle to next variant
         const nextIndex = (currentVariantIndex + 1) % variants.length;
@@ -602,16 +764,24 @@ const MultimodalDialog = () => {
 
         const variantToSpeak = variants[nextIndex];
         console.log(`Speaking variant ${nextIndex + 1}/${variants.length}:`, variantToSpeak);
-        speakText(variantToSpeak, tts);
+
+        // Small delay to ensure previous speech is canceled
+        setTimeout(() => {
+          speakText(variantToSpeak, tts);
+        }, 100);
       } else {
         // No variants, use question text
-        console.log('No TTS variants, speaking question text:', currentQuestion.question_text);
-        speakText(currentQuestion.question_text, {});
+        console.log('No TTS variants found, speaking question text:', currentQuestion.question_text);
+        setTimeout(() => {
+          speakText(currentQuestion.question_text, {});
+        }, 100);
       }
     } else {
       // Fallback to question text if no TTS configured
       console.log('No TTS configured, speaking question text:', currentQuestion.question_text);
-      speakText(currentQuestion.question_text, {});
+      setTimeout(() => {
+        speakText(currentQuestion.question_text, {});
+      }, 100);
     }
   };
 
@@ -687,12 +857,66 @@ const MultimodalDialog = () => {
 
         {/* Question */}
         <div className="mb-6">
+          {/* TTS Play Button */}
+          <div className="mb-3">
+            <button
+              onClick={() => {
+                const text = currentQuestion.tts?.text || currentQuestion.question_text;
+                const ttsConfig = currentQuestion.tts || {};
+                speakText(text, ttsConfig, selectedVoice);
+              }}
+              disabled={isSpeaking}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: isSpeaking ? '#9ca3af' : '#2563eb',
+                color: '#ffffff',
+                borderRadius: '8px',
+                fontWeight: '500',
+                border: 'none',
+                cursor: isSpeaking ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                opacity: isSpeaking ? 0.6 : 1
+              }}
+              onMouseOver={(e) => {
+                if (!isSpeaking) e.target.style.backgroundColor = '#1d4ed8';
+              }}
+              onMouseOut={(e) => {
+                if (!isSpeaking) e.target.style.backgroundColor = '#2563eb';
+              }}
+            >
+              <Volume2 style={{ width: '16px', height: '16px' }} />
+              {isSpeaking ? 'Speaking...' : 'Play Question'}
+            </button>
+          </div>
+
           <div className="flex items-start gap-2 mb-4">
             <h3 className="text-xl font-semibold text-gray-900">{currentQuestion.question_text}</h3>
             {currentQuestion.required && (
               <Badge color="failure" className="text-xs">Required</Badge>
             )}
           </div>
+
+          {/* TTS Speaking Indicator */}
+          {isSpeaking && (
+            <div className="mb-4 flex items-center gap-3 bg-blue-50 border-2 border-blue-200 rounded-lg p-3">
+              <Volume2 className="w-5 h-5 text-blue-600 animate-pulse" />
+              <div className="flex-1">
+                <p className="font-semibold text-blue-900 text-sm">Speaking Prompt</p>
+                <p className="text-xs text-blue-700">The system is reading the question aloud</p>
+              </div>
+              <button
+                onClick={() => {
+                  speechSynthesis.cancel();
+                  setIsSpeaking(false);
+                }}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                Stop
+              </button>
+            </div>
+          )}
 
           {/* Visual Components */}
           {currentQuestion.visual_components && currentQuestion.visual_components.length > 0 && (
@@ -735,54 +959,6 @@ const MultimodalDialog = () => {
           ) : (
             /* Text/Speech Input */
             <div className="space-y-4">
-              {/* Input Mode Toggle - Slider */}
-              <div className="flex items-center gap-4">
-                <div className="relative inline-flex items-center bg-white border-2 border-black w-64">
-                  {/* Slider background highlight */}
-                  <div
-                    className={`absolute h-full bg-black transition-all duration-300 ease-in-out`}
-                    style={{
-                      width: '50%',
-                      left: inputMode === 'text' ? '0' : '50%',
-                      top: '0'
-                    }}
-                  />
-                  {/* Type Button */}
-                  <button
-                    onClick={() => setInputMode('text')}
-                    className={`relative z-10 flex-1 py-3 px-4 text-sm font-semibold transition-colors duration-300 ${
-                      inputMode === 'text'
-                        ? 'text-white'
-                        : 'text-black hover:text-gray-700'
-                    }`}
-                  >
-                    Type
-                  </button>
-                  {/* Speak Button */}
-                  <button
-                    onClick={() => setInputMode('speech')}
-                    disabled={!recognitionRef.current}
-                    className={`relative z-10 flex-1 py-3 px-4 text-sm font-semibold transition-colors duration-300 ${
-                      inputMode === 'speech'
-                        ? 'text-white'
-                        : 'text-black hover:text-gray-700'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    Speak
-                  </button>
-                </div>
-                {currentQuestion?.input_mode?.supports_letter_by_letter && (
-                  <Button
-                    color={inputMode === 'keyboard' ? 'blue' : 'light'}
-                    onClick={() => setInputMode('keyboard')}
-                    size="sm"
-                  >
-                    <Keyboard className="w-4 h-4 mr-2" />
-                    Spell
-                  </Button>
-                )}
-              </div>
-
               {/* Select Options (if available) */}
               {currentQuestion?.select_options && currentQuestion.select_options.length > 0 ? (
                 <SelectWithASR
@@ -799,28 +975,125 @@ const MultimodalDialog = () => {
                   onStopRecording={stopSpeechRecognition}
                 />
               ) : inputMode === 'keyboard' ? (
-                <PhoneticKeyboard
-                  value={userInput}
-                  onChange={setUserInput}
-                  onSubmit={() => submitAnswer(userInput.trim(), 'text')}
-                  placeholder={`Spell ${currentQuestion?.slot_name || 'answer'} here`}
-                  inputMode={currentQuestion?.input_mode}
-                />
-              ) : inputMode === 'text' ? (
-                <form onSubmit={handleTextSubmit} className="flex gap-2">
-                  <TextInput
-                    type="text"
+                <div className="space-y-3">
+                  {/* Back button above keyboard */}
+                  <div className="flex justify-start">
+                    <Button
+                      color="light"
+                      onClick={() => setInputMode('text')}
+                      size="sm"
+                    >
+                      <Keyboard className="w-4 h-4 mr-2" />
+                      Back to Type/Speak
+                    </Button>
+                  </div>
+                  <PhoneticKeyboard
                     value={userInput}
-                    onChange={(e) => setUserInput(e.target.value)}
-                    placeholder="Type your answer..."
-                    disabled={loading}
-                    className="flex-1"
+                    onChange={setUserInput}
+                    onSubmit={() => submitAnswer(userInput.trim(), 'text')}
+                    placeholder={`Spell ${currentQuestion?.slot_name || 'answer'} here (NATO/Letter/Number)`}
+                    inputMode={currentQuestion?.input_mode}
                   />
-                  <Button type="submit" disabled={loading || !userInput.trim()}>
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </form>
+                  <Alert color="info">
+                    <p className="text-sm">
+                      <strong>Spelling Mode:</strong> Use NATO phonetic alphabet (Alpha, Bravo, Charlie),
+                      single letters (A, B, C), or numbers for precise input.
+                    </p>
+                  </Alert>
+                </div>
               ) : (
+                /* Combined text/speech input with icons inside */
+                <form onSubmit={handleTextSubmit} className="space-y-4">
+                  <div className="flex gap-2">
+                    {/* Spell button (if supported) */}
+                    {currentQuestion?.input_mode?.supports_letter_by_letter && (
+                      <Button
+                        color="light"
+                        onClick={() => setInputMode('keyboard')}
+                        size="lg"
+                        className="flex-shrink-0"
+                      >
+                        <Keyboard className="w-5 h-5" />
+                      </Button>
+                    )}
+
+                    {/* Text input with mic icon */}
+                    <div className="flex-1 relative">
+                      <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 bg-white">
+                        {/* Microphone button on the left */}
+                        <button
+                          type="button"
+                          onClick={isRecording ? stopSpeechRecognition : startSpeechRecognition}
+                          disabled={loading || !recognitionRef.current}
+                          className={`
+                            flex-shrink-0 px-3 py-3 transition-colors
+                            disabled:opacity-50 disabled:cursor-not-allowed
+                            ${isRecording
+                              ? 'bg-red-500 hover:bg-red-600 text-white'
+                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                            }
+                          `}
+                          aria-label={isRecording ? "Stop recording" : "Start recording"}
+                        >
+                          {isRecording ? (
+                            <MicOff className="w-5 h-5" />
+                          ) : (
+                            <Mic className="w-5 h-5" />
+                          )}
+                        </button>
+
+                        {/* Text input */}
+                        <input
+                          type="text"
+                          value={userInput}
+                          onChange={(e) => setUserInput(e.target.value)}
+                          placeholder={isRecording ? "Listening..." : "Type or speak your answer..."}
+                          disabled={loading}
+                          className="flex-1 px-4 py-3 border-0 focus:outline-none focus:ring-0"
+                        />
+
+                        {/* Submit button */}
+                        <button
+                          type="submit"
+                          disabled={loading || !userInput.trim()}
+                          className="flex-shrink-0 px-4 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white transition-colors"
+                        >
+                          <Send className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recording indicator */}
+                  {isRecording && (
+                    <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-red-900 text-sm">Recording Active</p>
+                          <p className="text-xs text-red-700">Speak clearly into your microphone</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recognized text display */}
+                  {userInput && !isRecording && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-green-900 text-sm">Recognized:</p>
+                          <p className="text-gray-900 text-sm">{userInput}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </form>
+              )}
+
+              {/* Remove the old speech mode section since it's now integrated */}
+              {false && (
                 <div className="space-y-4">
                   {/* Round Voice Button with Glow Effect */}
                   <div className="flex flex-col items-center gap-4 py-6">
@@ -943,19 +1216,39 @@ const MultimodalDialog = () => {
           )}
 
           {/* Controls */}
-          <div className="flex gap-2 mt-6 flex-wrap">
-            <Button color="light" onClick={repeatQuestion}>
+          <div className="flex gap-3 mt-6 flex-wrap justify-center">
+            <Button
+              color="light"
+              onClick={repeatQuestion}
+              className="flex-1 min-w-[140px] max-w-[180px] justify-center"
+            >
               <Volume2 className="w-4 h-4 mr-2" />
               Rephrase Question
             </Button>
-            <Button color="light" onClick={() => setShowVoiceSettings(true)}>
+            <Button
+              color="blue"
+              onClick={testVoice}
+              className="flex-1 min-w-[140px] max-w-[180px] justify-center"
+            >
+              <Volume2 className="w-4 h-4 mr-2" />
+              Test Voice
+            </Button>
+            <Button
+              color="light"
+              onClick={() => setShowVoiceSettings(true)}
+              className="flex-1 min-w-[140px] max-w-[180px] justify-center"
+            >
               <SettingsIcon className="w-4 h-4 mr-2" />
               Voice Settings
             </Button>
-            <Button color="light" onClick={() => {
-              setShowHelpDialog(true);
-              connectToOperatorHelp();
-            }}>
+            <Button
+              color="light"
+              onClick={() => {
+                setShowHelpDialog(true);
+                connectToOperatorHelp();
+              }}
+              className="flex-1 min-w-[160px] max-w-[200px] justify-center"
+            >
               <MessageSquare className="w-4 h-4 mr-2" />
               Ask Operator
             </Button>
@@ -1017,6 +1310,30 @@ const MultimodalDialog = () => {
               <p className="text-xs text-gray-500 mt-1">
                 {availableVoices.length} voices available
               </p>
+
+              {/* Test Voice button - UPDATED */}
+              <button
+                onClick={testVoice}
+                style={{
+                  width: '100%',
+                  marginTop: '12px',
+                  backgroundColor: '#2563eb',
+                  color: '#ffffff',
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  fontWeight: '500',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onMouseOver={(e) => e.target.style.backgroundColor = '#1d4ed8'}
+                onMouseOut={(e) => e.target.style.backgroundColor = '#2563eb'}
+              >
+                <Volume2 style={{ width: '16px', height: '16px', marginRight: '8px' }} />
+                Test Voice
+              </button>
             </div>
 
             {selectedVoice && (
@@ -1076,24 +1393,52 @@ const MultimodalDialog = () => {
               </div>
             </div>
 
+            {/* Test Voice and Reset buttons */}
             <div className="flex gap-2">
-              <Button
-                color="blue"
+              <button
                 onClick={testVoice}
-                className="flex-1"
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  backgroundColor: '#2563eb',
+                  color: '#ffffff',
+                  borderRadius: '8px',
+                  fontWeight: '500',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onMouseOver={(e) => e.target.style.backgroundColor = '#1d4ed8'}
+                onMouseOut={(e) => e.target.style.backgroundColor = '#2563eb'}
               >
-                <Volume2 className="w-4 h-4 mr-2" />
+                <Volume2 style={{ width: '16px', height: '16px', marginRight: '8px' }} />
                 Test Voice
-              </Button>
-              <Button
-                color="light"
+              </button>
+              <button
                 onClick={() => {
                   handleRateChange(1.0);
                   handlePitchChange(1.0);
                 }}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  backgroundColor: '#6b7280',
+                  color: '#ffffff',
+                  borderRadius: '8px',
+                  fontWeight: '500',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onMouseOver={(e) => e.target.style.backgroundColor = '#4b5563'}
+                onMouseOut={(e) => e.target.style.backgroundColor = '#6b7280'}
               >
                 Reset to Default
-              </Button>
+              </button>
             </div>
 
             <Alert color="info">
@@ -1210,6 +1555,69 @@ const MultimodalDialog = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Enable Audio Prompt Modal */}
+      {showAudioPrompt && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 9999,
+          backgroundColor: 'white',
+          padding: '32px',
+          borderRadius: '12px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          maxWidth: '500px',
+          width: '90%'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+            <Volume2 style={{ width: '32px', height: '32px', color: '#3b82f6' }} />
+            <h2 style={{ fontSize: '24px', fontWeight: '600', margin: 0, color: '#111827' }}>Enable Audio</h2>
+          </div>
+          <p style={{ color: '#4b5563', marginBottom: '16px', lineHeight: '1.6' }}>
+            This application uses text-to-speech to read questions aloud.
+            Click the button below to enable audio playback.
+          </p>
+          <div style={{
+            backgroundColor: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '20px'
+          }}>
+            <p style={{ fontSize: '14px', color: '#1e40af', margin: 0 }}>
+              Your browser requires user interaction before playing audio.
+              This is a security feature to prevent websites from auto-playing sounds.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setShowAudioPrompt(false);
+              setAudioEnabled(true);
+              speakText("Audio enabled. I will now read questions aloud.", {});
+            }}
+            style={{
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              padding: '12px 24px',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '500',
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+          >
+            <Volume2 style={{ width: '20px', height: '20px' }} />
+            Enable Audio & Continue
+          </button>
+        </div>
+      )}
     </div>
   );
 };

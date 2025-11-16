@@ -156,6 +156,246 @@ mm:faqCategory a owl:DatatypeProperty ;
     rdfs:domain mm:FAQ ;
     rdfs:range xsd:string .
 
+# Form Field Properties for Questions
+mm:fieldType a owl:DatatypeProperty ;
+    rdfs:label "field type" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Type of input field: text, textarea, number, email, phone, date, select, checkbox, radio" .
+
+mm:placeholder a owl:DatatypeProperty ;
+    rdfs:label "placeholder" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Placeholder text for the input field" .
+
+mm:helpText a owl:DatatypeProperty ;
+    rdfs:label "help text" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Help text displayed below the field" .
+
+mm:defaultValue a owl:DatatypeProperty ;
+    rdfs:label "default value" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Default value for the field" .
+
+mm:validationRule a owl:DatatypeProperty ;
+    rdfs:label "validation rule" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Validation rules in Zod format or predicate names" .
+
+mm:validationMessage a owl:DatatypeProperty ;
+    rdfs:label "validation message" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Custom error message for validation failures" .
+
+mm:minLength a owl:DatatypeProperty ;
+    rdfs:label "minimum length" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Minimum length for text inputs" .
+
+mm:maxLength a owl:DatatypeProperty ;
+    rdfs:label "maximum length" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Maximum length for text inputs" .
+
+mm:minValue a owl:DatatypeProperty ;
+    rdfs:label "minimum value" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Minimum value for number inputs" .
+
+mm:maxValue a owl:DatatypeProperty ;
+    rdfs:label "maximum value" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Maximum value for number inputs" .
+
+mm:pattern a owl:DatatypeProperty ;
+    rdfs:label "pattern" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Regular expression pattern for validation" .
+
+mm:uiHint a owl:DatatypeProperty ;
+    rdfs:label "UI hint" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "UI layout hint: full-width, half-width, inline, two-column" .
+
+# Validation Predicate Properties
+mm:isDigit a owl:DatatypeProperty ;
+    rdfs:label "is digit" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Validates that value contains only digits" .
+
+mm:isNumber a owl:DatatypeProperty ;
+    rdfs:label "is number" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Validates that value is a valid number" .
+
+mm:isEmail a owl:DatatypeProperty ;
+    rdfs:label "is email" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Validates email address format" .
+
+mm:isUKPostcode a owl:DatatypeProperty ;
+    rdfs:label "is UK postcode" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Validates UK postcode format" .
+
+mm:isUKDrivingLicence a owl:DatatypeProperty ;
+    rdfs:label "is UK driving licence" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Validates UK driving licence number format" .
+
+mm:isVehicleReg a owl:DatatypeProperty ;
+    rdfs:label "is vehicle registration" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Validates UK vehicle registration format" .
+
+mm:isAlpha a owl:DatatypeProperty ;
+    rdfs:label "is alpha" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Validates that value contains only letters" .
+
+mm:isAlphanumeric a owl:DatatypeProperty ;
+    rdfs:label "is alphanumeric" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Validates that value contains only letters and numbers" .
+
+mm:isDate a owl:DatatypeProperty ;
+    rdfs:label "is date" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Validates date format" .
+
+mm:isPhoneNumber a owl:DatatypeProperty ;
+    rdfs:label "is phone number" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Validates phone number format" .
+
+# TTS Grammar and Configuration Properties
+mm:ttsGrammarText a owl:DatatypeProperty ;
+    rdfs:label "TTS grammar text" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Text-to-speech prompt for this field" .
+
+mm:ttsLibrary a owl:DatatypeProperty ;
+    rdfs:label "TTS library" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Recommended TTS library: coqui-tts, pyttsx3, gtts, azure-speech" .
+
+mm:ttsSSML a owl:DatatypeProperty ;
+    rdfs:label "TTS SSML" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "SSML markup for advanced TTS control" .
+
+# ASR Configuration Properties
+mm:asrGrammarPatterns a owl:DatatypeProperty ;
+    rdfs:label "ASR grammar patterns" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Speech recognition grammar patterns (JSGF, GRXML, ABNF, regex)" .
+
+mm:asrLibrary a owl:DatatypeProperty ;
+    rdfs:label "ASR library" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Recommended ASR library: whisper, vosk-api, coqui-stt, google-cloud-speech" .
+
+mm:asrGrammarVariants a owl:DatatypeProperty ;
+    rdfs:label "ASR grammar variants" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Expected phrases for speech recognition, pipe-separated" .
+
+mm:asrConfidenceThreshold a owl:DatatypeProperty ;
+    rdfs:label "ASR confidence threshold" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Minimum confidence score (0.0-1.0) for accepting ASR results" .
+
+mm:asrLanguageModel a owl:DatatypeProperty ;
+    rdfs:label "ASR language model" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Custom language model for domain-specific recognition" .
+
+# Mapping and Transformation Properties
+mm:transformationType a owl:DatatypeProperty ;
+    rdfs:label "transformation type" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Type of transformation: none, word-to-format, custom, lookup" .
+
+mm:wordToFormatMapping a owl:DatatypeProperty ;
+    rdfs:label "word to format mapping" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "JSON object mapping spoken words to formatted values" .
+
+mm:transformationScript a owl:DatatypeProperty ;
+    rdfs:label "transformation script" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Custom JavaScript/Python function for complex transformations" .
+
+# Help and Documentation Properties
+mm:fieldDescription a owl:DatatypeProperty ;
+    rdfs:label "field description" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Explanation of what this field is for" .
+
+mm:howToFill a owl:DatatypeProperty ;
+    rdfs:label "how to fill" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Instructions on how to fill this field correctly" .
+
+mm:validExamples a owl:DatatypeProperty ;
+    rdfs:label "valid examples" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "JSON array of valid example values" .
+
+mm:invalidExamples a owl:DatatypeProperty ;
+    rdfs:label "invalid examples" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "JSON array of invalid example values with explanations" .
+
+mm:asrHints a owl:DatatypeProperty ;
+    rdfs:label "ASR hints" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Voice input tips for users" .
+
+mm:commonMistakes a owl:DatatypeProperty ;
+    rdfs:label "common mistakes" ;
+    rdfs:domain mm:MultimodalQuestion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Common errors users make when filling this field" .
+
 # TTS Voice Configurations
 mm:StandardVoice a mm:TTSPrompt ;
     rdfs:label "Standard Voice" ;
@@ -220,7 +460,6 @@ mm:PhoneticVoice a mm:TTSPrompt ;
     :required true ;
     :spellingRequired true ;
     :order 3 ;
-    :nextNode :CarMakeQuestion ;
     :inSection :VehicleDetailsSection ;
     :hasInputMode vocab:VehicleRegInputMode ;
     mm:hasTTSPrompt :VehicleRegTTS ;
@@ -294,26 +533,7 @@ mm:ExampleComponent a mm:VisualComponent ;
     mm:componentType "example" ;
     rdfs:comment "Example display with formatting" .
 
-# Car Manufacturer Question with comprehensive select options
-:CarMakeQuestion a mm:MultimodalQuestion ;
-    rdfs:label "Vehicle Make Selection" ;
-    :questionId "q_car_make" ;
-    :questionText "What make is your vehicle?" ;
-    :slotName "vehicle_make" ;
-    :required true ;
-    :order 4 ;
-    :inSection :VehicleDetailsSection ;
-    mm:hasTTSPrompt :CarMakeTTS ;
-    mm:hasOption :MakeToyota, :MakeVolkswagen, :MakeFord, :MakeBMW, :MakeMercedes,
-                 :MakeAudi, :MakeHonda, :MakeNissan, :MakePeugeot, :MakeRenault,
-                 :MakeCitroen, :MakeMazda, :MakeHyundai, :MakeKia, :MakeSeat,
-                 :MakeSkoda, :MakeVolvo, :MakeLandRover, :MakeJaguar, :MakeMini .
-
-:CarMakeTTS a mm:TTSPrompt ;
-    mm:ttsText "Which manufacturer made your vehicle? You can select from the list or speak the make name." ;
-    mm:ttsVoice "en-GB-Neural2-A" ;
-    mm:ttsRate 1.0 ;
-    mm:ttsPitch 1.0 .
+# Car Manufacturer options are defined below (used by insurance questions)
 
 # Toyota
 :MakeToyota a mm:SelectOption ;

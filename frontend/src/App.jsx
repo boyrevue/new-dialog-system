@@ -1,10 +1,11 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { MessageSquare, UserCog, Menu, X, Settings, Edit3 } from 'lucide-react'
+import { MessageSquare, UserCog, Menu, X, Settings, Edit3, FolderTree } from 'lucide-react'
 import MultimodalDialog from './components/MultimodalDialog'
 import OperatorPanel from './components/OperatorPanel'
 import ConfigPanel from './components/ConfigPanel'
 import DialogEditor from './components/DialogEditor'
+import SectionManager from './components/SectionManager'
 
 function AppContent() {
   const location = useLocation()
@@ -69,6 +70,17 @@ function AppContent() {
                 >
                   <Edit3 className="h-4 w-4" />
                   Dialog Editor
+                </Link>
+                <Link
+                  to="/sections"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium ${
+                    location.pathname === '/sections'
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  <FolderTree className="h-4 w-4" />
+                  Section Manager
                 </Link>
               </div>
             </div>
@@ -139,6 +151,18 @@ function AppContent() {
                 <Edit3 className="h-5 w-5" />
                 Dialog Editor
               </Link>
+              <Link
+                to="/sections"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium ${
+                  location.pathname === '/sections'
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`}
+              >
+                <FolderTree className="h-5 w-5" />
+                Section Manager
+              </Link>
             </div>
           </div>
         )}
@@ -150,6 +174,7 @@ function AppContent() {
           <Route path="/operator" element={<OperatorPanel />} />
           <Route path="/config" element={<ConfigPanel />} />
           <Route path="/editor" element={<DialogEditor />} />
+          <Route path="/sections" element={<SectionManager />} />
         </Routes>
       </main>
     </div>
@@ -158,7 +183,12 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
+    <Router
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
       <AppContent />
     </Router>
   )

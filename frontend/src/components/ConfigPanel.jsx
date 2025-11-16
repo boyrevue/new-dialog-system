@@ -310,67 +310,90 @@ const ConfigPanel = () => {
           )}
 
           {activeTab === 'ontologies' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Ontology Files</h3>
-                <div className="space-y-2">
-                  {ontologies.map((ont) => (
-                    <Button
-                      key={ont.type}
-                      color={selectedOntology?.ontology_type === ont.type ? 'blue' : 'light'}
-                      onClick={() => ont.exists && loadOntologyContent(ont.type)}
-                      className="w-full justify-start"
-                      disabled={!ont.exists}
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      <div className="flex-1 text-left">
-                        <div className="font-semibold">{ont.type}</div>
-                        <div className="text-xs opacity-75">{ont.filename}</div>
-                      </div>
-                      {!ont.exists && <Badge color="failure">Missing</Badge>}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="lg:col-span-2">
-                {selectedOntology ? (
-                  <Card>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">{selectedOntology.filename}</h3>
-                          <p className="text-sm text-gray-600">
-                            {selectedOntology.line_count} lines
-                          </p>
+            <div className="space-y-6">
+              {!selectedOntology ? (
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">Ontology Files</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {ontologies.map((ont) => (
+                      <Card
+                        key={ont.type}
+                        className={`cursor-pointer transition-all hover:shadow-lg ${
+                          !ont.exists ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                        }`}
+                        onClick={() => ont.exists && loadOntologyContent(ont.type)}
+                      >
+                        <div className="flex flex-col items-center text-center space-y-3 p-2">
+                          <div className={`p-4 rounded-full ${
+                            ont.exists ? 'bg-blue-100' : 'bg-gray-100'
+                          }`}>
+                            <FileText className={`w-8 h-8 ${
+                              ont.exists ? 'text-blue-600' : 'text-gray-400'
+                            }`} />
+                          </div>
+                          <div className="flex-1 w-full">
+                            <h4 className="font-semibold text-gray-900 mb-1 capitalize">
+                              {ont.type.replace('_', ' ')}
+                            </h4>
+                            <p className="text-xs text-gray-500 font-mono break-all">
+                              {ont.filename}
+                            </p>
+                          </div>
+                          {ont.exists ? (
+                            <Badge color="success" className="w-full">
+                              Available
+                            </Badge>
+                          ) : (
+                            <Badge color="failure" className="w-full">
+                              Missing
+                            </Badge>
+                          )}
                         </div>
-                        <Button color="success" onClick={saveOntology} disabled={loading}>
-                          <Save className="w-4 h-4 mr-2" />
-                          Save Changes
-                        </Button>
-                      </div>
-
-                      <Textarea
-                        value={ontologyContent}
-                        onChange={(e) => setOntologyContent(e.target.value)}
-                        rows={20}
-                        className="font-mono text-sm"
-                      />
-
-                      <Alert color="info">
-                        <p className="text-sm">
-                          <strong>Note:</strong> A backup will be created before saving.
-                          Changes will take effect after server restart.
-                        </p>
-                      </Alert>
-                    </div>
-                  </Card>
-                ) : (
-                  <div className="text-center text-gray-500 py-12">
-                    Select an ontology file to view and edit
+                      </Card>
+                    ))}
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <Button
+                        color="light"
+                        size="sm"
+                        onClick={() => setSelectedOntology(null)}
+                      >
+                        ← Back to Files
+                      </Button>
+                      <div>
+                        <h3 className="text-xl font-semibold">{selectedOntology.filename}</h3>
+                        <p className="text-sm text-gray-600">
+                          {selectedOntology.line_count} lines
+                        </p>
+                      </div>
+                    </div>
+                    <Button color="success" onClick={saveOntology} disabled={loading}>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </Button>
+                  </div>
+
+                  <Card>
+                    <Textarea
+                      value={ontologyContent}
+                      onChange={(e) => setOntologyContent(e.target.value)}
+                      rows={24}
+                      className="font-mono text-sm"
+                    />
+                  </Card>
+
+                  <Alert color="info" className="mt-4">
+                    <p className="text-sm">
+                      <strong>Note:</strong> A backup will be created before saving.
+                      Changes will take effect after server restart.
+                    </p>
+                  </Alert>
+                </div>
+              )}
             </div>
           )}
 
@@ -378,9 +401,39 @@ const ConfigPanel = () => {
             <Card>
               <h3 className="text-lg font-semibold mb-4">System Information</h3>
               <div className="space-y-2 text-sm">
-                <p><strong>Dialog Server:</strong> http://localhost:8000</p>
-                <p><strong>Admin Panel:</strong> http://localhost:8001</p>
-                <p><strong>Config Panel:</strong> http://localhost:8002</p>
+                <p>
+                  <strong>Dialog Server:</strong>{' '}
+                  <a
+                    href="http://localhost:8000"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    http://localhost:8000
+                  </a>
+                </p>
+                <p>
+                  <strong>Admin Panel:</strong>{' '}
+                  <a
+                    href="http://localhost:8001"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    http://localhost:8001
+                  </a>
+                </p>
+                <p>
+                  <strong>Config Panel:</strong>{' '}
+                  <a
+                    href="http://localhost:8002"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    http://localhost:8002
+                  </a>
+                </p>
                 <p><strong>Ontologies:</strong> {ontologies.length} files</p>
                 <p><strong>Questions:</strong> {questions.length} configured</p>
               </div>

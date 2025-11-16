@@ -665,6 +665,58 @@ class DialogManager:
 
         return list(documents.values())
 
+    def get_all_questions(self) -> List[Dict]:
+        """
+        Get ALL questions from the ontology (not just those in the dialog flow).
+        Returns list of questions with their basic properties and section assignments.
+        """
+        query = prepareQuery("""
+            SELECT ?question ?questionId ?questionText ?slotName ?required ?order
+            WHERE {
+                ?question a mm:MultimodalQuestion .
+                ?question dialog:questionId ?questionId .
+                ?question dialog:questionText ?questionText .
+                ?question dialog:slotName ?slotName .
+                ?question dialog:required ?required .
+                OPTIONAL { ?question dialog:order ?order . }
+            }
+            ORDER BY ?order
+        """, initNs={"mm": MM, "dialog": DIALOG})
+
+        results = self.graph.query(query)
+
+        questions = []
+        for row in results:
+            question_id = str(row.questionId)
+
+            # Get section info
+            section_info = self.get_section_for_question(question_id)
+
+            # Get multimodal features
+            features = self.get_multimodal_features(question_id)
+
+            # Get confidence threshold
+            threshold, priority = self.get_confidence_threshold(question_id)
+
+            question_obj = {
+                "question_id": question_id,
+                "question_text": str(row.questionText),
+                "slot_name": str(row.slotName),
+                "required": bool(row.required),
+                "order": int(row.order) if hasattr(row, 'order') and row.order else 0,
+                "tts": features["tts"],
+                "visual_components": features["visual_components"],
+                "select_options": features["select_options"],
+                "faqs": features["faqs"],
+                "confidence_threshold": threshold,
+                "priority": priority,
+                "section": section_info
+            }
+
+            questions.append(question_obj)
+
+        return questions
+
     def get_document_details(self, document_uri: str) -> Dict:
         """
         Get detailed information about a specific document type.
@@ -840,6 +892,300 @@ class DialogManager:
             sections_map[section_id].append(question_id)
 
         return sections_map
+
+    def update_question_section(self, question_id: str, section_id: str) -> bool:
+        """
+        Update a question's section assignment by modifying the :inSection relationship.
+
+        Args:
+            question_id: Question ID (e.g., "q_first_name")
+            section_id: Target section ID (e.g., "section_personal_info")
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Find the question URI
+            question_query = prepareQuery("""
+                SELECT ?question ?oldSection
+                WHERE {
+                    ?question dialog:questionId ?qid .
+                    OPTIONAL { ?question dialog:inSection ?oldSection . }
+                }
+            """, initNs={"dialog": DIALOG})
+
+            results = list(self.graph.query(question_query, initBindings={'qid': Literal(question_id)}))
+
+            if not results:
+                logger.error(f"Question not found: {question_id}")
+                return False
+
+            question_uri = results[0].question
+            old_section = results[0].oldSection if results[0].oldSection else None
+
+            # Find the target section URI
+            section_query = prepareQuery("""
+                SELECT ?section
+                WHERE {
+                    ?section a dialog:Section ;
+                            dialog:sectionId ?sid .
+                }
+            """, initNs={"dialog": DIALOG})
+
+            section_results = list(self.graph.query(section_query, initBindings={'sid': Literal(section_id)}))
+
+            if not section_results:
+                logger.error(f"Section not found: {section_id}")
+                return False
+
+            new_section_uri = section_results[0].section
+
+            # Remove old section relationship if exists
+            if old_section:
+                self.graph.remove((question_uri, DIALOG.inSection, old_section))
+
+            # Add new section relationship
+            self.graph.add((question_uri, DIALOG.inSection, new_section_uri))
+
+            logger.info(f"Updated question {question_id} to section {section_id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error updating question section: {e}")
+            return False
+
+    def update_question_order(self, question_id: str, new_order: int) -> bool:
+        """
+        Update a question's order within its section.
+
+        Args:
+            question_id: Question ID
+            new_order: New order number
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Find the question URI
+            question_query = prepareQuery("""
+                SELECT ?question
+                WHERE {
+                    ?question dialog:questionId ?qid .
+                }
+            """, initNs={"dialog": DIALOG})
+
+            results = list(self.graph.query(question_query, initBindings={'qid': Literal(question_id)}))
+
+            if not results:
+                logger.error(f"Question not found: {question_id}")
+                return False
+
+            question_uri = results[0].question
+
+            # Remove old order if exists
+            self.graph.remove((question_uri, DIALOG.order, None))
+
+            # Add new order
+            self.graph.add((question_uri, DIALOG.order, Literal(new_order)))
+
+            logger.info(f"Updated question {question_id} order to {new_order}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error updating question order: {e}")
+            return False
+
+    def create_section(
+        self,
+        section_id: str,
+        section_title: str,
+        section_description: str,
+        section_order: int,
+        semantic_aliases: List[str] = None,
+        skos_labels: List[str] = None
+    ) -> bool:
+        """
+        Create a new section with OWL/SKOS metadata.
+
+        Args:
+            section_id: Unique section ID
+            section_title: Display title
+            section_description: Description text
+            section_order: Display order
+            semantic_aliases: List of alternative names (SKOS:altLabel)
+            skos_labels: List of preferred labels (SKOS:prefLabel)
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Create section URI from camelCase version of section_id
+            section_name = ''.join(word.capitalize() for word in section_id.replace('section_', '').split('_')) + 'Section'
+            section_uri = DIALOG[section_name]
+
+            # Check if section already exists
+            existing = list(self.graph.query(
+                prepareQuery("SELECT ?s WHERE { ?s dialog:sectionId ?sid }", initNs={"dialog": DIALOG}),
+                initBindings={'sid': Literal(section_id)}
+            ))
+
+            if existing:
+                logger.error(f"Section already exists: {section_id}")
+                return False
+
+            # Add section as OWL Class and instance
+            self.graph.add((section_uri, rdflib.RDF.type, DIALOG.Section))
+            self.graph.add((section_uri, DIALOG.sectionId, Literal(section_id)))
+            self.graph.add((section_uri, DIALOG.sectionTitle, Literal(section_title)))
+            self.graph.add((section_uri, DIALOG.sectionDescription, Literal(section_description)))
+            self.graph.add((section_uri, DIALOG.sectionOrder, Literal(section_order)))
+            self.graph.add((section_uri, RDFS.label, Literal(f"{section_title} Section")))
+
+            # Add SKOS metadata if provided
+            if semantic_aliases:
+                for alias in semantic_aliases:
+                    self.graph.add((section_uri, SKOS.altLabel, Literal(alias)))
+
+            if skos_labels:
+                for label in skos_labels:
+                    self.graph.add((section_uri, SKOS.prefLabel, Literal(label)))
+
+            logger.info(f"Created section: {section_id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error creating section: {e}")
+            return False
+
+    def update_section(self, section_id: str, updates: Dict) -> bool:
+        """
+        Update an existing section's properties.
+
+        Args:
+            section_id: Section ID to update
+            updates: Dictionary of properties to update
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Find the section URI
+            section_query = prepareQuery("""
+                SELECT ?section
+                WHERE {
+                    ?section a dialog:Section ;
+                            dialog:sectionId ?sid .
+                }
+            """, initNs={"dialog": DIALOG})
+
+            results = list(self.graph.query(section_query, initBindings={'sid': Literal(section_id)}))
+
+            if not results:
+                logger.error(f"Section not found: {section_id}")
+                return False
+
+            section_uri = results[0].section
+
+            # Update properties
+            if 'section_title' in updates:
+                self.graph.remove((section_uri, DIALOG.sectionTitle, None))
+                self.graph.add((section_uri, DIALOG.sectionTitle, Literal(updates['section_title'])))
+                self.graph.remove((section_uri, RDFS.label, None))
+                self.graph.add((section_uri, RDFS.label, Literal(f"{updates['section_title']} Section")))
+
+            if 'section_description' in updates:
+                self.graph.remove((section_uri, DIALOG.sectionDescription, None))
+                self.graph.add((section_uri, DIALOG.sectionDescription, Literal(updates['section_description'])))
+
+            if 'section_order' in updates:
+                self.graph.remove((section_uri, DIALOG.sectionOrder, None))
+                self.graph.add((section_uri, DIALOG.sectionOrder, Literal(updates['section_order'])))
+
+            if 'semantic_aliases' in updates:
+                # Remove old aliases
+                self.graph.remove((section_uri, SKOS.altLabel, None))
+                # Add new aliases
+                for alias in updates['semantic_aliases']:
+                    self.graph.add((section_uri, SKOS.altLabel, Literal(alias)))
+
+            if 'skos_labels' in updates:
+                # Remove old labels
+                self.graph.remove((section_uri, SKOS.prefLabel, None))
+                # Add new labels
+                for label in updates['skos_labels']:
+                    self.graph.add((section_uri, SKOS.prefLabel, Literal(label)))
+
+            logger.info(f"Updated section: {section_id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error updating section: {e}")
+            return False
+
+    def delete_section(self, section_id: str) -> bool:
+        """
+        Delete a section and unassign all questions from it.
+
+        Args:
+            section_id: Section ID to delete
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Find the section URI
+            section_query = prepareQuery("""
+                SELECT ?section
+                WHERE {
+                    ?section a dialog:Section ;
+                            dialog:sectionId ?sid .
+                }
+            """, initNs={"dialog": DIALOG})
+
+            results = list(self.graph.query(section_query, initBindings={'sid': Literal(section_id)}))
+
+            if not results:
+                logger.error(f"Section not found: {section_id}")
+                return False
+
+            section_uri = results[0].section
+
+            # Unassign all questions from this section
+            questions_query = prepareQuery("""
+                SELECT ?question
+                WHERE {
+                    ?question dialog:inSection ?section .
+                }
+            """, initNs={"dialog": DIALOG})
+
+            questions = list(self.graph.query(questions_query, initBindings={'section': section_uri}))
+
+            for row in questions:
+                self.graph.remove((row.question, DIALOG.inSection, section_uri))
+
+            # Remove all triples with section as subject
+            self.graph.remove((section_uri, None, None))
+
+            logger.info(f"Deleted section: {section_id} and unassigned {len(questions)} questions")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error deleting section: {e}")
+            return False
+
+    def save_graph_to_file(self, file_path: str):
+        """
+        Save the RDF graph to a TTL file.
+
+        Args:
+            file_path: Path to save the TTL file
+        """
+        try:
+            self.graph.serialize(destination=file_path, format='turtle')
+            logger.info(f"Saved graph to: {file_path}")
+        except Exception as e:
+            logger.error(f"Error saving graph: {e}")
+            raise
 
 
 if __name__ == "__main__":

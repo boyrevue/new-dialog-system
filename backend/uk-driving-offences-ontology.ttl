@@ -1,0 +1,879 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dvla: <http://dvla.example.org/ontology#> .
+
+# ============================================================================
+# UK DVLA DRIVING OFFENCES ONTOLOGY
+# Hierarchical structure: OffenceCategory → OffenceCode → Penalty Details
+# ============================================================================
+
+<http://dvla.example.org/ontology>
+    a owl:Ontology ;
+    rdfs:label "UK DVLA Driving Offences Ontology"@en ;
+    rdfs:comment "Comprehensive ontology for UK driving offence codes and penalties"@en ;
+    owl:versionInfo "1.0" .
+
+# ============================================================================
+# CLASSES
+# ============================================================================
+
+dvla:OffenceCategory a owl:Class ;
+    rdfs:label "Offence Category"@en ;
+    rdfs:comment "Top-level category of driving offences (AC, BA, CD, etc.)"@en .
+
+dvla:OffenceCode a owl:Class ;
+    rdfs:label "Offence Code"@en ;
+    rdfs:comment "Specific offence code (e.g., SP30, DR10)"@en .
+
+dvla:Penalty a owl:Class ;
+    rdfs:label "Penalty"@en ;
+    rdfs:comment "Penalty details for an offence"@en .
+
+# ============================================================================
+# PROPERTIES
+# ============================================================================
+
+dvla:hasOffenceCode a owl:ObjectProperty ;
+    rdfs:domain dvla:OffenceCategory ;
+    rdfs:range dvla:OffenceCode ;
+    rdfs:label "has offence code"@en .
+
+dvla:hasPenalty a owl:ObjectProperty ;
+    rdfs:domain dvla:OffenceCode ;
+    rdfs:range dvla:Penalty ;
+    rdfs:label "has penalty"@en .
+
+dvla:code a owl:DatatypeProperty ;
+    rdfs:domain dvla:OffenceCode ;
+    rdfs:range xsd:string ;
+    rdfs:label "offence code"@en .
+
+dvla:description a owl:DatatypeProperty ;
+    rdfs:domain dvla:OffenceCode ;
+    rdfs:range xsd:string ;
+    rdfs:label "offence description"@en .
+
+dvla:penaltyPoints a owl:DatatypeProperty ;
+    rdfs:domain dvla:Penalty ;
+    rdfs:range xsd:string ;
+    rdfs:label "penalty points"@en ;
+    rdfs:comment "Range of penalty points (e.g., '3-6')"@en .
+
+dvla:disqualificationPeriod a owl:DatatypeProperty ;
+    rdfs:domain dvla:Penalty ;
+    rdfs:range xsd:string ;
+    rdfs:label "disqualification period"@en .
+
+dvla:mustDisqualify a owl:DatatypeProperty ;
+    rdfs:domain dvla:Penalty ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "must disqualify"@en .
+
+# ============================================================================
+# OFFENCE CATEGORIES
+# ============================================================================
+
+dvla:AccidentOffences a dvla:OffenceCategory ;
+    rdfs:label "Accident Offences"@en ;
+    skos:prefLabel "AC - Accident Offences"@en ;
+    skos:notation "AC"@en .
+
+dvla:DisqualifiedDriver a dvla:OffenceCategory ;
+    rdfs:label "Disqualified Driver"@en ;
+    skos:prefLabel "BA - Disqualified Driver"@en ;
+    skos:notation "BA"@en .
+
+dvla:CarelessDriving a dvla:OffenceCategory ;
+    rdfs:label "Careless Driving"@en ;
+    skos:prefLabel "CD - Careless Driving"@en ;
+    skos:notation "CD"@en .
+
+dvla:ConstructionAndUse a dvla:OffenceCategory ;
+    rdfs:label "Construction & Use"@en ;
+    skos:prefLabel "CU - Construction & Use"@en ;
+    skos:notation "CU"@en .
+
+dvla:DangerousDriving a dvla:OffenceCategory ;
+    rdfs:label "Dangerous Driving"@en ;
+    skos:prefLabel "DD - Dangerous Driving"@en ;
+    skos:notation "DD"@en .
+
+dvla:DrinkDrugs a dvla:OffenceCategory ;
+    rdfs:label "Drink/Drugs"@en ;
+    skos:prefLabel "DR - Drink/Drugs"@en ;
+    skos:notation "DR"@en .
+
+dvla:Insurance a dvla:OffenceCategory ;
+    rdfs:label "Insurance"@en ;
+    skos:prefLabel "IN - Insurance"@en ;
+    skos:notation "IN"@en .
+
+dvla:Licence a dvla:OffenceCategory ;
+    rdfs:label "Licence"@en ;
+    skos:prefLabel "LC - Licence"@en ;
+    skos:notation "LC"@en .
+
+dvla:Miscellaneous a dvla:OffenceCategory ;
+    rdfs:label "Miscellaneous"@en ;
+    skos:prefLabel "MS - Miscellaneous"@en ;
+    skos:notation "MS"@en .
+
+dvla:Motorway a dvla:OffenceCategory ;
+    rdfs:label "Motorway"@en ;
+    skos:prefLabel "MW - Motorway"@en ;
+    skos:notation "MW"@en .
+
+dvla:PedestrianCrossing a dvla:OffenceCategory ;
+    rdfs:label "Pedestrian Crossing"@en ;
+    skos:prefLabel "PC - Pedestrian Crossing"@en ;
+    skos:notation "PC"@en .
+
+dvla:SpeedLimits a dvla:OffenceCategory ;
+    rdfs:label "Speed Limits"@en ;
+    skos:prefLabel "SP - Speed Limits"@en ;
+    skos:notation "SP"@en .
+
+dvla:TrafficDirection a dvla:OffenceCategory ;
+    rdfs:label "Traffic Direction"@en ;
+    skos:prefLabel "TS - Traffic Direction"@en ;
+    skos:notation "TS"@en .
+
+dvla:Theft a dvla:OffenceCategory ;
+    rdfs:label "Theft"@en ;
+    skos:prefLabel "UT - Theft"@en ;
+    skos:notation "UT"@en .
+
+dvla:TottingUp a dvla:OffenceCategory ;
+    rdfs:label "Totting Up"@en ;
+    skos:prefLabel "TT - Totting Up"@en ;
+    skos:notation "TT"@en .
+
+# ============================================================================
+# ACCIDENT OFFENCES (AC10-AC30)
+# ============================================================================
+
+dvla:AC10 a dvla:OffenceCode ;
+    dvla:code "AC10" ;
+    dvla:description "Failing to stop after an accident" ;
+    skos:prefLabel "AC10 - Failing to stop after an accident"@en ;
+    dvla:hasPenalty dvla:AC10_Penalty .
+
+dvla:AC10_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "5-10" ;
+    dvla:mustDisqualify false .
+
+dvla:AC20 a dvla:OffenceCode ;
+    dvla:code "AC20" ;
+    dvla:description "Failing to give particulars or report an accident within 24 hours" ;
+    skos:prefLabel "AC20 - Failing to report accident"@en ;
+    dvla:hasPenalty dvla:AC20_Penalty .
+
+dvla:AC20_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "5-10" ;
+    dvla:mustDisqualify false .
+
+dvla:AC30 a dvla:OffenceCode ;
+    dvla:code "AC30" ;
+    dvla:description "Undefined accident offences" ;
+    skos:prefLabel "AC30 - Undefined accident offences"@en ;
+    dvla:hasPenalty dvla:AC30_Penalty .
+
+dvla:AC30_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "4-9" ;
+    dvla:mustDisqualify false .
+
+# ============================================================================
+# DISQUALIFIED DRIVER (BA10-BA60)
+# ============================================================================
+
+dvla:BA10 a dvla:OffenceCode ;
+    dvla:code "BA10" ;
+    dvla:description "Driving while disqualified by order of court" ;
+    skos:prefLabel "BA10 - Driving while disqualified"@en ;
+    dvla:hasPenalty dvla:BA10_Penalty .
+
+dvla:BA10_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "6" ;
+    dvla:mustDisqualify true .
+
+dvla:BA30 a dvla:OffenceCode ;
+    dvla:code "BA30" ;
+    dvla:description "Attempting to drive while disqualified" ;
+    skos:prefLabel "BA30 - Attempting to drive while disqualified"@en ;
+    dvla:hasPenalty dvla:BA30_Penalty .
+
+dvla:BA30_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "6" ;
+    dvla:mustDisqualify true .
+
+# ============================================================================
+# CARELESS DRIVING (CD10-CD99)
+# ============================================================================
+
+dvla:CD10 a dvla:OffenceCode ;
+    dvla:code "CD10" ;
+    dvla:description "Driving without due care and attention" ;
+    skos:prefLabel "CD10 - Driving without due care and attention"@en ;
+    dvla:hasPenalty dvla:CD10_Penalty .
+
+dvla:CD10_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-9" ;
+    dvla:mustDisqualify false .
+
+dvla:CD20 a dvla:OffenceCode ;
+    dvla:code "CD20" ;
+    dvla:description "Driving without reasonable consideration for other road users" ;
+    skos:prefLabel "CD20 - Inconsiderate driving"@en ;
+    dvla:hasPenalty dvla:CD20_Penalty .
+
+dvla:CD20_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-9" ;
+    dvla:mustDisqualify false .
+
+dvla:CD30 a dvla:OffenceCode ;
+    dvla:code "CD30" ;
+    dvla:description "Driving without due care and attention or reasonable consideration for other road users" ;
+    skos:prefLabel "CD30 - Careless/inconsiderate driving"@en ;
+    dvla:hasPenalty dvla:CD30_Penalty .
+
+dvla:CD30_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-9" ;
+    dvla:mustDisqualify false .
+
+dvla:CD40 a dvla:OffenceCode ;
+    dvla:code "CD40" ;
+    dvla:description "Causing death through careless driving when unfit through drink" ;
+    skos:prefLabel "CD40 - Death by careless driving (drink)"@en ;
+    dvla:hasPenalty dvla:CD40_Penalty .
+
+dvla:CD40_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "2 years minimum" .
+
+dvla:CD50 a dvla:OffenceCode ;
+    dvla:code "CD50" ;
+    dvla:description "Causing death by careless driving when unfit through drugs" ;
+    skos:prefLabel "CD50 - Death by careless driving (drugs)"@en ;
+    dvla:hasPenalty dvla:CD50_Penalty .
+
+dvla:CD50_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "2 years minimum" .
+
+dvla:CD60 a dvla:OffenceCode ;
+    dvla:code "CD60" ;
+    dvla:description "Causing death by careless driving with alcohol level above the limit" ;
+    skos:prefLabel "CD60 - Death by careless driving (over limit)"@en ;
+    dvla:hasPenalty dvla:CD60_Penalty .
+
+dvla:CD60_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "2 years minimum" .
+
+dvla:CD70 a dvla:OffenceCode ;
+    dvla:code "CD70" ;
+    dvla:description "Causing death by careless driving then failing to supply specimen" ;
+    skos:prefLabel "CD70 - Death by careless driving (no specimen)"@en ;
+    dvla:hasPenalty dvla:CD70_Penalty .
+
+dvla:CD70_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "2 years minimum" .
+
+dvla:CD80 a dvla:OffenceCode ;
+    dvla:code "CD80" ;
+    dvla:description "Causing death by careless or inconsiderate driving" ;
+    skos:prefLabel "CD80 - Death by careless driving"@en ;
+    dvla:hasPenalty dvla:CD80_Penalty .
+
+dvla:CD80_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true .
+
+dvla:CD90 a dvla:OffenceCode ;
+    dvla:code "CD90" ;
+    dvla:description "Causing death by driving while unlicensed, disqualified or uninsured" ;
+    skos:prefLabel "CD90 - Death by driving (unlicensed/disqualified/uninsured)"@en ;
+    dvla:hasPenalty dvla:CD90_Penalty .
+
+dvla:CD90_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true .
+
+# ============================================================================
+# CONSTRUCTION & USE (CU10-CU80)
+# ============================================================================
+
+dvla:CU10 a dvla:OffenceCode ;
+    dvla:code "CU10" ;
+    dvla:description "Using a vehicle with defective brakes" ;
+    skos:prefLabel "CU10 - Defective brakes"@en ;
+    dvla:hasPenalty dvla:CU10_Penalty .
+
+dvla:CU10_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:CU20 a dvla:OffenceCode ;
+    dvla:code "CU20" ;
+    dvla:description "Causing or likely to cause danger by reason of use of unsuitable vehicle or using a vehicle with parts or accessories in a dangerous condition" ;
+    skos:prefLabel "CU20 - Dangerous vehicle condition"@en ;
+    dvla:hasPenalty dvla:CU20_Penalty .
+
+dvla:CU20_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:CU30 a dvla:OffenceCode ;
+    dvla:code "CU30" ;
+    dvla:description "Using a vehicle with defective tyre(s)" ;
+    skos:prefLabel "CU30 - Defective tyres"@en ;
+    dvla:hasPenalty dvla:CU30_Penalty .
+
+dvla:CU30_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:CU40 a dvla:OffenceCode ;
+    dvla:code "CU40" ;
+    dvla:description "Using a vehicle with defective steering" ;
+    skos:prefLabel "CU40 - Defective steering"@en ;
+    dvla:hasPenalty dvla:CU40_Penalty .
+
+dvla:CU40_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:CU50 a dvla:OffenceCode ;
+    dvla:code "CU50" ;
+    dvla:description "Causing or likely to cause danger by reason of load or passengers" ;
+    skos:prefLabel "CU50 - Dangerous load/passengers"@en ;
+    dvla:hasPenalty dvla:CU50_Penalty .
+
+dvla:CU50_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:CU80 a dvla:OffenceCode ;
+    dvla:code "CU80" ;
+    dvla:description "Breach of requirements as to control of vehicle, mobile phones etc." ;
+    skos:prefLabel "CU80 - Mobile phone/control breach"@en ;
+    dvla:hasPenalty dvla:CU80_Penalty .
+
+dvla:CU80_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-6" ;
+    dvla:mustDisqualify false .
+
+# ============================================================================
+# DANGEROUS DRIVING (DD10-DD90)
+# ============================================================================
+
+dvla:DD10 a dvla:OffenceCode ;
+    dvla:code "DD10" ;
+    dvla:description "Causing serious injury by dangerous driving" ;
+    skos:prefLabel "DD10 - Serious injury by dangerous driving"@en ;
+    dvla:hasPenalty dvla:DD10_Penalty .
+
+dvla:DD10_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "2 years minimum" .
+
+dvla:DD40 a dvla:OffenceCode ;
+    dvla:code "DD40" ;
+    dvla:description "Dangerous driving" ;
+    skos:prefLabel "DD40 - Dangerous driving"@en ;
+    dvla:hasPenalty dvla:DD40_Penalty .
+
+dvla:DD40_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "12 months minimum" .
+
+dvla:DD60 a dvla:OffenceCode ;
+    dvla:code "DD60" ;
+    dvla:description "Manslaughter or culpable homicide while driving a vehicle" ;
+    skos:prefLabel "DD60 - Manslaughter while driving"@en ;
+    dvla:hasPenalty dvla:DD60_Penalty .
+
+dvla:DD60_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "Long period" .
+
+dvla:DD80 a dvla:OffenceCode ;
+    dvla:code "DD80" ;
+    dvla:description "Causing death by dangerous driving" ;
+    skos:prefLabel "DD80 - Death by dangerous driving"@en ;
+    dvla:hasPenalty dvla:DD80_Penalty .
+
+dvla:DD80_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "2 years minimum" .
+
+dvla:DD90 a dvla:OffenceCode ;
+    dvla:code "DD90" ;
+    dvla:description "Furious driving" ;
+    skos:prefLabel "DD90 - Furious driving"@en ;
+    dvla:hasPenalty dvla:DD90_Penalty .
+
+dvla:DD90_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-9" ;
+    dvla:mustDisqualify false .
+
+# ============================================================================
+# DRINK/DRUGS (DR10-DR90)
+# ============================================================================
+
+dvla:DR10 a dvla:OffenceCode ;
+    dvla:code "DR10" ;
+    dvla:description "Driving or attempting to drive with alcohol level above limit" ;
+    skos:prefLabel "DR10 - Drink driving"@en ;
+    skos:altLabel "Drink driving"@en ;
+    dvla:hasPenalty dvla:DR10_Penalty .
+
+dvla:DR10_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "12 months minimum" .
+
+dvla:DR20 a dvla:OffenceCode ;
+    dvla:code "DR20" ;
+    dvla:description "Driving or attempting to drive while unfit through drink" ;
+    skos:prefLabel "DR20 - Driving while unfit (drink)"@en ;
+    dvla:hasPenalty dvla:DR20_Penalty .
+
+dvla:DR20_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "12 months minimum" .
+
+dvla:DR30 a dvla:OffenceCode ;
+    dvla:code "DR30" ;
+    dvla:description "Driving or attempting to drive then failing to supply a specimen for analysis" ;
+    skos:prefLabel "DR30 - Failing to provide specimen"@en ;
+    dvla:hasPenalty dvla:DR30_Penalty .
+
+dvla:DR30_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "12 months minimum" .
+
+dvla:DR40 a dvla:OffenceCode ;
+    dvla:code "DR40" ;
+    dvla:description "In charge of a vehicle while alcohol level above limit" ;
+    skos:prefLabel "DR40 - In charge while over limit"@en ;
+    dvla:hasPenalty dvla:DR40_Penalty .
+
+dvla:DR40_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "10" ;
+    dvla:mustDisqualify false .
+
+dvla:DR50 a dvla:OffenceCode ;
+    dvla:code "DR50" ;
+    dvla:description "In charge of a vehicle while unfit through drink" ;
+    skos:prefLabel "DR50 - In charge while unfit (drink)"@en ;
+    dvla:hasPenalty dvla:DR50_Penalty .
+
+dvla:DR50_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "10" ;
+    dvla:mustDisqualify false .
+
+dvla:DR60 a dvla:OffenceCode ;
+    dvla:code "DR60" ;
+    dvla:description "Failure to provide specimen for analysis in circumstances other than driving or attempting to drive" ;
+    skos:prefLabel "DR60 - Failing to provide specimen (in charge)"@en ;
+    dvla:hasPenalty dvla:DR60_Penalty .
+
+dvla:DR60_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "10" ;
+    dvla:mustDisqualify false .
+
+dvla:DR70 a dvla:OffenceCode ;
+    dvla:code "DR70" ;
+    dvla:description "Failing to provide specimen for breath test" ;
+    skos:prefLabel "DR70 - Failing to provide breath test"@en ;
+    dvla:hasPenalty dvla:DR70_Penalty .
+
+dvla:DR70_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "4" ;
+    dvla:mustDisqualify false .
+
+dvla:DR80 a dvla:OffenceCode ;
+    dvla:code "DR80" ;
+    dvla:description "Driving or attempting to drive when unfit through drugs" ;
+    skos:prefLabel "DR80 - Drug driving"@en ;
+    dvla:hasPenalty dvla:DR80_Penalty .
+
+dvla:DR80_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "12 months minimum" .
+
+dvla:DR90 a dvla:OffenceCode ;
+    dvla:code "DR90" ;
+    dvla:description "In charge of a vehicle when unfit through drugs" ;
+    skos:prefLabel "DR90 - In charge while unfit (drugs)"@en ;
+    dvla:hasPenalty dvla:DR90_Penalty .
+
+dvla:DR90_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "10" ;
+    dvla:mustDisqualify false .
+
+# ============================================================================
+# INSURANCE (IN10)
+# ============================================================================
+
+dvla:IN10 a dvla:OffenceCode ;
+    dvla:code "IN10" ;
+    dvla:description "Using a vehicle uninsured against third party risks" ;
+    skos:prefLabel "IN10 - No insurance"@en ;
+    skos:altLabel "No insurance"@en ;
+    dvla:hasPenalty dvla:IN10_Penalty .
+
+dvla:IN10_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "6-8" ;
+    dvla:mustDisqualify false .
+
+# ============================================================================
+# LICENCE (LC20-LC50)
+# ============================================================================
+
+dvla:LC20 a dvla:OffenceCode ;
+    dvla:code "LC20" ;
+    dvla:description "Driving otherwise than in accordance with a licence" ;
+    skos:prefLabel "LC20 - Driving not in accordance with licence"@en ;
+    dvla:hasPenalty dvla:LC20_Penalty .
+
+dvla:LC20_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-6" ;
+    dvla:mustDisqualify false .
+
+dvla:LC30 a dvla:OffenceCode ;
+    dvla:code "LC30" ;
+    dvla:description "Driving after making a false declaration about fitness when applying for a licence" ;
+    skos:prefLabel "LC30 - False declaration for licence"@en ;
+    dvla:hasPenalty dvla:LC30_Penalty .
+
+dvla:LC30_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-6" ;
+    dvla:mustDisqualify false .
+
+dvla:LC40 a dvla:OffenceCode ;
+    dvla:code "LC40" ;
+    dvla:description "Driving a vehicle having failed to notify a disability" ;
+    skos:prefLabel "LC40 - Failed to notify disability"@en ;
+    dvla:hasPenalty dvla:LC40_Penalty .
+
+dvla:LC40_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-6" ;
+    dvla:mustDisqualify false .
+
+dvla:LC50 a dvla:OffenceCode ;
+    dvla:code "LC50" ;
+    dvla:description "Driving after a licence has been revoked or refused on medical grounds" ;
+    skos:prefLabel "LC50 - Driving after licence revoked (medical)"@en ;
+    dvla:hasPenalty dvla:LC50_Penalty .
+
+dvla:LC50_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-6" ;
+    dvla:mustDisqualify false .
+
+# ============================================================================
+# MISCELLANEOUS (MS10-MS90)
+# ============================================================================
+
+dvla:MS10 a dvla:OffenceCode ;
+    dvla:code "MS10" ;
+    dvla:description "Leaving a vehicle in a dangerous position" ;
+    skos:prefLabel "MS10 - Dangerous position"@en ;
+    dvla:hasPenalty dvla:MS10_Penalty .
+
+dvla:MS10_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:MS20 a dvla:OffenceCode ;
+    dvla:code "MS20" ;
+    dvla:description "Unlawful pillion riding" ;
+    skos:prefLabel "MS20 - Unlawful pillion riding"@en ;
+    dvla:hasPenalty dvla:MS20_Penalty .
+
+dvla:MS20_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:MS50 a dvla:OffenceCode ;
+    dvla:code "MS50" ;
+    dvla:description "Motor racing on the highway" ;
+    skos:prefLabel "MS50 - Motor racing on highway"@en ;
+    dvla:hasPenalty dvla:MS50_Penalty .
+
+dvla:MS50_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true .
+
+dvla:MS60 a dvla:OffenceCode ;
+    dvla:code "MS60" ;
+    dvla:description "Offences not covered by other codes" ;
+    skos:prefLabel "MS60 - Other offences"@en ;
+    dvla:hasPenalty dvla:MS60_Penalty .
+
+dvla:MS60_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "Variable" ;
+    dvla:mustDisqualify false .
+
+dvla:MS70 a dvla:OffenceCode ;
+    dvla:code "MS70" ;
+    dvla:description "Driving with uncorrected defective eyesight" ;
+    skos:prefLabel "MS70 - Defective eyesight"@en ;
+    dvla:hasPenalty dvla:MS70_Penalty .
+
+dvla:MS70_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:MS80 a dvla:OffenceCode ;
+    dvla:code "MS80" ;
+    dvla:description "Refusing to submit to an eyesight test" ;
+    skos:prefLabel "MS80 - Refusing eyesight test"@en ;
+    dvla:hasPenalty dvla:MS80_Penalty .
+
+dvla:MS80_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:MS90 a dvla:OffenceCode ;
+    dvla:code "MS90" ;
+    dvla:description "Failure to give information as to identity of driver" ;
+    skos:prefLabel "MS90 - Failure to give driver identity"@en ;
+    dvla:hasPenalty dvla:MS90_Penalty .
+
+dvla:MS90_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "6" ;
+    dvla:mustDisqualify false .
+
+# ============================================================================
+# MOTORWAY (MW10)
+# ============================================================================
+
+dvla:MW10 a dvla:OffenceCode ;
+    dvla:code "MW10" ;
+    dvla:description "Contravention of special roads regulations (excluding speed limits)" ;
+    skos:prefLabel "MW10 - Motorway offences"@en ;
+    dvla:hasPenalty dvla:MW10_Penalty .
+
+dvla:MW10_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+# ============================================================================
+# PEDESTRIAN CROSSING (PC10-PC30)
+# ============================================================================
+
+dvla:PC10 a dvla:OffenceCode ;
+    dvla:code "PC10" ;
+    dvla:description "Undefined contravention of pedestrian crossing regulations" ;
+    skos:prefLabel "PC10 - Pedestrian crossing offence"@en ;
+    dvla:hasPenalty dvla:PC10_Penalty .
+
+dvla:PC10_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:PC20 a dvla:OffenceCode ;
+    dvla:code "PC20" ;
+    dvla:description "Contravention of pedestrian crossing regulations with moving vehicle" ;
+    skos:prefLabel "PC20 - Pedestrian crossing (moving vehicle)"@en ;
+    dvla:hasPenalty dvla:PC20_Penalty .
+
+dvla:PC20_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:PC30 a dvla:OffenceCode ;
+    dvla:code "PC30" ;
+    dvla:description "Contravention of pedestrian crossing regulations with stationary vehicle" ;
+    skos:prefLabel "PC30 - Pedestrian crossing (stationary vehicle)"@en ;
+    dvla:hasPenalty dvla:PC30_Penalty .
+
+dvla:PC30_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+# ============================================================================
+# SPEED LIMITS (SP10-SP60)
+# ============================================================================
+
+dvla:SP10 a dvla:OffenceCode ;
+    dvla:code "SP10" ;
+    dvla:description "Exceeding goods vehicle speed limit" ;
+    skos:prefLabel "SP10 - Speeding (goods vehicle)"@en ;
+    dvla:hasPenalty dvla:SP10_Penalty .
+
+dvla:SP10_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-6" ;
+    dvla:mustDisqualify false .
+
+dvla:SP20 a dvla:OffenceCode ;
+    dvla:code "SP20" ;
+    dvla:description "Exceeding speed limit for type of vehicle (excluding goods or passenger vehicles)" ;
+    skos:prefLabel "SP20 - Speeding (vehicle type)"@en ;
+    dvla:hasPenalty dvla:SP20_Penalty .
+
+dvla:SP20_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-6" ;
+    dvla:mustDisqualify false .
+
+dvla:SP30 a dvla:OffenceCode ;
+    dvla:code "SP30" ;
+    dvla:description "Exceeding statutory speed limit on a public road" ;
+    skos:prefLabel "SP30 - Speeding"@en ;
+    skos:altLabel "Speeding"@en ;
+    dvla:hasPenalty dvla:SP30_Penalty .
+
+dvla:SP30_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-6" ;
+    dvla:mustDisqualify false .
+
+dvla:SP40 a dvla:OffenceCode ;
+    dvla:code "SP40" ;
+    dvla:description "Exceeding passenger vehicle speed limit" ;
+    skos:prefLabel "SP40 - Speeding (passenger vehicle)"@en ;
+    dvla:hasPenalty dvla:SP40_Penalty .
+
+dvla:SP40_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-6" ;
+    dvla:mustDisqualify false .
+
+dvla:SP50 a dvla:OffenceCode ;
+    dvla:code "SP50" ;
+    dvla:description "Exceeding speed limit on a motorway" ;
+    skos:prefLabel "SP50 - Speeding (motorway)"@en ;
+    dvla:hasPenalty dvla:SP50_Penalty .
+
+dvla:SP50_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-6" ;
+    dvla:mustDisqualify false .
+
+dvla:SP60 a dvla:OffenceCode ;
+    dvla:code "SP60" ;
+    dvla:description "Undefined speed limit offence" ;
+    skos:prefLabel "SP60 - Undefined speeding offence"@en ;
+    dvla:hasPenalty dvla:SP60_Penalty .
+
+dvla:SP60_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-6" ;
+    dvla:mustDisqualify false .
+
+# ============================================================================
+# TRAFFIC DIRECTION (TS10-TS70)
+# ============================================================================
+
+dvla:TS10 a dvla:OffenceCode ;
+    dvla:code "TS10" ;
+    dvla:description "Failing to comply with traffic light signals" ;
+    skos:prefLabel "TS10 - Failing to comply with traffic lights"@en ;
+    dvla:hasPenalty dvla:TS10_Penalty .
+
+dvla:TS10_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:TS20 a dvla:OffenceCode ;
+    dvla:code "TS20" ;
+    dvla:description "Failing to comply with double white lines" ;
+    skos:prefLabel "TS20 - Failing to comply with double white lines"@en ;
+    dvla:hasPenalty dvla:TS20_Penalty .
+
+dvla:TS20_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:TS30 a dvla:OffenceCode ;
+    dvla:code "TS30" ;
+    dvla:description "Failing to comply with a 'stop' sign" ;
+    skos:prefLabel "TS30 - Failing to comply with stop sign"@en ;
+    dvla:hasPenalty dvla:TS30_Penalty .
+
+dvla:TS30_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:TS40 a dvla:OffenceCode ;
+    dvla:code "TS40" ;
+    dvla:description "Failing to comply with direction of a constable or traffic warden" ;
+    skos:prefLabel "TS40 - Failing to comply with officer direction"@en ;
+    dvla:hasPenalty dvla:TS40_Penalty .
+
+dvla:TS40_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:TS50 a dvla:OffenceCode ;
+    dvla:code "TS50" ;
+    dvla:description "Failing to comply with a traffic sign (excluding stop signs, traffic lights or double white lines)" ;
+    skos:prefLabel "TS50 - Failing to comply with traffic sign"@en ;
+    dvla:hasPenalty dvla:TS50_Penalty .
+
+dvla:TS50_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:TS60 a dvla:OffenceCode ;
+    dvla:code "TS60" ;
+    dvla:description "Failing to comply with school crossing patrol sign" ;
+    skos:prefLabel "TS60 - Failing to comply with school crossing"@en ;
+    dvla:hasPenalty dvla:TS60_Penalty .
+
+dvla:TS60_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+dvla:TS70 a dvla:OffenceCode ;
+    dvla:code "TS70" ;
+    dvla:description "Undefined failure to comply with a traffic direction sign" ;
+    skos:prefLabel "TS70 - Undefined traffic sign failure"@en ;
+    dvla:hasPenalty dvla:TS70_Penalty .
+
+dvla:TS70_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3" ;
+    dvla:mustDisqualify false .
+
+# ============================================================================
+# THEFT (UT50)
+# ============================================================================
+
+dvla:UT50 a dvla:OffenceCode ;
+    dvla:code "UT50" ;
+    dvla:description "Aggravated taking of a vehicle" ;
+    skos:prefLabel "UT50 - Aggravated vehicle taking"@en ;
+    dvla:hasPenalty dvla:UT50_Penalty .
+
+dvla:UT50_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "3-11" ;
+    dvla:mustDisqualify true .
+
+# ============================================================================
+# TOTTING UP (TT99)
+# ============================================================================
+
+dvla:TT99 a dvla:OffenceCode ;
+    dvla:code "TT99" ;
+    dvla:description "Disqualification under totting-up procedure (12+ points)" ;
+    skos:prefLabel "TT99 - Totting up disqualification"@en ;
+    skos:altLabel "Totting up"@en ;
+    dvla:hasPenalty dvla:TT99_Penalty .
+
+dvla:TT99_Penalty a dvla:Penalty ;
+    dvla:penaltyPoints "Variable" ;
+    dvla:mustDisqualify true ;
+    dvla:disqualificationPeriod "6 months minimum (12 points in 3 years)" .

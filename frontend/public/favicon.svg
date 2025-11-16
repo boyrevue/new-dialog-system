@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="#2563eb" stroke="#1d4ed8" stroke-width="2"/>
+
+  <!-- Chat bubble -->
+  <path d="M 30 35 L 70 35 Q 75 35 75 40 L 75 55 Q 75 60 70 60 L 55 60 L 45 70 L 45 60 L 30 60 Q 25 60 25 55 L 25 40 Q 25 35 30 35 Z"
+        fill="white"
+        stroke="#e5e7eb"
+        stroke-width="1"/>
+
+  <!-- Sound waves -->
+  <path d="M 42 45 Q 45 42 48 45"
+        stroke="#2563eb"
+        stroke-width="2"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <path d="M 52 45 Q 55 42 58 45"
+        stroke="#2563eb"
+        stroke-width="2"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <path d="M 42 50 Q 45 47 48 50"
+        stroke="#2563eb"
+        stroke-width="2"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <path d="M 52 50 Q 55 47 58 50"
+        stroke="#2563eb"
+        stroke-width="2"
+        fill="none"
+        stroke-linecap="round"/>
+</svg>
