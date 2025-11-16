@@ -41,6 +41,7 @@ const DialogFlowEditor = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDocumentHints, setShowDocumentHints] = useState(false);
 
   // Load flow data from backend
   const loadFlow = async () => {
@@ -52,7 +53,15 @@ const DialogFlowEditor = () => {
       const data = await response.json();
 
       if (data.success) {
-        setNodes(data.flow.nodes || []);
+        // Add showDocumentHints to all nodes' data
+        const nodesWithHints = (data.flow.nodes || []).map(node => ({
+          ...node,
+          data: {
+            ...node.data,
+            showDocumentHints: false
+          }
+        }));
+        setNodes(nodesWithHints);
         setEdges(data.flow.edges || []);
       } else {
         setError(data.error || 'Failed to load flow');
@@ -69,6 +78,19 @@ const DialogFlowEditor = () => {
   useEffect(() => {
     loadFlow();
   }, []);
+
+  // Update all nodes when showDocumentHints changes
+  useEffect(() => {
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          showDocumentHints
+        }
+      }))
+    );
+  }, [showDocumentHints, setNodes]);
 
   // Handle edge connections (for future editing)
   const onConnect = useCallback(
@@ -182,6 +204,21 @@ const DialogFlowEditor = () => {
               }}
             >
               🔄 Reload
+            </button>
+            <button
+              onClick={() => setShowDocumentHints(!showDocumentHints)}
+              style={{
+                background: showDocumentHints ? '#10b981' : '#6b7280',
+                color: 'white',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '12px',
+                transition: 'background 0.3s ease'
+              }}
+            >
+              📄 {showDocumentHints ? 'Hide' : 'Show'} Doc Fields
             </button>
             <div style={{ fontSize: '12px', color: '#9ca3af' }}>
               {nodes.length} nodes, {edges.length} edges

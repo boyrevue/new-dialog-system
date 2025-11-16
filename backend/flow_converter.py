@@ -257,7 +257,7 @@ class TTLToFlowConverter:
         PREFIX mm: <http://diggi.io/ontology/multimodal#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-        SELECT DISTINCT ?question ?questionId ?questionText ?slotName ?inputType ?required ?order ?sectionRef
+        SELECT DISTINCT ?question ?questionId ?questionText ?slotName ?inputType ?required ?order ?sectionRef ?documentFillable
         WHERE {{
             ?question :inSection ?sectionRef .
 
@@ -274,6 +274,7 @@ class TTLToFlowConverter:
             OPTIONAL {{ ?question :order ?order }}
             OPTIONAL {{ ?question :inputType ?inputType }}
             OPTIONAL {{ ?question :required ?required }}
+            OPTIONAL {{ ?question mm:documentFillable ?documentFillable }}
 
             # Exclude SubQuestions
             FILTER NOT EXISTS {{ ?question a :SubQuestion }}
@@ -306,7 +307,8 @@ class TTLToFlowConverter:
                 "input_type": str(row.inputType) if row.inputType else "text",
                 "required": bool(row.required) if row.required else False,
                 "order": int(row.order) if row.order else 999,
-                "section": section_uri
+                "section": section_uri,
+                "document_fillable": bool(row.documentFillable) if row.documentFillable else False
             })
 
         return questions
@@ -402,7 +404,8 @@ class TTLToFlowConverter:
                 "input_type": question['input_type'],
                 "required": question['required'],
                 "section": question['section'],
-                "order": question['order']
+                "order": question['order'],
+                "document_fillable": question.get('document_fillable', False)
             }
         }
 

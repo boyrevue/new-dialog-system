@@ -7,6 +7,8 @@ import { Handle, Position } from 'reactflow';
  */
 const QuestionNode = ({ data, selected }) => {
   const hasSubQuestions = data.has_sub_questions || false;
+  const isDocumentFillable = data.document_fillable || false;
+  const showDocumentHints = data.showDocumentHints || false;
 
   // Input type icon mapping
   const inputTypeIcons = {
@@ -21,12 +23,29 @@ const QuestionNode = ({ data, selected }) => {
 
   const icon = inputTypeIcons[data.input_type] || '❓';
 
+  // Determine border style based on document fillable status
+  let borderStyle;
+  if (selected) {
+    borderStyle = '2px solid #0ea5e9';
+  } else if (isDocumentFillable && showDocumentHints) {
+    // Half-color border effect: purple (left) and amber (right)
+    borderStyle = '3px solid';
+    borderStyle = 'none';  // We'll use a gradient instead
+  } else {
+    borderStyle = '2px solid #0284c7';
+  }
+
+  // Background gradient for document-fillable fields
+  const backgroundGradient = (isDocumentFillable && showDocumentHints)
+    ? 'linear-gradient(90deg, #8b5cf6 0%, #8b5cf6 50%, #f59e0b 50%, #f59e0b 100%)'
+    : 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)';
+
   return (
     <div
       className={`question-node ${selected ? 'selected' : ''}`}
       style={{
-        background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-        border: selected ? '2px solid #0ea5e9' : '2px solid #0284c7',
+        background: backgroundGradient,
+        border: (isDocumentFillable && showDocumentHints) ? 'none' : borderStyle,
         borderRadius: '6px',
         padding: '10px',
         minWidth: '200px',
@@ -35,7 +54,8 @@ const QuestionNode = ({ data, selected }) => {
           ? '0 6px 12px rgba(6, 182, 212, 0.4)'
           : '0 3px 6px rgba(0, 0, 0, 0.15)',
         color: 'white',
-        transition: 'all 0.2s ease'
+        transition: 'all 0.2s ease',
+        position: 'relative'
       }}
     >
       {/* Input Handle (top) - connects to parent section */}
@@ -123,6 +143,21 @@ const QuestionNode = ({ data, selected }) => {
           marginLeft: '4px'
         }}>
           🔀 Has conditions
+        </div>
+      )}
+
+      {/* Document fillable indicator */}
+      {isDocumentFillable && showDocumentHints && (
+        <div style={{
+          fontSize: '9px',
+          background: 'rgba(139, 92, 246, 0.3)',
+          padding: '3px 6px',
+          borderRadius: '3px',
+          marginTop: '4px',
+          display: 'inline-block',
+          marginLeft: hasSubQuestions ? '4px' : '0px'
+        }}>
+          📄 Doc Fillable
         </div>
       )}
 

@@ -2,6 +2,7 @@
 @prefix mm: <http://diggi.io/ontology/multimodal#> .
 @prefix vocab: <http://diggi.io/ontology/vocabularies#> .
 @prefix form: <http://diggi.io/ontology/form#> .
+@prefix doc: <http://diggi.io/ontology/documents#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -29,6 +30,7 @@
     mm:maxLength 50 ;
     mm:validationRule "isAlpha" ;
     mm:validationMessage "First name must contain only letters" ;
+    mm:documentFillable true ;
     mm:uiHint "half-width" .
 
 :FirstNameTTS a mm:TTSPrompt ;
@@ -52,7 +54,8 @@
     :order 11 ;
     :inSection :PersonalInfoSection ;
     :hasInputMode vocab:NameInputMode ;
-    mm:hasTTSPrompt :LastNameTTS .
+    mm:hasTTSPrompt :LastNameTTS ;
+    mm:documentFillable true .
 
 :LastNameTTS a mm:TTSPrompt ;
     mm:ttsText "Please tell me your last name or surname." ;
@@ -74,7 +77,8 @@
     :order 12 ;
     :inSection :DriversSection ;
     :hasInputMode vocab:DateInputMode ;
-    mm:hasTTSPrompt :DateOfBirthTTS .
+    mm:hasTTSPrompt :DateOfBirthTTS ;
+    mm:documentFillable true .
 
 :DateOfBirthTTS a mm:TTSPrompt ;
     mm:ttsText "Please tell me your date of birth. For example, fifteenth of March nineteen ninety." ;
@@ -97,7 +101,8 @@
     :order 13 ;
     :inSection :DriversSection ;
     :hasInputMode vocab:EmailInputMode ;
-    mm:hasTTSPrompt :EmailTTS .
+    mm:hasTTSPrompt :EmailTTS ;
+    mm:documentFillable true .
 
 :EmailTTS a mm:TTSPrompt ;
     mm:ttsText "Please tell me your email address. You can spell it letter by letter." ;
@@ -119,7 +124,8 @@
     :order 14 ;
     :inSection :DriversSection ;
     :hasInputMode vocab:PhoneInputMode ;
-    mm:hasTTSPrompt :PhoneTTS .
+    mm:hasTTSPrompt :PhoneTTS ;
+    mm:documentFillable true .
 
 :PhoneTTS a mm:TTSPrompt ;
     mm:ttsText "Please tell me your UK mobile number, starting with zero seven." ;
@@ -140,7 +146,8 @@
     :required true ;
     :order 14 ;
     :inSection :AddressSection ;
-    mm:hasTTSPrompt :AddressTTS .
+    mm:hasTTSPrompt :AddressTTS ;
+    mm:documentFillable true .
 
 :AddressTTS a mm:TTSPrompt ;
     mm:ttsText "Please tell me your street address, including house number and street name." ;
@@ -161,7 +168,8 @@
     :required true ;
     :order 15 ;
     :inSection :AddressSection ;
-    mm:hasTTSPrompt :CityTownTTS .
+    mm:hasTTSPrompt :CityTownTTS ;
+    mm:documentFillable true .
 
 :CityTownTTS a mm:TTSPrompt ;
     mm:ttsText "What city or town do you live in?" ;
@@ -184,7 +192,8 @@
     :order 16 ;
     :inSection :AddressSection ;
     :hasInputMode vocab:PostcodeInputMode ;
-    mm:hasTTSPrompt :PostcodeTTS .
+    mm:hasTTSPrompt :PostcodeTTS ;
+    mm:documentFillable true .
 
 :PostcodeTTS a mm:TTSPrompt ;
     mm:ttsText "Please tell me your postcode. You can spell it letter by letter." ;
@@ -299,7 +308,10 @@
     :order 20 ;
     :inSection :VehicleSection ;
     :hasInputMode vocab:VehicleRegInputMode ;
-    mm:hasTTSPrompt :RegistrationNumberTTS .
+    mm:hasTTSPrompt :RegistrationNumberTTS ;
+    :extractableFrom doc:V5CLogBook, doc:InsuranceCertificate, doc:MOTCertificate ;
+    mm:documentFillable true ;
+    mm:uiHint "document-fillable" .
 
 :RegistrationNumberTTS a mm:TTSPrompt ;
     mm:ttsText "Please tell me your vehicle registration number. You can spell it letter by letter." ;
@@ -324,7 +336,8 @@
     mm:hasOption :MakeToyota, :MakeVolkswagen, :MakeFord, :MakeBMW, :MakeMercedes,
                  :MakeAudi, :MakeHonda, :MakeNissan, :MakePeugeot, :MakeRenault,
                  :MakeCitroen, :MakeMazda, :MakeHyundai, :MakeKia, :MakeSeat,
-                 :MakeSkoda, :MakeVolvo, :MakeLandRover, :MakeJaguar, :MakeMini .
+                 :MakeSkoda, :MakeVolvo, :MakeLandRover, :MakeJaguar, :MakeMini ;
+    mm:documentFillable true .
 
 :VehicleMakeTTS a mm:TTSPrompt ;
     mm:ttsText "What make is your vehicle? For example, Toyota, Ford, or BMW." ;
@@ -347,7 +360,8 @@
     :required true ;
     :order 22 ;
     :inSection :VehicleSection ;
-    mm:hasTTSPrompt :VehicleModelTTS .
+    mm:hasTTSPrompt :VehicleModelTTS ;
+    mm:documentFillable true .
 
 :VehicleModelTTS a mm:TTSPrompt ;
     mm:ttsText "What model is your vehicle? For example, Corolla, Focus, or Three Series." ;
@@ -368,7 +382,8 @@
     :required true ;
     :order 23 ;
     :inSection :VehicleSection ;
-    mm:hasTTSPrompt :VehicleYearTTS .
+    mm:hasTTSPrompt :VehicleYearTTS ;
+    mm:documentFillable true .
 
 :VehicleYearTTS a mm:TTSPrompt ;
     mm:ttsText "What year was your vehicle manufactured? For example, two thousand and twenty." ;
@@ -389,7 +404,8 @@
     :required true ;
     :order 24 ;
     :inSection :UsageMileageSection ;
-    mm:hasTTSPrompt :AnnualMileageTTS .
+    mm:hasTTSPrompt :AnnualMileageTTS ;
+    mm:documentFillable true .
 
 :AnnualMileageTTS a mm:TTSPrompt ;
     mm:ttsText "What is your estimated annual mileage? This is how many miles you drive per year." ;
@@ -1373,7 +1389,8 @@
     :inSection :AdditionalDriversSection ;
     :hasInputMode vocab:NameInputMode ;
     form:inFieldGroup :AdditionalDriverFieldGroup ;
-    mm:hasTTSPrompt :AdditionalDriverFirstNameTTS .
+    mm:hasTTSPrompt :AdditionalDriverFirstNameTTS ;
+    mm:documentFillable true .
 
 :AdditionalDriverFirstNameTTS a mm:TTSPrompt ;
     mm:ttsText "What is the additional driver's first name?" ;
@@ -1397,7 +1414,8 @@
     :inSection :AdditionalDriversSection ;
     :hasInputMode vocab:NameInputMode ;
     form:inFieldGroup :AdditionalDriverFieldGroup ;
-    mm:hasTTSPrompt :AdditionalDriverLastNameTTS .
+    mm:hasTTSPrompt :AdditionalDriverLastNameTTS ;
+    mm:documentFillable true .
 
 :AdditionalDriverLastNameTTS a mm:TTSPrompt ;
     mm:ttsText "What is the additional driver's last name or surname?" ;
@@ -1419,7 +1437,8 @@
     :order 34 ;
     :inSection :AdditionalDriversSection ;
     form:inFieldGroup :AdditionalDriverFieldGroup ;
-    mm:hasTTSPrompt :AdditionalDriverDOBTTS .
+    mm:hasTTSPrompt :AdditionalDriverDOBTTS ;
+    mm:documentFillable true .
 
 :AdditionalDriverDOBTTS a mm:TTSPrompt ;
     mm:ttsText "What is the additional driver's date of birth? Please say it as day, month, year." ;
@@ -1442,7 +1461,8 @@
     :inSection :AdditionalDriversSection ;
     form:inFieldGroup :AdditionalDriverFieldGroup ;
     mm:hasTTSPrompt :AdditionalDriverRelationshipTTS ;
-    mm:hasSelectOption :RelSpouse, :RelPartner, :RelChild, :RelParent, :RelSibling, :RelFriend, :RelOther .
+    mm:hasSelectOption :RelSpouse, :RelPartner, :RelChild, :RelParent, :RelSibling, :RelFriend, :RelOther ;
+    mm:documentFillable true .
 
 :AdditionalDriverRelationshipTTS a mm:TTSPrompt ;
     mm:ttsText "What is the additional driver's relationship to you? For example, spouse, partner, child, parent, or friend." ;
@@ -1514,7 +1534,8 @@
     :inSection :AdditionalDriversSection ;
     form:inFieldGroup :AdditionalDriverFieldGroup ;
     mm:hasTTSPrompt :AdditionalDriverLicenceTypeTTS ;
-    mm:hasSelectOption :AddDriverLicenceUKFull, :AddDriverLicenceUKProvisional, :AddDriverLicenceEU, :AddDriverLicenceInternational .
+    mm:hasSelectOption :AddDriverLicenceUKFull, :AddDriverLicenceUKProvisional, :AddDriverLicenceEU, :AddDriverLicenceInternational ;
+    mm:documentFillable true .
 
 :AdditionalDriverLicenceTypeTTS a mm:TTSPrompt ;
     mm:ttsText "What type of driving licence does the additional driver have? UK full, UK provisional, European Union, or International?" ;
@@ -1587,7 +1608,8 @@
     :inSection :AdditionalDriversSection ;
     form:inFieldGroup :AdditionalDriverFieldGroup ;
     mm:hasTTSPrompt :AdditionalDriverClaimsTTS ;
-    mm:hasSelectOption :AddDriverClaimsYes, :AddDriverClaimsNo .
+    mm:hasSelectOption :AddDriverClaimsYes, :AddDriverClaimsNo ;
+    mm:documentFillable true .
 
 :AdditionalDriverClaimsTTS a mm:TTSPrompt ;
     mm:ttsText "Has the additional driver made any insurance claims in the last 5 years?" ;
@@ -1624,7 +1646,8 @@
     :inSection :AdditionalDriversSection ;
     form:inFieldGroup :AdditionalDriverFieldGroup ;
     mm:hasTTSPrompt :AdditionalDriverConvictionsTTS ;
-    mm:hasSelectOption :AddDriverConvictionsYes, :AddDriverConvictionsNo .
+    mm:hasSelectOption :AddDriverConvictionsYes, :AddDriverConvictionsNo ;
+    mm:documentFillable true .
 
 :AdditionalDriverConvictionsTTS a mm:TTSPrompt ;
     mm:ttsText "Does the additional driver have any driving convictions or penalty points on their licence?" ;
@@ -2254,7 +2277,8 @@
     :order 52 ;
     :inSection :InsuranceHistorySection ;
     mm:hasTTSPrompt :PenaltyPointsTTS ;
-    mm:hasSelectOption :Points3, :Points6, :Points9, :Points12Plus .
+    mm:hasSelectOption :Points3, :Points6, :Points9, :Points12Plus ;
+    mm:documentFillable true .
 
 :PenaltyPointsTTS a mm:TTSPrompt ;
     mm:ttsText "How many penalty points do you currently have on your driving licence?" ;
