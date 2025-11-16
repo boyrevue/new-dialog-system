@@ -90,6 +90,30 @@
     mm:ttsRate 1.0 ;
     mm:ttsPitch 1.0 .
 
+# Q3a: Driving Licence Number
+:DrivingLicenceQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driving Licence Number" ;
+    :questionId "q_driving_licence" ;
+    :questionText "What is your UK driving licence number?" ;
+    :slotName "drivingLicence" ;
+    :required true ;
+    :spellingRequired true ;
+    :order 125 ;
+    :inSection :PersonalInfoSection ;
+    :hasInputMode vocab:DrivingLicenceInputMode ;
+    mm:hasTTSPrompt :DrivingLicenceTTS ;
+    mm:documentFillable true .
+
+:DrivingLicenceTTS a mm:TTSPrompt ;
+    mm:ttsText "Please spell out your UK driving licence number, letter by letter and number by number. For example, J O N E S 6 0 1 0 5 3 D J 9 B M." ;
+    mm:ttsVariant1 "Please spell out your UK driving licence number, letter by letter and number by number. For example, J O N E S 6 0 1 0 5 3 D J 9 B M." ;
+    mm:ttsVariant2 "Could you spell your driving licence number please, one character at a time?" ;
+    mm:ttsVariant3 "What's your driving licence number? Please spell it out." ;
+    mm:ttsVariant4 "I need your UK photocard driving licence number. Please spell it character by character." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 0.95 ;
+    mm:ttsPitch 1.0 .
+
 # Q4: Email
 :EmailQuestion a mm:MultimodalQuestion ;
     rdfs:label "Email Address" ;
@@ -215,7 +239,8 @@
     :order 17 ;
     :inSection :DriversSection ;
     mm:hasTTSPrompt :LicenceTypeTTS ;
-    mm:hasOption :LicenceTypeFull, :LicenceTypeProvisional, :LicenceTypeInternational .
+    mm:hasOption :LicenceTypeFull, :LicenceTypeProvisional, :LicenceTypeInternational ;
+    mm:documentFillable true .
 
 :LicenceTypeTTS a mm:TTSPrompt ;
     mm:ttsText "What type of driving licence do you have? Full UK, Provisional, or International?" ;

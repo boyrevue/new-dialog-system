@@ -40,7 +40,23 @@ class TTLToFlowConverter:
             nodes.append(start_node)
             seen_node_ids.add(start_node["id"])
 
-            # 2. Get all sections and their questions
+            # 2. Add document upload node (positioned between start and first section)
+            fillable_questions = self.get_all_fillable_questions()
+            document_upload_node = self.create_document_upload_node(200, 250, fillable_questions)
+            nodes.append(document_upload_node)
+            seen_node_ids.add(document_upload_node["id"])
+
+            # Edge from start to document upload
+            edges.append({
+                "id": "e-start-docupload",
+                "source": "start",
+                "target": "document_upload",
+                "type": "default",
+                "animated": False,
+                "style": {"stroke": "#f59e0b", "strokeWidth": 2}
+            })
+
+            # 3. Get all sections and their questions
             sections = self.get_all_sections()
 
             prev_section_id = "start"
@@ -134,6 +150,21 @@ class TTLToFlowConverter:
                                     })
 
                                 sub_q_y += self.question_y_spacing
+
+                        # Add edge from document upload to this question if it's document-fillable
+                        if question.get('document_fillable', False):
+                            edges.append({
+                                "id": f"e-docupload-{question['question_id']}",
+                                "source": "document_upload",
+                                "target": question['question_id'],
+                                "type": "default",
+                                "animated": True,
+                                "style": {
+                                    "stroke": "#8b5cf6",
+                                    "strokeWidth": 2,
+                                    "strokeDasharray": "3,3"
+                                }
+                            })
 
                         question_y += self.question_y_spacing
 
@@ -433,6 +464,59 @@ class TTLToFlowConverter:
                 "order": sub_question['order']
             }
         }
+
+    def create_document_upload_node(self, x: int, y: int, fillable_questions: List[Dict]) -> Dict:
+        """
+        Create document upload node showing required documents
+        """
+        # Extract unique document types from fillable questions
+        document_types = set()
+        document_types.add("UK Driving Licence")
+        document_types.add("Previous Insurance Policy")
+        document_types.add("Vehicle Registration Document")
+
+        return {
+            "id": "document_upload",
+            "type": "documentUpload",
+            "position": {"x": x, "y": y},
+            "data": {
+                "label": "Document Upload",
+                "ttl_ref": ":DocumentUploadNode",
+                "documentTypes": sorted(list(document_types)),
+                "fillableQuestionCount": len(fillable_questions)
+            }
+        }
+
+    def get_all_fillable_questions(self) -> List[Dict]:
+        """
+        Get all document-fillable questions from the ontology
+        """
+        query = """
+        PREFIX : <http://diggi.io/ontology/dialog#>
+        PREFIX mm: <http://diggi.io/ontology/multimodal#>
+
+        SELECT DISTINCT ?question ?questionId
+        WHERE {
+            {
+                ?question a :Question .
+            } UNION {
+                ?question a mm:MultimodalQuestion .
+            }
+            ?question :questionId ?questionId ;
+                      mm:documentFillable true .
+        }
+        """
+
+        results = self.dm.graph.query(query)
+
+        fillable_questions = []
+        for row in results:
+            fillable_questions.append({
+                "question_id": str(row.questionId),
+                "question_uri": str(row.question)
+            })
+
+        return fillable_questions
 
 
 class FlowToTTLConverter:

@@ -16,6 +16,7 @@ import EndNode from './flow-nodes/EndNode';
 import SectionNode from './flow-nodes/SectionNode';
 import QuestionNode from './flow-nodes/QuestionNode';
 import SubQuestionNode from './flow-nodes/SubQuestionNode';
+import DocumentUploadNode from './flow-nodes/DocumentUploadNode';
 
 // Define custom node types
 const nodeTypes = {
@@ -23,7 +24,8 @@ const nodeTypes = {
   end: EndNode,
   section: SectionNode,
   question: QuestionNode,
-  subQuestion: SubQuestionNode
+  subQuestion: SubQuestionNode,
+  documentUpload: DocumentUploadNode
 };
 
 /**
@@ -43,6 +45,10 @@ const DialogFlowEditor = () => {
   const [error, setError] = useState(null);
   const [showDocumentHints, setShowDocumentHints] = useState(false);
 
+  // Store original unfiltered data
+  const [allNodes, setAllNodes] = useState([]);
+  const [allEdges, setAllEdges] = useState([]);
+
   // Load flow data from backend
   const loadFlow = async () => {
     try {
@@ -53,16 +59,29 @@ const DialogFlowEditor = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Add showDocumentHints to all nodes' data
-        const nodesWithHints = (data.flow.nodes || []).map(node => ({
+        // Store the original unfiltered data
+        const originalNodes = (data.flow.nodes || []).map(node => ({
           ...node,
           data: {
             ...node.data,
-            showDocumentHints: false
+            showDocumentHints: showDocumentHints
           }
         }));
-        setNodes(nodesWithHints);
-        setEdges(data.flow.edges || []);
+        const originalEdges = data.flow.edges || [];
+
+        setAllNodes(originalNodes);
+        setAllEdges(originalEdges);
+
+        // Filter and set display nodes/edges based on showDocumentHints
+        const filteredNodes = originalNodes.filter(
+          node => showDocumentHints || node.type !== 'documentUpload'
+        );
+        const filteredEdges = originalEdges.filter(
+          edge => showDocumentHints || edge.source !== 'document_upload'
+        );
+
+        setNodes(filteredNodes);
+        setEdges(filteredEdges);
       } else {
         setError(data.error || 'Failed to load flow');
       }
@@ -80,17 +99,29 @@ const DialogFlowEditor = () => {
   }, []);
 
   // Update all nodes when showDocumentHints changes
+  // Filter from the original unfiltered data stored in allNodes/allEdges
   useEffect(() => {
-    setNodes((nds) =>
-      nds.map((node) => ({
+    if (allNodes.length === 0) return; // Skip if data not loaded yet
+
+    // Update showDocumentHints in node data and filter
+    const filteredNodes = allNodes
+      .map((node) => ({
         ...node,
         data: {
           ...node.data,
           showDocumentHints
         }
       }))
+      .filter(node => showDocumentHints || node.type !== 'documentUpload');
+
+    // Filter edges based on showDocumentHints
+    const filteredEdges = allEdges.filter(
+      edge => showDocumentHints || edge.source !== 'document_upload'
     );
-  }, [showDocumentHints, setNodes]);
+
+    setNodes(filteredNodes);
+    setEdges(filteredEdges);
+  }, [showDocumentHints, allNodes, allEdges, setNodes, setEdges]);
 
   // Handle edge connections (for future editing)
   const onConnect = useCallback(
@@ -306,6 +337,8 @@ const DialogFlowEditor = () => {
             switch (node.type) {
               case 'start':
                 return '#10b981';
+              case 'documentUpload':
+                return '#f59e0b';
               case 'section':
                 return '#667eea';
               case 'question':
