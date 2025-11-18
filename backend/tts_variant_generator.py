@@ -49,7 +49,7 @@ class TTSVariantGenerator:
             prompt = self._build_prompt(original_text, question_context)
 
             response = self.client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4-turbo",
                 messages=[
                     {
                         "role": "system",

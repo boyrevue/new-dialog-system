@@ -1,0 +1,12 @@
+{
+  "": {
+    "dependencies": "/Users/vincentpower/UNIVERSX/dialog-system/backend/tools/vision-ocr/.build/arm64-apple-macosx/release/VisionOCR.build/VisionOCR.d",
+    "object": "/Users/vincentpower/UNIVERSX/dialog-system/backend/tools/vision-ocr/.build/arm64-apple-macosx/release/VisionOCR.build/VisionOCR.o",
+    "swift-dependencies": "/Users/vincentpower/UNIVERSX/dialog-system/backend/tools/vision-ocr/.build/arm64-apple-macosx/release/VisionOCR.build/master.swiftdeps"
+  },
+  "/Users/vincentpower/UNIVERSX/dialog-system/backend/tools/vision-ocr/Sources/VisionOCR/main.swift": {
+    "object": "/Users/vincentpower/UNIVERSX/dialog-system/backend/tools/vision-ocr/.build/arm64-apple-macosx/release/VisionOCR.build/main.swift.o",
+    "swiftmodule": "/Users/vincentpower/UNIVERSX/dialog-system/backend/tools/vision-ocr/.build/arm64-apple-macosx/release/VisionOCR.build/main~partial.swiftmodule",
+    "swift-dependencies": "/Users/vincentpower/UNIVERSX/dialog-system/backend/tools/vision-ocr/.build/arm64-apple-macosx/release/VisionOCR.build/main.swiftdeps"
+  }
+}

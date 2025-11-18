@@ -21,6 +21,7 @@ CONF = Namespace("http://diggi.io/ontology/confidence#")
 QC = Namespace("http://diggi.io/ontology/quality-control#")
 VOCAB = Namespace("http://diggi.io/ontology/vocabularies#")
 DOC = Namespace("http://diggi.io/ontology/documents#")
+FORM = Namespace("http://diggi.io/ontology/forms#")
 SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
 RDFS = Namespace("http://www.w3.org/2000/01/rdf-schema#")
 OWL = Namespace("http://www.w3.org/2002/07/owl#")
@@ -48,6 +49,8 @@ class DialogManager:
         self.graph.bind("conf", CONF)
         self.graph.bind("qc", QC)
         self.graph.bind("vocab", VOCAB)
+        self.graph.bind("doc", DOC)
+        self.graph.bind("form", FORM)
         self.graph.bind("skos", SKOS)
         self.graph.bind("sh", SH)
         
@@ -406,6 +409,232 @@ class DialogManager:
 
         return None
 
+    def get_document_fillable(self, question_id: str) -> dict:
+        """
+        Get whether a question can be auto-filled from document upload and the document name.
+        Returns dict with 'fillable' (bool) and 'document_name' (str or None).
+        """
+        query = prepareQuery("""
+            SELECT ?documentFillable ?documentLabel
+            WHERE {
+                ?question dialog:questionId ?qid .
+                FILTER(str(?qid) = ?questionIdLiteral)
+
+                OPTIONAL {
+                    ?question mm:documentFillable ?documentFillable .
+                }
+                OPTIONAL {
+                    ?question dialog:extractableFrom ?document .
+                    ?document rdfs:label ?documentLabel .
+                }
+            }
+            LIMIT 1
+        """, initNs={"dialog": DIALOG, "mm": MM, "rdfs": RDFS})
+
+        results = list(self.graph.query(query, initBindings={"questionIdLiteral": Literal(question_id)}))
+
+        if results and results[0].documentFillable:
+            # Get the document label from the :extractableFrom property
+            document_name = str(results[0].documentLabel) if results[0].documentLabel else None
+
+            return {
+                "fillable": True,
+                "document_name": document_name
+            }
+
+        return {
+            "fillable": False,
+            "document_name": None
+        }
+
+    def get_form_definition(self, question_id: str) -> Optional[dict]:
+        """
+        Get form definition for a question if it has a :hasForm property.
+        Returns form structure with fields, validations, and transformers.
+        """
+        query = prepareQuery("""
+            SELECT ?form ?formId ?formTitle ?formDescription ?successMsg ?onSubmit
+            WHERE {
+                ?question dialog:questionId ?qid .
+                FILTER(str(?qid) = ?questionIdLiteral)
+
+                OPTIONAL {
+                    ?question dialog:hasForm ?form .
+                    ?form form:formId ?formId ;
+                          form:formTitle ?formTitle .
+
+                    OPTIONAL { ?form form:formDescription ?formDescription . }
+                    OPTIONAL { ?form form:successMessage ?successMsg . }
+                    OPTIONAL { ?form form:onSubmitAction ?onSubmit . }
+                }
+            }
+            LIMIT 1
+        """, initNs={"dialog": DIALOG, "form": FORM})
+
+        results = list(self.graph.query(query, initBindings={"questionIdLiteral": Literal(question_id)}))
+
+        if not results or not results[0].form:
+            return None
+
+        row = results[0]
+        form_uri = row.form
+
+        # Get field groups
+        field_groups = self._get_field_groups(form_uri)
+
+        return {
+            "form_id": str(row.formId),
+            "form_title": str(row.formTitle),
+            "form_description": str(row.formDescription) if row.formDescription else None,
+            "success_message": str(row.successMsg) if row.successMsg else None,
+            "on_submit_action": str(row.onSubmit) if row.onSubmit else "next_question",
+            "field_groups": field_groups
+        }
+
+    def _get_field_groups(self, form_uri) -> List[dict]:
+        """Get all field groups for a form."""
+        query = prepareQuery("""
+            SELECT ?fieldGroup ?groupId ?groupTitle ?groupOrder ?minOccurs ?maxOccurs
+            WHERE {
+                ?form form:hasFieldGroup ?fieldGroup .
+                FILTER(?form = ?formUri)
+
+                ?fieldGroup form:fieldGroupId ?groupId ;
+                           form:fieldGroupTitle ?groupTitle ;
+                           form:fieldGroupOrder ?groupOrder .
+
+                OPTIONAL { ?fieldGroup form:minOccurs ?minOccurs . }
+                OPTIONAL { ?fieldGroup form:maxOccurs ?maxOccurs . }
+            }
+            ORDER BY ?groupOrder
+        """, initNs={"form": FORM})
+
+        results = list(self.graph.query(query, initBindings={"formUri": form_uri}))
+
+        field_groups = []
+        for row in results:
+            fields = self._get_fields(row.fieldGroup)
+            field_groups.append({
+                "group_id": str(row.groupId),
+                "group_title": str(row.groupTitle),
+                "group_order": int(row.groupOrder),
+                "min_occurs": int(row.minOccurs) if row.minOccurs else 1,
+                "max_occurs": int(row.maxOccurs) if row.maxOccurs else 1,
+                "fields": fields
+            })
+
+        return field_groups
+
+    def _get_fields(self, field_group_uri) -> List[dict]:
+        """Get all fields for a field group."""
+        query = prepareQuery("""
+            SELECT ?field ?fieldId ?fieldLabel ?fieldType ?fieldOrder ?required
+                   ?placeholder ?helpText ?uiHint ?defaultValue
+            WHERE {
+                ?fieldGroup form:hasField ?field .
+                FILTER(?fieldGroup = ?fieldGroupUri)
+
+                ?field form:fieldId ?fieldId ;
+                       form:fieldLabel ?fieldLabel ;
+                       form:fieldType ?fieldType ;
+                       form:fieldOrder ?fieldOrder .
+
+                OPTIONAL { ?field form:required ?required . }
+                OPTIONAL { ?field form:placeholder ?placeholder . }
+                OPTIONAL { ?field form:helpText ?helpText . }
+                OPTIONAL { ?field form:uiHint ?uiHint . }
+                OPTIONAL { ?field form:defaultValue ?defaultValue . }
+            }
+            ORDER BY ?fieldOrder
+        """, initNs={"form": FORM})
+
+        results = list(self.graph.query(query, initBindings={"fieldGroupUri": field_group_uri}))
+
+        fields = []
+        for row in results:
+            # Get field type name from URI
+            field_type_str = str(row.fieldType).split("#")[-1] if row.fieldType else "TextInput"
+
+            # Get validations and transformers
+            validations = self._get_validations(row.field)
+            transformers = self._get_transformers(row.field)
+
+            fields.append({
+                "field_id": str(row.fieldId),
+                "field_label": str(row.fieldLabel),
+                "field_type": field_type_str,
+                "field_order": int(row.fieldOrder),
+                "required": bool(row.required) if row.required else False,
+                "placeholder": str(row.placeholder) if row.placeholder else None,
+                "help_text": str(row.helpText) if row.helpText else None,
+                "ui_hint": str(row.uiHint) if row.uiHint else None,
+                "default_value": str(row.defaultValue) if row.defaultValue else None,
+                "validations": validations,
+                "transformers": transformers
+            })
+
+        return fields
+
+    def _get_validations(self, field_uri) -> List[dict]:
+        """Get all validation rules for a field."""
+        query = prepareQuery("""
+            SELECT ?validation ?validationType ?validationValue ?validationMessage
+            WHERE {
+                ?field form:hasValidation ?validation .
+                FILTER(?field = ?fieldUri)
+
+                ?validation form:validationType ?validationType ;
+                           form:validationValue ?validationValue .
+
+                OPTIONAL { ?validation form:validationMessage ?validationMessage . }
+            }
+        """, initNs={"form": FORM})
+
+        results = list(self.graph.query(query, initBindings={"fieldUri": field_uri}))
+
+        validations = []
+        for row in results:
+            validations.append({
+                "type": str(row.validationType),
+                "value": str(row.validationValue),
+                "message": str(row.validationMessage) if row.validationMessage else None
+            })
+
+        return validations
+
+    def _get_transformers(self, field_uri) -> List[dict]:
+        """Get all value transformers for a field."""
+        query = prepareQuery("""
+            SELECT ?transformer ?transformerType ?inputPattern ?outputValue
+                   ?transformerOrder ?caseInsensitive
+            WHERE {
+                ?field form:hasTransformer ?transformer .
+                FILTER(?field = ?fieldUri)
+
+                ?transformer form:transformerType ?transformerType ;
+                            form:inputPattern ?inputPattern ;
+                            form:outputValue ?outputValue .
+
+                OPTIONAL { ?transformer form:transformerOrder ?transformerOrder . }
+                OPTIONAL { ?transformer form:caseInsensitive ?caseInsensitive . }
+            }
+            ORDER BY ?transformerOrder
+        """, initNs={"form": FORM})
+
+        results = list(self.graph.query(query, initBindings={"fieldUri": field_uri}))
+
+        transformers = []
+        for row in results:
+            transformers.append({
+                "type": str(row.transformerType),
+                "input_pattern": str(row.inputPattern),
+                "output_value": str(row.outputValue),
+                "order": int(row.transformerOrder) if row.transformerOrder else 0,
+                "case_insensitive": bool(row.caseInsensitive) if row.caseInsensitive else False
+            })
+
+        return transformers
+
     def get_confidence_threshold(self, question_id: str) -> Tuple[float, int]:
         """
         Get confidence threshold and review priority for a question from ontology.
@@ -413,28 +642,28 @@ class DialogManager:
         """
         if question_id in self._confidence_thresholds:
             return self._confidence_thresholds[question_id]
-        
+
         query = prepareQuery("""
             SELECT ?threshold ?priority
             WHERE {
                 ?question dialog:questionId ?qid .
                 FILTER(str(?qid) = ?questionIdLiteral)
-                
+
                 ?thresholdConfig dialog:appliesTo ?question ;
                                  conf:thresholdValue ?threshold ;
                                  qc:reviewPriority ?priority .
             }
         """, initNs={"dialog": DIALOG, "conf": CONF, "qc": QC})
-        
+
         results = list(self.graph.query(query, initBindings={"questionIdLiteral": Literal(question_id)}))
-        
+
         if results:
             row = results[0]
             threshold = float(row.threshold)
             priority = int(row.priority)
             self._confidence_thresholds[question_id] = (threshold, priority)
             return threshold, priority
-        
+
         # Default fallback (should be configured in TTL)
         logger.warning(f"No confidence threshold found for question {question_id}, using default")
         return 0.70, 5

@@ -1,0 +1,22 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix mm: <http://diggi.io/ontology/multimodal#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+:PersonalInfoSection a :Section ;
+  :sectionId "section_personal_info" ;
+  :sectionTitle "Personal Information" ;
+  :sectionOrder 1 .
+
+:FirstNameQuestion a mm:MultimodalQuestion ;
+  rdfs:label "First name" ;
+  :questionId "q_first_name" ;
+  :questionText "Please tell me your first name." ;
+  :slotName "firstName" ;
+  :inSection :PersonalInfoSection ;
+  :order 1 .
+
+# Validation (illustrative)
+# min_length: 2, max_length: 50, pattern: letters, dash, apostrophe, space
+# Transformer: map spoken tokens ("oh") → "o"
+
+

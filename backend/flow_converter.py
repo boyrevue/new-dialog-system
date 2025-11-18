@@ -289,6 +289,7 @@ class TTLToFlowConverter:
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
         SELECT DISTINCT ?question ?questionId ?questionText ?slotName ?inputType ?required ?order ?sectionRef ?documentFillable
+               ?minLength ?maxLength ?validationRule ?validationMessage ?placeholder ?helpText
         WHERE {{
             ?question :inSection ?sectionRef .
 
@@ -306,6 +307,12 @@ class TTLToFlowConverter:
             OPTIONAL {{ ?question :inputType ?inputType }}
             OPTIONAL {{ ?question :required ?required }}
             OPTIONAL {{ ?question mm:documentFillable ?documentFillable }}
+            OPTIONAL {{ ?question mm:minLength ?minLength }}
+            OPTIONAL {{ ?question mm:maxLength ?maxLength }}
+            OPTIONAL {{ ?question mm:validationRule ?validationRule }}
+            OPTIONAL {{ ?question mm:validationMessage ?validationMessage }}
+            OPTIONAL {{ ?question mm:placeholder ?placeholder }}
+            OPTIONAL {{ ?question mm:helpText ?helpText }}
 
             # Exclude SubQuestions
             FILTER NOT EXISTS {{ ?question a :SubQuestion }}
@@ -331,7 +338,7 @@ class TTLToFlowConverter:
                 continue
             seen_question_ids.add(question_id)
 
-            questions.append({
+            question_dict = {
                 "question_id": question_id,
                 "question_text": str(row.questionText) if row.questionText else question_id,
                 "slot_name": str(row.slotName) if row.slotName else question_id,
@@ -340,7 +347,23 @@ class TTLToFlowConverter:
                 "order": int(row.order) if row.order else 999,
                 "section": section_uri,
                 "document_fillable": bool(row.documentFillable) if row.documentFillable else False
-            })
+            }
+
+            # Add validation properties if they exist
+            if row.minLength:
+                question_dict["min_length"] = int(row.minLength)
+            if row.maxLength:
+                question_dict["max_length"] = int(row.maxLength)
+            if row.validationRule:
+                question_dict["validation_rule"] = str(row.validationRule)
+            if row.validationMessage:
+                question_dict["validation_message"] = str(row.validationMessage)
+            if row.placeholder:
+                question_dict["placeholder"] = str(row.placeholder)
+            if row.helpText:
+                question_dict["help_text"] = str(row.helpText)
+
+            questions.append(question_dict)
 
         return questions
 

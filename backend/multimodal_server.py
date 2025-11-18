@@ -3,8 +3,9 @@ Multimodal Dialog Server - FastAPI server for dialog interaction
 Extracts questions from TTL, handles speech/text input, calculates confidence
 """
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 import asyncio
@@ -17,6 +18,8 @@ import io
 from pathlib import Path
 
 from dialog_manager import DialogManager
+from document_ocr import extract_from_document
+from perspective_transform import perspective_transform_image
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -34,6 +37,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve debug images (OCR pipeline artifacts)
+try:
+    app.mount("/debug", StaticFiles(directory="debug_images"), name="debug")
+except Exception:
+    # Directory may not exist yet; mounting will work after first run creates it
+    pass
+
 # Initialize Dialog Manager
 ontology_paths = [
     "../ontologies/dialog.ttl",
@@ -43,12 +53,16 @@ ontology_paths = [
     "../ontologies/dialog-vocabularies.ttl",
     "../ontologies/dialog-documents.ttl",
     "../ontologies/dialog-validation.ttl",
-    "../ontologies/dialog-confidence.ttl"
+    "../ontologies/dialog-confidence.ttl",
+    "../ontologies/dialog-forms.ttl"
 ]
 dialog_manager = DialogManager(ontology_paths)
 
 # In-memory session store (use Redis in production)
 sessions = {}
+
+# In-memory store for low-confidence audio recordings awaiting operator review
+low_confidence_queue = []
 
 # Get TTL configuration from ontology
 ttl_config = dialog_manager.get_ttl_configuration()
@@ -220,17 +234,27 @@ async def get_current_question(session_id: str):
     # Load dialog flow
     flow = dialog_manager.get_dialog_flow("InsuranceQuoteDialog")
 
-    # Skip to next question node if current node is not a question
+    # Skip to next unanswered question node
     while session.current_node_index < len(flow):
         current_node = flow[session.current_node_index]
 
         # Check if current node is a question
         if "question_id" in current_node:
             question_id = current_node["question_id"]
+
+            # Skip this question if it's already been answered (e.g., by OCR extraction)
+            if question_id in session.answers:
+                logger.info(f"Skipping already answered question: {question_id} (answer: {session.answers[question_id]})")
+                session.current_node_index += 1
+                continue
+
+            # This question hasn't been answered yet, return it
             features = dialog_manager.get_multimodal_features(question_id)
             threshold, priority = dialog_manager.get_confidence_threshold(question_id)
             input_mode = dialog_manager.get_input_mode(question_id)
             section_info = dialog_manager.get_section_for_question(question_id)
+            document_info = dialog_manager.get_document_fillable(question_id)
+            form_definition = dialog_manager.get_form_definition(question_id)
 
             return {
                 "question_id": question_id,
@@ -245,7 +269,10 @@ async def get_current_question(session_id: str):
                 "select_options": features["select_options"],
                 "faqs": features["faqs"],
                 "confidence_threshold": threshold,
-                "priority": priority
+                "priority": priority,
+                "document_fillable": document_info["fillable"],
+                "document_name": document_info["document_name"],
+                "form": form_definition
             }
 
         # If not a question, skip to next node
@@ -378,8 +405,500 @@ async def match_vocabulary(
 async def get_rephrase_template(question_id: str, template_type: str = "phonetic"):
     """Get rephrase request template from TTL."""
     template = dialog_manager.get_rephrase_template(question_id, template_type)
-    
+
     return template
+
+
+@app.get("/api/sessions")
+async def get_all_sessions():
+    """Get all active sessions with their current state."""
+    flow = dialog_manager.get_dialog_flow("InsuranceQuoteDialog")
+
+    result = []
+    for session_id, session in sessions.items():
+        questions = []
+
+        for idx, node in enumerate(flow):
+            if "question_id" not in node:
+                continue
+
+            question_id = node["question_id"]
+
+            # Determine status
+            if idx < session.current_node_index:
+                status = "completed"
+                answer = session.answers.get(question_id, "N/A")
+            elif idx == session.current_node_index:
+                status = "active"
+                answer = None
+            else:
+                status = "pending"
+                answer = None
+
+            questions.append({
+                "id": question_id,
+                "text": node["question_text"],
+                "status": status,
+                "answer": answer
+            })
+
+        result.append({
+            "id": session_id,
+            "label": f"Session {len(result) + 1}",
+            "active": True,
+            "questions": questions,
+            "currentIndex": session.current_node_index,
+            "totalQuestions": len([n for n in flow if "question_id" in n]),
+            "lastAccessed": session.last_accessed.isoformat()
+        })
+
+    return result
+
+
+@app.post("/api/document/upload-and-extract")
+async def upload_and_extract_document(
+    file: UploadFile = File(...),
+    session_id: str = Form(""),
+    question_id: str = Form(""),
+    template: str = Form(""),
+    document_type: str = Form("uk_driving_licence")
+):
+    """
+    Upload a document (UK Driving Licence, V5C, Passport, etc.) and extract data using OCR.
+    Returns extracted fields that can be used to auto-fill the dialog form.
+    Optional template parameter allows providing custom field coordinates.
+    Optional document_type parameter specifies document type ('uk_driving_licence' or 'v5c').
+    """
+    try:
+        # Read file bytes
+        file_bytes = await file.read()
+
+        # Parse template if provided
+        template_dict = None
+        logger.info(f"Template parameter received: {bool(template)}, length: {len(template) if template else 0}")
+        if template:
+            import json
+            try:
+                template_dict = json.loads(template)
+                logger.info(f"Parsed custom template with {len(template_dict.get('fields', []))} fields")
+            except json.JSONDecodeError as e:
+                logger.warning(f"Invalid template JSON provided, ignoring: {e}")
+
+        # Log document type
+        logger.info(f"Extracting document type: {document_type}")
+
+        # Perform OCR and extraction
+        extraction_result = extract_from_document(file_bytes, file.filename, custom_template=template_dict, document_type=document_type)
+
+        if not extraction_result.get('success'):
+            # Return debug links with error detail to help troubleshooting in the client
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": extraction_result.get('error', 'Document extraction failed'),
+                    "debug_urls": extraction_result.get('debug_urls', [])
+                }
+            )
+
+        # Get extracted fields
+        extracted_fields = extraction_result.get('extracted_fields', {})
+
+        # Validate extracted fields and get suggestions
+        from ocr_validator import get_validator
+        validator = get_validator()
+        field_confidences = extraction_result.get('field_confidences', {})
+        validations = validator.validate_document(extracted_fields, field_confidences)
+
+        logger.info(f"Field validations: {validations}")
+
+        # Map extracted fields to dialog question IDs (from ontology)
+        # Template field names from uk_licence_template.json & v5c_template.json -> question_id mapping
+        field_to_question_map = {
+            # UK Driving Licence fields (from template extraction)
+            'surname': 'q_last_name',
+            'given_names': 'q_first_name',
+            'licence_number': 'q_licence_number',
+            'address': 'q_street_address',
+            'issue_date': 'q_issue_date',
+            'expiry_date': 'q_expiry_date',
+            'dob_place': 'q_date_of_birth',  # Contains DOB + birthplace, needs parsing
+
+            # V5C Log Book fields (from v5c_template.json)
+            'registration_number': 'q_vehicle_reg_number',
+            'make': 'q_vehicle_make',
+            'model': 'q_vehicle_model',
+            'vin': 'q_vehicle_vin',
+            'fuel_type': 'q_vehicle_fuel_type',
+            'colour': 'q_vehicle_colour',
+            'date_of_registration': 'q_vehicle_date_first_registered',
+            'date_first_uk_registration': 'q_vehicle_date_first_registered',
+            'keeper_name': 'q_registered_keeper_name',
+            'keeper_address': 'q_registered_keeper_address',
+            'keeper_postcode': 'q_registered_keeper_postcode',
+
+            # Legacy OCR fields (fallback for old extraction)
+            'date_of_birth': 'q_date_of_birth',
+            'dob_from_licence': 'q_date_of_birth',
+            'first_names': 'q_first_name',  # Old field name
+            'gender': 'q_gender',
+        }
+
+        # Create slot mappings for questions that have extracted values
+        slot_mappings = {}
+        answered_questions = []  # Track which questions we've answered
+
+        for ocr_field, question_id in field_to_question_map.items():
+            value = extracted_fields.get(ocr_field)
+            if value:
+                slot_mappings[question_id] = value
+                answered_questions.append(question_id)
+
+        # Update session with extracted data if session_id provided
+        if session_id and session_id in sessions:
+            session = sessions[session_id]
+            ocr_confidence = extraction_result.get('confidence', 0.9)
+
+            for question_id, value in slot_mappings.items():
+                # Store in session answers with high confidence (OCR extracted)
+                session.answers[question_id] = value
+                session.confidence_scores[question_id] = ocr_confidence
+                logger.info(f"Auto-filled question {question_id} with OCR value: {value} (confidence: {ocr_confidence})")
+
+            # Mark session as updated
+            session.last_accessed = datetime.now()
+
+        logger.info(f"Document extraction successful. Document type: {extraction_result.get('document_type')}")
+        logger.info(f"Extracted fields: {list(extracted_fields.keys())}")
+        logger.info(f"Field images keys: {list(extraction_result.get('images', {}).keys())}")
+        logger.info(f"Auto-filled questions: {answered_questions}")
+
+        return {
+            'success': True,
+            'document_type': extraction_result.get('document_type'),
+            'confidence': extraction_result.get('confidence'),
+            'extracted_fields': extracted_fields,
+            'field_confidences': field_confidences,
+            'validations': validations,  # Field validation results with suggestions
+            'field_images': extraction_result.get('images', {}),  # Field images (for extractionType='image' or 'both')
+            'slot_mappings': slot_mappings,  # question_id -> value mappings
+            'answered_questions': answered_questions,  # List of question IDs that were auto-filled
+            'raw_text_preview': extraction_result.get('raw_text', '')[:500],  # First 500 chars
+            'photo': extraction_result.get('photo'),  # Base64-encoded photo
+            'signature': extraction_result.get('signature'),  # Base64-encoded signature
+            'full_image': extraction_result.get('full_image'),  # Base64-encoded full straightened licence
+            'debug_urls': extraction_result.get('debug_urls', []),
+            'aligned_image_url': extraction_result.get('aligned_image_url')
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Document upload and extraction failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+
+@app.post("/api/operator/low-confidence-audio")
+async def receive_low_confidence_audio(
+    audio: UploadFile = File(...),
+    session_id: str = "",
+    question_id: str = "",
+    transcript: str = "",
+    confidence: float = 0.0,
+    is_select_question: bool = False
+):
+    """
+    Receive low-confidence audio recording from frontend for operator review.
+    Stores audio with metadata for operator to listen, transcribe, and respond.
+    """
+    try:
+        # Read audio file
+        audio_bytes = await audio.read()
+
+        # Create a unique ID for this review item
+        import uuid
+        review_id = str(uuid.uuid4())
+
+        # Get question details
+        flow = dialog_manager.get_dialog_flow("InsuranceQuoteDialog")
+        question_node = next((n for n in flow if n.get("question_id") == question_id), None)
+        question_text = question_node.get("question_text", "") if question_node else ""
+
+        # Get select options if it's a select question
+        select_options = []
+        if is_select_question and question_node:
+            features = dialog_manager.get_multimodal_features(question_id)
+            select_options = features.get("select_options", [])
+
+        # Store in queue
+        review_item = {
+            "id": review_id,
+            "session_id": session_id,
+            "question_id": question_id,
+            "question_text": question_text,
+            "transcript": transcript,
+            "confidence": confidence,
+            "audio_data": audio_bytes,
+            "is_select_question": is_select_question,
+            "select_options": select_options,
+            "timestamp": datetime.now().isoformat(),
+            "status": "pending",  # pending, resolved, rephrased
+            "operator_action": None  # Will be "fixed" or "rephrase"
+        }
+
+        low_confidence_queue.append(review_item)
+
+        logger.info(f"Received low-confidence audio for session {session_id}, question {question_id}")
+        logger.info(f"Transcript: '{transcript}', Confidence: {confidence:.2f}")
+
+        return {
+            "success": True,
+            "review_id": review_id,
+            "message": "Audio sent to operator for review"
+        }
+
+    except Exception as e:
+        logger.error(f"Error receiving low-confidence audio: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to process audio: {e}")
+
+
+@app.get("/api/operator/low-confidence-queue")
+async def get_low_confidence_queue():
+    """
+    Get all pending low-confidence audio recordings awaiting operator review.
+    """
+    # Return queue items without the audio data (too large for JSON)
+    queue_items = [
+        {
+            "id": item["id"],
+            "session_id": item["session_id"],
+            "question_id": item["question_id"],
+            "question_text": item["question_text"],
+            "transcript": item["transcript"],
+            "confidence": item["confidence"],
+            "is_select_question": item["is_select_question"],
+            "select_options": item["select_options"],
+            "timestamp": item["timestamp"],
+            "status": item["status"]
+        }
+        for item in low_confidence_queue
+    ]
+
+    return queue_items
+
+
+@app.get("/api/operator/audio/{review_id}")
+async def get_review_audio(review_id: str):
+    """
+    Get the audio file for a specific review item.
+    Returns the audio file as a downloadable WAV file.
+    """
+    from fastapi.responses import Response
+
+    # Find the review item
+    review_item = next((item for item in low_confidence_queue if item["id"] == review_id), None)
+
+    if not review_item:
+        raise HTTPException(status_code=404, detail="Review item not found")
+
+    # Return audio file
+    return Response(
+        content=review_item["audio_data"],
+        media_type="audio/wav",
+        headers={
+            "Content-Disposition": f"attachment; filename=review_{review_id}.wav"
+        }
+    )
+
+
+@app.post("/api/operator/fix-answer")
+async def fix_answer(
+    review_id: str,
+    corrected_answer: str
+):
+    """
+    Operator fixes the user's answer and updates the session.
+    """
+    # Find the review item
+    review_item = next((item for item in low_confidence_queue if item["id"] == review_id), None)
+
+    if not review_item:
+        raise HTTPException(status_code=404, detail="Review item not found")
+
+    session_id = review_item["session_id"]
+    question_id = review_item["question_id"]
+
+    # Update session with corrected answer
+    session = get_or_create_session(session_id)
+    session.answers[question_id] = corrected_answer
+    session.confidence_scores[question_id] = 1.0  # Operator-verified = 100% confidence
+
+    # Mark review item as resolved
+    review_item["status"] = "resolved"
+    review_item["operator_action"] = "fixed"
+    review_item["corrected_answer"] = corrected_answer
+
+    logger.info(f"Operator fixed answer for session {session_id}, question {question_id}: '{corrected_answer}'")
+
+    return {
+        "success": True,
+        "message": "Answer fixed and session updated"
+    }
+
+
+@app.post("/api/operator/request-rephrase")
+async def request_rephrase(
+    review_id: str,
+    rephrase_message: Optional[str] = None
+):
+    """
+    Operator requests the user to rephrase their answer.
+    Sends TTS message back to the user's session.
+    """
+    # Find the review item
+    review_item = next((item for item in low_confidence_queue if item["id"] == review_id), None)
+
+    if not review_item:
+        raise HTTPException(status_code=404, detail="Review item not found")
+
+    session_id = review_item["session_id"]
+    question_id = review_item["question_id"]
+
+    # Get rephrase template from ontology if no custom message provided
+    if not rephrase_message:
+        template = dialog_manager.get_rephrase_template(question_id, "default")
+        rephrase_message = template.get("text", "I'm sorry, I didn't understand that. Please can you rephrase your answer?")
+
+    # Mark review item as rephrased
+    review_item["status"] = "rephrased"
+    review_item["operator_action"] = "rephrase"
+    review_item["rephrase_message"] = rephrase_message
+
+    logger.info(f"Operator requested rephrase for session {session_id}, question {question_id}")
+
+    # TODO: Send rephrase message to user via WebSocket or TTS
+    # This will be implemented in the WebSocket handler
+
+    return {
+        "success": True,
+        "message": "Rephrase request sent to user",
+        "rephrase_message": rephrase_message
+    }
+
+
+class PerspectiveTransformRequest(BaseModel):
+    image_base64: str
+    corners: List[List[float]]  # [[x1,y1], [x2,y2], [x3,y3], [x4,y4]]
+
+
+@app.post("/api/perspective-transform")
+async def perspective_transform(request: PerspectiveTransformRequest):
+    """
+    Apply perspective transform to straighten a crooked document image.
+    Expects 4 corner points in order: top-left, top-right, bottom-right, bottom-left.
+    """
+    try:
+        if len(request.corners) != 4:
+            raise HTTPException(status_code=400, detail="Exactly 4 corners required")
+
+        # Perform perspective transform using OpenCV
+        straightened_base64 = perspective_transform_image(
+            request.image_base64,
+            request.corners
+        )
+
+        return {
+            "success": True,
+            "straightened_image": straightened_base64
+        }
+    except Exception as e:
+        logger.error(f"Perspective transform error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Transform failed: {str(e)}")
+
+
+@app.post("/api/template/save")
+async def save_template(request: dict):
+    """
+    Save extraction template to file.
+    Accepts template data and filename.
+    """
+    try:
+        template_data = request.get('template')
+        filename = request.get('filename')
+
+        if not template_data or not filename:
+            raise HTTPException(status_code=400, detail="Missing template or filename")
+
+        # Validate filename
+        allowed_filenames = ['uk_licence_template.json', 'v5c_template.json']
+        if filename not in allowed_filenames:
+            raise HTTPException(status_code=400, detail=f"Invalid filename. Must be one of: {allowed_filenames}")
+
+        # Save to backend directory
+        import os
+        backend_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(backend_dir, filename)
+
+        # Write template file
+        import json
+        with open(file_path, 'w') as f:
+            json.dump(template_data, f, indent=2)
+
+        logger.info(f"Saved template to {file_path}")
+
+        return {
+            "success": True,
+            "message": f"Template saved to {filename}",
+            "path": file_path
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Template save error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Save failed: {str(e)}")
+
+
+@app.get("/api/template/load")
+async def load_template(filename: str):
+    """
+    Load extraction template from file.
+    Returns the template data if it exists.
+    """
+    try:
+        # Validate filename
+        allowed_filenames = ['uk_licence_template.json', 'v5c_template.json']
+        if filename not in allowed_filenames:
+            raise HTTPException(status_code=400, detail=f"Invalid filename. Must be one of: {allowed_filenames}")
+
+        # Load from backend directory
+        import os
+        import json
+        backend_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(backend_dir, filename)
+
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return {
+                "success": False,
+                "message": f"Template {filename} not found",
+                "template": None
+            }
+
+        # Read template file
+        with open(file_path, 'r') as f:
+            template_data = json.load(f)
+
+        logger.info(f"Loaded template from {file_path}")
+
+        return {
+            "success": True,
+            "message": f"Template loaded from {filename}",
+            "template": template_data
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Template load error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Load failed: {str(e)}")
 
 
 # WebSocket for real-time updates

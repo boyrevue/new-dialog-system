@@ -1,12 +1,14 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { MessageSquare, UserCog, Menu, X, Settings, Edit3, FolderTree, GitBranch } from 'lucide-react'
+import { MessageSquare, UserCog, Menu, X, Settings, Edit3, FolderTree, GitBranch, TrendingUp, CreditCard } from 'lucide-react'
 import MultimodalDialog from './components/MultimodalDialog'
 import OperatorPanel from './components/OperatorPanel'
 import ConfigPanel from './components/ConfigPanel'
 import DialogEditor from './components/DialogEditor'
 import SectionManager from './components/SectionManager'
 import DialogFlowEditor from './components/DialogFlowEditor'
+import DialogFlowView from './components/DialogFlowView'
+import { LicenceTemplateEditor } from './components/LicenceTemplateEditor'
 
 function AppContent() {
   const location = useLocation()
@@ -92,7 +94,18 @@ function AppContent() {
                   }`}
                 >
                   <GitBranch className="h-4 w-4" />
-                  Flow Editor
+                  Flow Diagram
+                </Link>
+                <Link
+                  to="/licence-template"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium ${
+                    location.pathname === '/licence-template'
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  <CreditCard className="h-4 w-4" />
+                  Licence Template
                 </Link>
               </div>
             </div>
@@ -185,7 +198,19 @@ function AppContent() {
                 }`}
               >
                 <GitBranch className="h-5 w-5" />
-                Flow Editor
+                Flow Diagram
+              </Link>
+              <Link
+                to="/licence-template"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium ${
+                  location.pathname === '/licence-template'
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`}
+              >
+                <CreditCard className="h-5 w-5" />
+                Licence Template
               </Link>
             </div>
           </div>
@@ -194,6 +219,8 @@ function AppContent() {
 
       <Routes>
         <Route path="/flow" element={<DialogFlowEditor />} />
+        <Route path="/sessions" element={<DialogFlowView />} />
+        <Route path="/licence-template" element={<LicenceTemplateEditor />} />
         <Route path="*" element={
           <main className="container mx-auto px-4 py-8">
             <Routes>

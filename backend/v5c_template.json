@@ -1,0 +1,199 @@
+{
+  "templateName": "uk_v5c_logbook_v1",
+  "imageSize": {
+    "width": 856,
+    "height": 540
+  },
+  "cardRect": {
+    "absolute": {
+      "x": 0,
+      "y": 0,
+      "width": 856,
+      "height": 540
+    },
+    "normalized": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+    }
+  },
+  "fields": [
+    {
+      "fieldId": "registration_number",
+      "label": "A. Registration number",
+      "rectCard": {
+        "x": 112,
+        "y": 63,
+        "width": 123,
+        "height": 32
+      },
+      "normalizedCard": {
+        "x": 0.1308411214953271,
+        "y": 0.11666666666666667,
+        "width": 0.14369158878504673,
+        "height": 0.05925925925925926
+      }
+    },
+    {
+      "fieldId": "date_of_registration",
+      "label": "B. Date of registration",
+      "rectCard": {
+        "x": 154,
+        "y": 95,
+        "width": 91,
+        "height": 16
+      },
+      "normalizedCard": {
+        "x": 0.17990654205607476,
+        "y": 0.17592592592592593,
+        "width": 0.10630841121495327,
+        "height": 0.02962962962962963
+      }
+    },
+    {
+      "fieldId": "date_first_uk_registration",
+      "label": "B.1. Date of first UK registration",
+      "rectCard": {
+        "x": 156,
+        "y": 112,
+        "width": 82,
+        "height": 18
+      },
+      "normalizedCard": {
+        "x": 0.1822429906542056,
+        "y": 0.2074074074074074,
+        "width": 0.09579439252336448,
+        "height": 0.03333333333333333
+      }
+    },
+    {
+      "fieldId": "make",
+      "label": "D.1. Make",
+      "rectCard": {
+        "x": 157,
+        "y": 136,
+        "width": 52,
+        "height": 19
+      },
+      "normalizedCard": {
+        "x": 0.18341121495327103,
+        "y": 0.2518518518518518,
+        "width": 0.06074766355140187,
+        "height": 0.03518518518518519
+      }
+    },
+    {
+      "fieldId": "type_variant_version",
+      "label": "D.2. Type, Variant, Version",
+      "rectCard": {
+        "x": 157,
+        "y": 156,
+        "width": 33,
+        "height": 15
+      },
+      "normalizedCard": {
+        "x": 0.18341121495327103,
+        "y": 0.28888888888888886,
+        "width": 0.038551401869158876,
+        "height": 0.027777777777777776
+      }
+    },
+    {
+      "fieldId": "body_type",
+      "label": "D.5. Body type",
+      "rectCard": {
+        "x": 156,
+        "y": 279,
+        "width": 129,
+        "height": 16
+      },
+      "normalizedCard": {
+        "x": 0.1822429906542056,
+        "y": 0.5166666666666667,
+        "width": 0.15070093457943926,
+        "height": 0.02962962962962963
+      }
+    },
+    {
+      "fieldId": "model",
+      "label": "D.3. Model",
+      "rectCard": {
+        "x": 153,
+        "y": 257,
+        "width": 182,
+        "height": 20
+      },
+      "normalizedCard": {
+        "x": 0.17873831775700935,
+        "y": 0.4759259259259259,
+        "width": 0.21261682242990654,
+        "height": 0.037037037037037035
+      }
+    },
+    {
+      "fieldId": "vin",
+      "label": "E. VIN/Chassis/Frame number",
+      "rectCard": {
+        "x": 568,
+        "y": 89,
+        "width": 145,
+        "height": 23
+      },
+      "normalizedCard": {
+        "x": 0.6635514018691588,
+        "y": 0.1648148148148148,
+        "width": 0.169392523364486,
+        "height": 0.04259259259259259
+      }
+    },
+    {
+      "fieldId": "fuel_type",
+      "label": "P.3. Type of fuel",
+      "rectCard": {
+        "x": 155,
+        "y": 295,
+        "width": 107,
+        "height": 15
+      },
+      "normalizedCard": {
+        "x": 0.1810747663551402,
+        "y": 0.5462962962962963,
+        "width": 0.125,
+        "height": 0.027777777777777776
+      }
+    },
+    {
+      "fieldId": "engine_number",
+      "label": "P.5. Engine number",
+      "rectCard": {
+        "x": 571,
+        "y": 107,
+        "width": 68,
+        "height": 20
+      },
+      "normalizedCard": {
+        "x": 0.6670560747663551,
+        "y": 0.19814814814814816,
+        "width": 0.0794392523364486,
+        "height": 0.037037037037037035
+      }
+    },
+    {
+      "fieldId": "colour",
+      "label": "R. Colour",
+      "rectCard": {
+        "x": 569,
+        "y": 200,
+        "width": 136,
+        "height": 19
+      },
+      "normalizedCard": {
+        "x": 0.6647196261682243,
+        "y": 0.37037037037037035,
+        "width": 0.1588785046728972,
+        "height": 0.03518518518518519
+      }
+    }
+  ]
+}

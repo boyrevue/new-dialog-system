@@ -12,17 +12,20 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, Button, TextInput, Badge, Progress, Spinner, Alert, Select, Label, Modal } from 'flowbite-react';
-import { Mic, MicOff, Send, Volume2, HelpCircle, CheckCircle2, AlertTriangle, Settings as SettingsIcon, MessageSquare, Keyboard, Users } from 'lucide-react';
+import { Mic, MicOff, Send, Volume2, HelpCircle, CheckCircle2, AlertTriangle, Settings as SettingsIcon, MessageSquare, Keyboard, Users, Upload, X, Minus, Maximize2, Paperclip, FileText } from 'lucide-react';
 import PhoneticKeyboard from './PhoneticKeyboard';
 import SelectWithASR from './SelectWithASR';
 
 const API_BASE_URL = '/api';
 
 const MultimodalDialog = () => {
-  // Session management for multi-user support (up to 2 sessions)
+  // Session management for multi-user support (up to 5 sessions)
   const [sessions, setSessions] = useState([
-    { id: null, label: 'Session 1', active: true, data: null },
-    { id: null, label: 'Session 2', active: false, data: null }
+    { id: null, label: 'Session 1', active: true, data: null, needsAttention: false },
+    { id: null, label: 'Session 2', active: false, data: null, needsAttention: false },
+    { id: null, label: 'Session 3', active: false, data: null, needsAttention: false },
+    { id: null, label: 'Session 4', active: false, data: null, needsAttention: false },
+    { id: null, label: 'Session 5', active: false, data: null, needsAttention: false }
   ]);
   const [activeSessionIndex, setActiveSessionIndex] = useState(0);
 
@@ -38,18 +41,26 @@ const MultimodalDialog = () => {
   const [completed, setCompleted] = useState(false);
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const [helpDialogMinimized, setHelpDialogMinimized] = useState(false);
   const [availableVoices, setAvailableVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [ttsRate, setTtsRate] = useState(1.0);
   const [ttsPitch, setTtsPitch] = useState(1.0);
   const [operatorMessages, setOperatorMessages] = useState([]);
   const [helpMessage, setHelpMessage] = useState('');
+  const [helpMessageRecording, setHelpMessageRecording] = useState(false);
+  const [helpAttachments, setHelpAttachments] = useState([]);
   const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [showAudioPrompt, setShowAudioPrompt] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [extractedFields, setExtractedFields] = useState(null); // Store OCR extracted fields
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
 
   const recognitionRef = useRef(null);
+  const helpRecognitionRef = useRef(null);
   const audioContextRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -150,9 +161,20 @@ const MultimodalDialog = () => {
     setTimeout(loadVoices, 100);
   }, []);
 
-  // Initialize session on mount
+  // Initialize ALL 5 sessions on mount
   useEffect(() => {
-    startSession();
+    // Start all 5 sessions immediately
+    const initializeAllSessions = async () => {
+      // Start all 5 sessions
+      for (let i = 0; i < 5; i++) {
+        await startSessionForSlot(i);
+      }
+
+      // Keep Session 1 as the active session
+      setActiveSessionIndex(0);
+    };
+
+    initializeAllSessions();
 
     // Initialize speech recognition if available
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -230,6 +252,11 @@ const MultimodalDialog = () => {
 
   // Switch between sessions
   const switchSession = useCallback(async (index) => {
+    if (index === activeSessionIndex) {
+      // Already on this session, no need to switch
+      return;
+    }
+
     const session = sessions[index];
 
     // Save current session state before switching
@@ -568,6 +595,11 @@ const MultimodalDialog = () => {
         question_id: currentQuestion.question_id,
         question_text: currentQuestion.question_text
       }));
+
+      // Mark this session as needing attention
+      const updatedSessions = [...sessions];
+      updatedSessions[activeSessionIndex].needsAttention = true;
+      setSessions(updatedSessions);
     };
 
     wsRef.current.onmessage = (event) => {
@@ -580,6 +612,11 @@ const MultimodalDialog = () => {
           timestamp: new Date().toISOString(),
           from: 'operator'
         }]);
+
+        // Clear the needs attention flag when operator responds
+        const updatedSessions = [...sessions];
+        updatedSessions[activeSessionIndex].needsAttention = false;
+        setSessions(updatedSessions);
       }
     };
 
@@ -591,7 +628,7 @@ const MultimodalDialog = () => {
     wsRef.current.onclose = () => {
       console.log('Operator help connection closed');
     };
-  }, [sessionId, currentQuestion]);
+  }, [sessionId, currentQuestion, sessions, activeSessionIndex]);
 
   const sendHelpMessage = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && helpMessage.trim()) {
@@ -599,16 +636,106 @@ const MultimodalDialog = () => {
         type: 'user_message',
         text: helpMessage,
         session_id: sessionId,
-        question_id: currentQuestion.question_id
+        question_id: currentQuestion.question_id,
+        attachments: helpAttachments
       }));
 
       setOperatorMessages(prev => [...prev, {
         text: helpMessage,
         timestamp: new Date().toISOString(),
-        from: 'user'
+        from: 'user',
+        attachments: helpAttachments
       }]);
 
       setHelpMessage('');
+      setHelpAttachments([]);
+    }
+  };
+
+  const startHelpMessageRecording = () => {
+    if (!helpRecognitionRef.current) {
+      // Initialize speech recognition for help dialog if not already done
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        helpRecognitionRef.current = new SpeechRecognition();
+        helpRecognitionRef.current.continuous = false;
+        helpRecognitionRef.current.interimResults = false;
+        helpRecognitionRef.current.lang = 'en-GB';
+
+        helpRecognitionRef.current.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          setHelpMessage(prev => prev + (prev ? ' ' : '') + transcript);
+          setHelpMessageRecording(false);
+        };
+
+        helpRecognitionRef.current.onerror = (event) => {
+          console.error('Help message speech recognition error:', event.error);
+          setHelpMessageRecording(false);
+        };
+
+        helpRecognitionRef.current.onend = () => {
+          setHelpMessageRecording(false);
+        };
+      }
+    }
+
+    if (helpRecognitionRef.current) {
+      helpRecognitionRef.current.start();
+      setHelpMessageRecording(true);
+    }
+  };
+
+  const stopHelpMessageRecording = () => {
+    if (helpRecognitionRef.current && helpMessageRecording) {
+      helpRecognitionRef.current.stop();
+      setHelpMessageRecording(false);
+    }
+  };
+
+  const handleHelpFileAttachment = (e) => {
+    const files = Array.from(e.target.files || []);
+    const newAttachments = files.map(file => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      file: file
+    }));
+    setHelpAttachments(prev => [...prev, ...newAttachments]);
+  };
+
+  const removeHelpAttachment = (index) => {
+    setHelpAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      // Check if file type is acceptable
+      const acceptedTypes = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx'];
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+
+      if (acceptedTypes.includes(fileExtension)) {
+        setUploadedFile(file);
+      } else {
+        setError(`File type not supported. Please upload: ${acceptedTypes.join(', ')}`);
+      }
     }
   };
 
@@ -726,17 +853,18 @@ const MultimodalDialog = () => {
         });
         const qualityData = await qualityResponse.json();
 
-        await submitAnswer(transcript, 'speech', recognitionConfidence, qualityData);
+        // Pass audioBlob to submitAnswer so it can be sent to operator if confidence is low
+        await submitAnswer(transcript, 'speech', recognitionConfidence, qualityData, audioBlob);
       } catch (err) {
         console.error('Audio analysis failed:', err);
-        await submitAnswer(transcript, 'speech', recognitionConfidence);
+        await submitAnswer(transcript, 'speech', recognitionConfidence, null, audioBlob);
       }
     } else {
       await submitAnswer(transcript, 'speech', recognitionConfidence);
     }
   };
 
-  const submitAnswer = async (answerText, answerType = 'text', recognitionConf = null, audioMetrics = null) => {
+  const submitAnswer = async (answerText, answerType = 'text', recognitionConf = null, audioMetrics = null, audioBlob = null) => {
     try {
       setLoading(true);
 
@@ -758,6 +886,29 @@ const MultimodalDialog = () => {
       setConfidence(data.confidence);
 
       if (data.needs_review) {
+        // If confidence is low and we have audio recording, send it to the operator
+        if (audioBlob) {
+          console.log('Sending low-confidence audio to operator for review');
+
+          const formData = new FormData();
+          formData.append('audio', audioBlob, 'low-confidence-recording.wav');
+          formData.append('session_id', sessionId);
+          formData.append('question_id', currentQuestion.question_id);
+          formData.append('transcript', answerText);
+          formData.append('confidence', data.confidence);
+          formData.append('is_select_question', currentQuestion.select_options && currentQuestion.select_options.length > 0);
+
+          try {
+            await fetch(`${API_BASE_URL}/operator/low-confidence-audio`, {
+              method: 'POST',
+              body: formData
+            });
+            console.log('Audio recording sent to operator successfully');
+          } catch (err) {
+            console.error('Failed to send audio to operator:', err);
+          }
+        }
+
         setError(`Your answer has been flagged for review (confidence: ${(data.confidence * 100).toFixed(0)}%). An operator will verify it shortly.`);
 
         setTimeout(() => {
@@ -870,36 +1021,73 @@ const MultimodalDialog = () => {
   return (
     <div className="max-w-3xl mx-auto">
       <Card>
-        {/* Session Switcher */}
+        {/* Session Switcher - Enhanced with operator alerts */}
         <div className="border-b pb-4 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <Users className="w-5 h-5 text-gray-600" />
             <span className="text-sm font-medium text-gray-700">Active Sessions</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             {sessions.map((session, index) => (
-              <Button
-                key={index}
-                color={activeSessionIndex === index ? 'blue' : 'light'}
-                size="sm"
-                onClick={() => switchSession(index)}
-                className="flex-1"
-              >
-                <div className="flex flex-col items-center">
-                  <span className="font-semibold">{session.label}</span>
-                  {session.id ? (
-                    <Badge color={activeSessionIndex === index ? 'success' : 'gray'} size="xs" className="mt-1">
-                      {session.data?.completed ? 'Completed' : 'In Progress'}
-                    </Badge>
-                  ) : (
-                    <Badge color="gray" size="xs" className="mt-1">
-                      Not Started
-                    </Badge>
-                  )}
-                </div>
-              </Button>
+              <div key={index} className="flex-1 relative">
+                {/* Attention Alert Badge */}
+                {session.needsAttention && index !== activeSessionIndex && (
+                  <div className="absolute -top-2 -right-2 z-10">
+                    <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
+                      <span className="text-white text-xs font-bold">!</span>
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  color={activeSessionIndex === index ? 'blue' : session.needsAttention ? 'failure' : 'light'}
+                  size="sm"
+                  onClick={() => switchSession(index)}
+                  className={`w-full ${session.needsAttention && index !== activeSessionIndex ? 'ring-2 ring-red-500 animate-pulse' : ''}`}
+                >
+                  <div className="flex flex-col items-center w-full">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">{session.label}</span>
+                      {session.needsAttention && index !== activeSessionIndex && (
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                      )}
+                    </div>
+                    {session.id ? (
+                      <Badge
+                        color={
+                          session.needsAttention ? 'failure' :
+                          activeSessionIndex === index ? 'success' :
+                          'gray'
+                        }
+                        size="xs"
+                        className="mt-1"
+                      >
+                        {session.data?.completed ? 'Completed' :
+                         session.needsAttention ? 'Needs Attention' :
+                         'In Progress'}
+                      </Badge>
+                    ) : (
+                      <Badge color="gray" size="xs" className="mt-1">
+                        Starting...
+                      </Badge>
+                    )}
+                  </div>
+                </Button>
+              </div>
             ))}
           </div>
+
+          {/* Alert message if any session needs attention */}
+          {sessions.some((s, i) => s.needsAttention && i !== activeSessionIndex) && (
+            <Alert color="warning" className="mt-3">
+              <div className="flex items-center">
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                <span className="text-sm font-medium">
+                  Another session needs operator response. Click to switch.
+                </span>
+              </div>
+            </Alert>
+          )}
         </div>
 
         {/* Header */}
@@ -917,11 +1105,7 @@ const MultimodalDialog = () => {
           {/* TTS Play Button */}
           <div className="mb-3">
             <button
-              onClick={() => {
-                const text = currentQuestion.tts?.text || currentQuestion.question_text;
-                const ttsConfig = currentQuestion.tts || {};
-                speakText(text, ttsConfig, selectedVoice);
-              }}
+              onClick={repeatQuestion}
               disabled={isSpeaking}
               style={{
                 padding: '8px 16px',
@@ -1016,8 +1200,8 @@ const MultimodalDialog = () => {
           ) : (
             /* Text/Speech Input */
             <div className="space-y-4">
-              {/* Select Options (if available) */}
-              {currentQuestion?.select_options && currentQuestion.select_options.length > 0 ? (
+              {/* Select Options (only for date fields) */}
+              {currentQuestion?.input_type === 'date' && currentQuestion?.select_options && currentQuestion.select_options.length > 0 ? (
                 <SelectWithASR
                   options={currentQuestion.select_options}
                   value={userInput}
@@ -1077,7 +1261,44 @@ const MultimodalDialog = () => {
                     {/* Text input with mic icon */}
                     <div className="flex-1 relative">
                       <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 bg-white">
-                        {/* Microphone button on the left */}
+                        {/* Upload Document button on the left - only show if question is document-fillable */}
+                        {currentQuestion.document_fillable && (
+                          <button
+                            type="button"
+                            onClick={() => setShowDocumentUpload(true)}
+                            disabled={loading}
+                            className="flex-shrink-0 px-3 py-3 bg-green-100 hover:bg-green-200 text-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Upload document"
+                          >
+                            <Upload className="w-5 h-5" />
+                          </button>
+                        )}
+
+                        {/* Text input */}
+                        <input
+                          type="text"
+                          id="dialog-answer-input"
+                          name="answer"
+                          value={userInput}
+                          onChange={(e) => setUserInput(e.target.value)}
+                          placeholder={
+                            isRecording
+                              ? "Listening..."
+                              : currentQuestion.placeholder ||
+                                (currentQuestion.document_fillable && currentQuestion.document_name
+                                  ? `It's faster to upload the (${currentQuestion.document_name})`
+                                  : "Type or speak your answer...")
+                          }
+                          disabled={loading}
+                          required={currentQuestion.required}
+                          minLength={currentQuestion.min_length}
+                          maxLength={currentQuestion.max_length}
+                          pattern={currentQuestion.validation_rule === 'isAlpha' ? '[A-Za-z\\s\'-]+' : undefined}
+                          title={currentQuestion.validation_message || currentQuestion.help_text}
+                          className="flex-1 px-4 py-3 border-0 focus:outline-none focus:ring-0"
+                        />
+
+                        {/* Microphone button on the right */}
                         <button
                           type="button"
                           onClick={isRecording ? stopSpeechRecognition : startSpeechRecognition}
@@ -1099,16 +1320,6 @@ const MultimodalDialog = () => {
                           )}
                         </button>
 
-                        {/* Text input */}
-                        <input
-                          type="text"
-                          value={userInput}
-                          onChange={(e) => setUserInput(e.target.value)}
-                          placeholder={isRecording ? "Listening..." : "Type or speak your answer..."}
-                          disabled={loading}
-                          className="flex-1 px-4 py-3 border-0 focus:outline-none focus:ring-0"
-                        />
-
                         {/* Submit button */}
                         <button
                           type="submit"
@@ -1120,6 +1331,72 @@ const MultimodalDialog = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Extracted document fields display */}
+                  {extractedFields && extractedFields.fields && Object.keys(extractedFields.fields).length > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="w-4 h-4 text-blue-600" />
+                        <p className="text-xs font-semibold text-blue-900">
+                          Extracted from {extractedFields.document_type}
+                        </p>
+                        <span className="ml-auto text-xs text-blue-700">
+                          {Math.round(extractedFields.confidence * 100)}% confidence
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(extractedFields.fields)
+                          .filter(([key]) => !['dob_from_licence', 'dates_found', 'surname_code', 'initials', 'check_digits'].includes(key))
+                          .map(([fieldName, value]) => (
+                          <span
+                            key={fieldName}
+                            className="inline-flex items-center px-2 py-1 rounded-md bg-gray-200 text-gray-700 text-xs"
+                          >
+                            <span className="font-medium">{fieldName.replace(/_/g, ' ')}:</span>
+                            <span className="ml-1">{String(value).substring(0, 40)}{String(value).length > 40 ? '...' : ''}</span>
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Full Licence Image */}
+                      {extractedFields.full_image && (
+                        <div className="mt-3 pt-3 border-t border-blue-200">
+                          <p className="text-xs font-medium text-blue-800 mb-2">Full Licence (Straightened)</p>
+                          <img
+                            src={extractedFields.full_image}
+                            alt="Full driving licence"
+                            className="w-full h-auto border border-gray-300 rounded shadow-sm"
+                          />
+                        </div>
+                      )}
+
+                      {/* Photo and Signature display */}
+                      {(extractedFields.photo || extractedFields.signature) && (
+                        <div className="flex gap-3 mt-3 pt-3 border-t border-blue-200">
+                          {extractedFields.photo && (
+                            <div className="flex-1">
+                              <p className="text-xs font-medium text-blue-800 mb-1">Photo (Field 6)</p>
+                              <img
+                                src={extractedFields.photo}
+                                alt="Extracted photo"
+                                className="w-full h-auto border border-gray-300 rounded"
+                              />
+                            </div>
+                          )}
+                          {extractedFields.signature && (
+                            <div className="flex-1">
+                              <p className="text-xs font-medium text-blue-800 mb-1">Signature (Field 7)</p>
+                              <img
+                                src={extractedFields.signature}
+                                alt="Extracted signature"
+                                className="w-full h-auto border border-gray-300 rounded bg-white"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Recording indicator */}
                   {isRecording && (
@@ -1275,20 +1552,12 @@ const MultimodalDialog = () => {
           {/* Controls */}
           <div className="flex gap-3 mt-6 flex-wrap justify-center">
             <Button
-              color="light"
+              color="blue"
               onClick={repeatQuestion}
               className="flex-1 min-w-[140px] max-w-[180px] justify-center"
             >
               <Volume2 className="w-4 h-4 mr-2" />
-              Rephrase Question
-            </Button>
-            <Button
-              color="blue"
-              onClick={testVoice}
-              className="flex-1 min-w-[140px] max-w-[180px] justify-center"
-            >
-              <Volume2 className="w-4 h-4 mr-2" />
-              Test Voice
+              Play Question
             </Button>
             <Button
               color="light"
@@ -1345,7 +1614,25 @@ const MultimodalDialog = () => {
       {/* Voice Settings Modal */}
       <Modal show={showVoiceSettings} onClose={() => setShowVoiceSettings(false)} size="lg">
         <div className="p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Voice Settings</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-gray-900">Voice Settings</h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowVoiceSettings(false)}
+                className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+                title="Minimize"
+              >
+                <Minus className="w-5 h-5 text-gray-600" />
+              </button>
+              <button
+                onClick={() => setShowVoiceSettings(false)}
+                className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+          </div>
           <div className="space-y-6">
             <div>
               <Label htmlFor="voice-select">Select TTS Voice</Label>
@@ -1514,102 +1801,405 @@ const MultimodalDialog = () => {
         </div>
       </Modal>
 
-      {/* Operator Help Dialog Modal */}
-      <Modal show={showHelpDialog} onClose={() => {
-        setShowHelpDialog(false);
-        if (wsRef.current) {
-          wsRef.current.close();
-        }
-      }} size="lg">
+      {/* Document Upload Modal */}
+      <Modal show={showDocumentUpload} onClose={() => setShowDocumentUpload(false)} size="md">
         <div className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <MessageSquare className="w-5 h-5" />
-            <h3 className="text-xl font-semibold text-gray-900">Ask Operator for Help</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Upload className="w-5 h-5" />
+              <h3 className="text-xl font-semibold text-gray-900">Upload Document</h3>
+            </div>
+            <button
+              onClick={() => setShowDocumentUpload(false)}
+              className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+              title="Close"
+            >
+              <X className="w-5 h-5 text-gray-600" />
+            </button>
           </div>
+
           <div className="space-y-4">
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-sm text-gray-700">
                 <strong>Current Question:</strong> {currentQuestion?.question_text}
               </p>
-              <p className="text-sm text-gray-600 mt-2">
-                <strong>Slot:</strong> {currentQuestion?.slot_name}
-              </p>
-            </div>
-
-            {/* Chat Messages */}
-            <div className="border rounded-lg p-4 h-64 overflow-y-auto bg-gray-50 space-y-3">
-              {operatorMessages.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center">
-                  No messages yet. An operator will respond shortly...
+              {currentQuestion?.document_name && (
+                <div className="mt-3 bg-white border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm font-semibold text-blue-900 mb-1">
+                    📄 Required Document: {currentQuestion.document_name}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Please upload your {currentQuestion.document_name.toLowerCase()} or other documents containing this information (e.g., passport, utility bill with address, etc.)
+                  </p>
+                </div>
+              )}
+              {!currentQuestion?.document_name && (
+                <p className="text-sm text-gray-600 mt-2">
+                  Upload a document to auto-fill this field.
                 </p>
-              ) : (
-                operatorMessages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-lg p-3 ${
-                        msg.from === 'user'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white text-gray-900 border'
-                      }`}
-                    >
-                      <p className="text-sm">{msg.text}</p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          msg.from === 'user' ? 'text-blue-100' : 'text-gray-500'
-                        }`}
-                      >
-                        {new Date(msg.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </div>
-                ))
               )}
             </div>
 
-            {/* Message Input */}
-            <div className="flex gap-2">
-              <TextInput
-                type="text"
-                value={helpMessage}
-                onChange={(e) => setHelpMessage(e.target.value)}
-                placeholder="Type your question..."
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    sendHelpMessage();
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                isDraggingFile
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-300 bg-white'
+              }`}
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <input
+                type="file"
+                id="document-upload"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setUploadedFile(file);
                   }
                 }}
-                className="flex-1"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
               />
-              <Button
-                onClick={sendHelpMessage}
-                disabled={!helpMessage.trim()}
-                color="blue"
+              <label
+                htmlFor="document-upload"
+                className="cursor-pointer flex flex-col items-center"
               >
-                <Send className="w-4 h-4" />
-              </Button>
+                <Upload className={`w-12 h-12 mb-2 ${isDraggingFile ? 'text-blue-500' : 'text-gray-400'}`} />
+                <span className={`text-sm font-medium ${isDraggingFile ? 'text-blue-700' : 'text-gray-700'}`}>
+                  {isDraggingFile ? 'Drop file here' : 'Click to upload or drag and drop'}
+                </span>
+                <span className="text-xs text-gray-500 mt-1">
+                  PDF, JPG, PNG, DOC up to 10MB
+                </span>
+              </label>
             </div>
 
-            <Alert color="info">
-              <p className="text-sm">
-                An operator will see your question and the current dialog slot you're working on.
-                They can provide guidance or clarification about what information is needed.
-              </p>
-            </Alert>
+            {uploadedFile && (
+              <Alert color="success">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>File selected: {uploadedFile.name}</span>
+                </div>
+              </Alert>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
             <Button color="gray" onClick={() => {
-              setShowHelpDialog(false);
-              if (wsRef.current) {
-                wsRef.current.close();
-              }
+              setShowDocumentUpload(false);
+              setUploadedFile(null);
             }}>
-              Close
+              Cancel
+            </Button>
+            <Button
+              color="success"
+              onClick={async () => {
+                if (uploadedFile) {
+                  const formData = new FormData();
+                  formData.append('file', uploadedFile);
+                  formData.append('session_id', sessionId);
+                  formData.append('question_id', currentQuestion?.question_id || '');
+
+                  try {
+                    setLoading(true);
+                    const response = await fetch(`${API_BASE_URL}/document/upload-and-extract`, {
+                      method: 'POST',
+                      body: formData
+                    });
+
+                    let data;
+                    if (!response.ok) {
+                      // Try to parse structured error with debug_urls
+                      try {
+                        data = await response.json();
+                      } catch (e) {
+                        throw new Error(`Upload failed: ${response.statusText}`);
+                      }
+                      const errDetail = data?.detail || data;
+                      const debugUrls = errDetail?.debug_urls || [];
+                      // Compute backend origin for absolute links in dev
+                      const backendOrigin = window.location.origin.replace(':3000', ':8000');
+                      if (Array.isArray(debugUrls) && debugUrls.length > 0) {
+                        console.group('OCR debug URLs');
+                        debugUrls.forEach((u) => console.log(`${backendOrigin}${u}`));
+                        console.groupEnd();
+                        setError(`OCR extraction failed: ${errDetail?.error || 'Bad Request'} — see console for debug images`);
+                      } else {
+                        setError(`OCR extraction failed: ${errDetail?.error || 'Bad Request'}`);
+                      }
+                      return;
+                    }
+
+                    data = await response.json();
+
+                    if (data.success) {
+                      // Store extracted fields for display
+                      setExtractedFields({
+                        fields: data.extracted_fields || {},
+                        slot_mappings: data.slot_mappings || {},
+                        answered_questions: data.answered_questions || [],
+                        document_type: data.document_type || 'document',
+                        confidence: data.confidence || 0,
+                        photo: data.photo || null,
+                        signature: data.signature || null,
+                        full_image: data.full_image || null
+                      });
+
+                      // Show success message with extracted fields and answered questions
+                      const extractedFieldsList = Object.keys(data.extracted_fields || {}).join(', ');
+                      const answeredQuestions = data.answered_questions || [];
+                      console.log(`✅ Extracted from ${data.document_type || 'document'}: ${extractedFieldsList || 'data'} (confidence: ${Math.round((data.confidence || 0) * 100)}%)`);
+                      if (answeredQuestions.length > 0) {
+                        console.log(`📝 Auto-filled ${answeredQuestions.length} questions: ${answeredQuestions.join(', ')}`);
+                      }
+
+                      setShowDocumentUpload(false);
+                      setUploadedFile(null);
+
+                      // Reload the current question to skip to the next unanswered one
+                      await loadCurrentQuestion();
+                    } else {
+                      setError(data.error || 'OCR extraction failed');
+                    }
+                  } catch (err) {
+                    console.error('OCR extraction error:', err);
+                    setError('OCR extraction failed: ' + err.message);
+                  } finally {
+                    setLoading(false);
+                  }
+                }
+              }}
+              disabled={!uploadedFile || loading}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {loading ? 'Extracting...' : 'Upload & Extract'}
             </Button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Operator Help Dialog Modal */}
+      <Modal show={showHelpDialog} onClose={() => {
+        setShowHelpDialog(false);
+        setHelpDialogMinimized(false);
+        if (wsRef.current) {
+          wsRef.current.close();
+        }
+      }} size="lg">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              <h3 className="text-xl font-semibold text-gray-900">Ask Operator for Help</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setHelpDialogMinimized(!helpDialogMinimized)}
+                className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+                title={helpDialogMinimized ? "Expand" : "Minimize"}
+              >
+                {helpDialogMinimized ? (
+                  <Maximize2 className="w-5 h-5 text-gray-600" />
+                ) : (
+                  <Minus className="w-5 h-5 text-gray-600" />
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setShowHelpDialog(false);
+                  setHelpDialogMinimized(false);
+                  if (wsRef.current) {
+                    wsRef.current.close();
+                  }
+                }}
+                className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+          </div>
+
+          {!helpDialogMinimized && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-700">
+                  <strong>Current Question:</strong> {currentQuestion?.question_text}
+                </p>
+                <p className="text-sm text-gray-600 mt-2">
+                  <strong>Slot:</strong> {currentQuestion?.slot_name}
+                </p>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="border rounded-lg p-4 h-64 overflow-y-auto bg-gray-50 space-y-3">
+                {operatorMessages.length === 0 ? (
+                  <p className="text-gray-500 text-sm text-center">
+                    No messages yet. An operator will respond shortly...
+                  </p>
+                ) : (
+                  operatorMessages.map((msg, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-lg p-3 ${
+                          msg.from === 'user'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-gray-900 border'
+                        }`}
+                      >
+                        <p className="text-sm">{msg.text}</p>
+                        {msg.attachments && msg.attachments.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {msg.attachments.map((att, attIdx) => (
+                              <div key={attIdx} className="flex items-center gap-2 text-xs">
+                                <FileText className="w-3 h-3" />
+                                <span>{att.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <p
+                          className={`text-xs mt-1 ${
+                            msg.from === 'user' ? 'text-blue-100' : 'text-gray-500'
+                          }`}
+                        >
+                          {new Date(msg.timestamp).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Attachments Preview */}
+              {helpAttachments.length > 0 && (
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs font-medium text-gray-700 mb-2">Attachments:</p>
+                  <div className="space-y-1">
+                    {helpAttachments.map((att, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-white p-2 rounded border">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <FileText className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                          <span className="text-sm text-gray-700 truncate">{att.name}</span>
+                          <span className="text-xs text-gray-500">
+                            ({(att.size / 1024).toFixed(1)} KB)
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => removeHelpAttachment(idx)}
+                          className="p-1 hover:bg-gray-100 rounded ml-2"
+                        >
+                          <X className="w-4 h-4 text-gray-600" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Message Input with Voice and Attachment */}
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <div className="flex-1 relative">
+                    <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 bg-white">
+                      {/* File attachment button on the left */}
+                      <input
+                        type="file"
+                        id="help-file-input"
+                        className="hidden"
+                        onChange={handleHelpFileAttachment}
+                        multiple
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt"
+                      />
+                      <label
+                        htmlFor="help-file-input"
+                        className="flex-shrink-0 px-3 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 cursor-pointer transition-colors"
+                        title="Attach file"
+                      >
+                        <Paperclip className="w-5 h-5" />
+                      </label>
+
+                      <input
+                        type="text"
+                        id="help-message-input"
+                        name="helpMessage"
+                        value={helpMessage}
+                        onChange={(e) => setHelpMessage(e.target.value)}
+                        placeholder={helpMessageRecording ? "Listening..." : "Type your question..."}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            sendHelpMessage();
+                          }
+                        }}
+                        disabled={helpMessageRecording}
+                        className="flex-1 px-4 py-3 border-0 focus:outline-none focus:ring-0"
+                      />
+
+                      {/* Voice input button */}
+                      <button
+                        type="button"
+                        onClick={helpMessageRecording ? stopHelpMessageRecording : startHelpMessageRecording}
+                        disabled={!helpRecognitionRef.current && !('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)}
+                        className={`
+                          flex-shrink-0 px-3 py-3 transition-colors
+                          disabled:opacity-50 disabled:cursor-not-allowed
+                          ${helpMessageRecording
+                            ? 'bg-red-500 hover:bg-red-600 text-white'
+                            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                          }
+                        `}
+                        title={helpMessageRecording ? "Stop recording" : "Voice input"}
+                      >
+                        {helpMessageRecording ? (
+                          <MicOff className="w-5 h-5" />
+                        ) : (
+                          <Mic className="w-5 h-5" />
+                        )}
+                      </button>
+
+                      {/* Send button */}
+                      <button
+                        onClick={sendHelpMessage}
+                        disabled={!helpMessage.trim()}
+                        className="flex-shrink-0 px-4 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white transition-colors"
+                      >
+                        <Send className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {helpMessageRecording && (
+                  <div className="bg-red-50 border-2 border-red-200 rounded-lg p-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                      <p className="text-xs text-red-900 font-medium">Recording voice input...</p>
+                    </div>
+                  </div>
+                )}
+
+                <Alert color="info">
+                  <p className="text-sm">
+                    An operator will see your question and the current dialog slot you're working on.
+                    They can provide guidance or clarification about what information is needed.
+                  </p>
+                </Alert>
+              </div>
+            </div>
+          )}
+
+          {helpDialogMinimized && (
+            <div className="py-2 text-center text-gray-500 text-sm">
+              Click expand to view conversation
+            </div>
+          )}
         </div>
       </Modal>
 

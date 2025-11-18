@@ -860,7 +860,7 @@ Generate 8-12 alternative names and phrases that users might use to refer to thi
 Return ONLY a JSON array of strings, no other text. Example: ["alias 1", "alias 2", "alias 3"]"""
 
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that generates semantic aliases for dialog sections. Return only JSON arrays."},
                 {"role": "user", "content": prompt}

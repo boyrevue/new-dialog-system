@@ -1,0 +1,201 @@
+{
+  "templateName": "uk_driving_licence_front_v1",
+  "imageSize": {
+    "width": 856,
+    "height": 540
+  },
+  "cardRect": {
+    "absolute": {
+      "x": 0,
+      "y": 0,
+      "width": 856,
+      "height": 540
+    },
+    "normalized": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+    }
+  },
+  "fields": [
+    {
+      "fieldId": "photo",
+      "label": "6. Photograph",
+      "rectCard": {
+        "x": 41,
+        "y": 153,
+        "width": 196,
+        "height": 204
+      },
+      "normalizedCard": {
+        "x": 0.04789719626168224,
+        "y": 0.2833333333333333,
+        "width": 0.22897196261682243,
+        "height": 0.37777777777777777
+      },
+      "extractionType": "image"
+    },
+    {
+      "fieldId": "signature",
+      "label": "7. Signature",
+      "rectCard": {
+        "x": 376,
+        "y": 316,
+        "width": 285,
+        "height": 77
+      },
+      "normalizedCard": {
+        "x": 0.4392523364485981,
+        "y": 0.5851851851851851,
+        "width": 0.33294392523364486,
+        "height": 0.1425925925925926
+      },
+      "extractionType": "image"
+    },
+    {
+      "fieldId": "surname",
+      "label": "1. Surname",
+      "rectCard": {
+        "x": 291,
+        "y": 94,
+        "width": 302,
+        "height": 33
+      },
+      "normalizedCard": {
+        "x": 0.3399532710280374,
+        "y": 0.17407407407407408,
+        "width": 0.352803738317757,
+        "height": 0.06111111111111111
+      }
+    },
+    {
+      "fieldId": "licence_number",
+      "label": "5. Licence number",
+      "rectCard": {
+        "x": 294,
+        "y": 276.66666412353516,
+        "width": 357,
+        "height": 36
+      },
+      "normalizedCard": {
+        "x": 0.34345794392523366,
+        "y": 0.5123456743028428,
+        "width": 0.41705607476635514,
+        "height": 0.06666666666666667
+      }
+    },
+    {
+      "fieldId": "categories",
+      "label": "9. Categories",
+      "rectCard": {
+        "x": 293,
+        "y": 487.66666412353516,
+        "width": 549,
+        "height": 36
+      },
+      "normalizedCard": {
+        "x": 0.3422897196261682,
+        "y": 0.9030864150435837,
+        "width": 0.6413551401869159,
+        "height": 0.06666666666666667
+      }
+    },
+    {
+      "fieldId": "given_names",
+      "label": "2. First names",
+      "rectCard": {
+        "x": 298,
+        "y": 125.66666412353516,
+        "width": 372,
+        "height": 64
+      },
+      "normalizedCard": {
+        "x": 0.34813084112149534,
+        "y": 0.23271604467321325,
+        "width": 0.43457943925233644,
+        "height": 0.11851851851851852
+      }
+    },
+    {
+      "fieldId": "dob_place",
+      "label": "3. Date & place of birth",
+      "rectCard": {
+        "x": 296,
+        "y": 187.66666412353516,
+        "width": 405,
+        "height": 33
+      },
+      "normalizedCard": {
+        "x": 0.34579439252336447,
+        "y": 0.3475308594880281,
+        "width": 0.47313084112149534,
+        "height": 0.06111111111111111
+      }
+    },
+    {
+      "fieldId": "issue_date",
+      "label": "4a. Date of issue",
+      "rectCard": {
+        "x": 297,
+        "y": 214.66666412353516,
+        "width": 140,
+        "height": 35
+      },
+      "normalizedCard": {
+        "x": 0.3469626168224299,
+        "y": 0.3975308594880281,
+        "width": 0.16355140186915887,
+        "height": 0.06481481481481481
+      }
+    },
+    {
+      "fieldId": "expiry_date",
+      "label": "4b. Date of expiry",
+      "rectCard": {
+        "x": 296,
+        "y": 246.66666412353516,
+        "width": 142,
+        "height": 31
+      },
+      "normalizedCard": {
+        "x": 0.34579439252336447,
+        "y": 0.4567901187472873,
+        "width": 0.1658878504672897,
+        "height": 0.05740740740740741
+      }
+    },
+    {
+      "fieldId": "issuing_authority",
+      "label": "4c. Issuing authority",
+      "rectCard": {
+        "x": 478,
+        "y": 213.66666412353516,
+        "width": 135,
+        "height": 62
+      },
+      "normalizedCard": {
+        "x": 0.5584112149532711,
+        "y": 0.3956790076361762,
+        "width": 0.15771028037383178,
+        "height": 0.11481481481481481
+      }
+    },
+    {
+      "fieldId": "address",
+      "label": "8. Address",
+      "rectCard": {
+        "x": 293,
+        "y": 397.66666412353516,
+        "width": 503,
+        "height": 91
+      },
+      "normalizedCard": {
+        "x": 0.3422897196261682,
+        "y": 0.7364197483769169,
+        "width": 0.5876168224299065,
+        "height": 0.1685185185185185
+      }
+    }
+  ]
+}

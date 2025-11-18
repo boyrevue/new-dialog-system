@@ -698,3 +698,109 @@ mm:ExampleComponent a mm:VisualComponent ;
     mm:optionDescription "British manufacturer" ;
     mm:optionAlias "Mini Cooper" ;
     mm:optionPhonetic "mini" .
+
+# Tesla
+:MakeTesla a mm:SelectOption ;
+    mm:optionValue "tesla" ;
+    mm:optionLabel "Tesla" ;
+    mm:optionDescription "American electric vehicle manufacturer" ;
+    mm:optionAlias "TSLA" ;
+    mm:optionPhonetic "tez-la" ;
+    mm:optionPhonetic "tes-la" .
+
+# ============================================================================
+# FUEL TYPES
+# ============================================================================
+
+# Petrol
+:FuelTypePetrol a mm:SelectOption ;
+    mm:optionValue "petrol" ;
+    mm:optionLabel "Petrol" ;
+    mm:optionDescription "Gasoline fuel" ;
+    mm:optionAlias "Gasoline" ;
+    mm:optionAlias "Unleaded" ;
+    mm:optionAlias "Benzine" ;  # Semantic alternative (German/European term)
+    mm:optionAlias "Gas" ;      # American term
+    mm:optionPhonetic "pet-rol" ;
+    mm:optionPhonetic "petrol" ;
+    mm:optionPhonetic "gas-o-leen" .
+
+# Diesel
+:FuelTypeDiesel a mm:SelectOption ;
+    mm:optionValue "diesel" ;
+    mm:optionLabel "Diesel" ;
+    mm:optionDescription "Diesel fuel" ;
+    mm:optionPhonetic "dee-zel" ;
+    mm:optionPhonetic "dee-sel" .
+
+# Electric
+:FuelTypeElectric a mm:SelectOption ;
+    mm:optionValue "electric" ;
+    mm:optionLabel "Electric" ;
+    mm:optionDescription "Battery electric vehicle (BEV)" ;
+    mm:optionAlias "Electricity" ;
+    mm:optionAlias "BEV" ;
+    mm:optionAlias "EV" ;
+    mm:optionPhonetic "ee-lek-trik" ;
+    mm:optionPhonetic "elek-tricity" .
+
+# Hybrid (Petrol/Electric)
+:FuelTypeHybridPetrol a mm:SelectOption ;
+    mm:optionValue "hybrid_petrol" ;
+    mm:optionLabel "Hybrid (Petrol/Electric)" ;
+    mm:optionDescription "Petrol-electric hybrid" ;
+    mm:optionAlias "Petrol Hybrid" ;
+    mm:optionAlias "Hybrid" ;
+    mm:optionAlias "HEV" ;
+    mm:optionPhonetic "hy-brid" .
+
+# Hybrid (Diesel/Electric)
+:FuelTypeHybridDiesel a mm:SelectOption ;
+    mm:optionValue "hybrid_diesel" ;
+    mm:optionLabel "Hybrid (Diesel/Electric)" ;
+    mm:optionDescription "Diesel-electric hybrid" ;
+    mm:optionAlias "Diesel Hybrid" ;
+    mm:optionPhonetic "die-sel hy-brid" .
+
+# Plug-in Hybrid (Petrol)
+:FuelTypePluginHybridPetrol a mm:SelectOption ;
+    mm:optionValue "plugin_hybrid_petrol" ;
+    mm:optionLabel "Plug-in Hybrid (Petrol)" ;
+    mm:optionDescription "Plug-in petrol-electric hybrid (PHEV)" ;
+    mm:optionAlias "PHEV" ;
+    mm:optionAlias "Plug-in Hybrid" ;
+    mm:optionPhonetic "plug-in hy-brid" .
+
+# Plug-in Hybrid (Diesel)
+:FuelTypePluginHybridDiesel a mm:SelectOption ;
+    mm:optionValue "plugin_hybrid_diesel" ;
+    mm:optionLabel "Plug-in Hybrid (Diesel)" ;
+    mm:optionDescription "Plug-in diesel-electric hybrid" ;
+    mm:optionAlias "Diesel PHEV" ;
+    mm:optionPhonetic "plug-in die-sel hy-brid" .
+
+# LPG (Liquefied Petroleum Gas)
+:FuelTypeLPG a mm:SelectOption ;
+    mm:optionValue "lpg" ;
+    mm:optionLabel "LPG" ;
+    mm:optionDescription "Liquefied petroleum gas" ;
+    mm:optionAlias "Autogas" ;
+    mm:optionPhonetic "el-pee-jee" ;
+    mm:optionPhonetic "liquified petroleum gas" .
+
+# CNG (Compressed Natural Gas)
+:FuelTypeCNG a mm:SelectOption ;
+    mm:optionValue "cng" ;
+    mm:optionLabel "CNG" ;
+    mm:optionDescription "Compressed natural gas" ;
+    mm:optionPhonetic "see-en-jee" ;
+    mm:optionPhonetic "natural gas" .
+
+# Hydrogen Fuel Cell
+:FuelTypeHydrogen a mm:SelectOption ;
+    mm:optionValue "hydrogen" ;
+    mm:optionLabel "Hydrogen" ;
+    mm:optionDescription "Hydrogen fuel cell vehicle (FCEV)" ;
+    mm:optionAlias "Fuel Cell" ;
+    mm:optionAlias "FCEV" ;
+    mm:optionPhonetic "hy-dro-jen" .

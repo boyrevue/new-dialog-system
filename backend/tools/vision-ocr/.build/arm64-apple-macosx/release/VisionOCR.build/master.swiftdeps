@@ -1,0 +1,6 @@
+version: "Apple Swift version 6.1.2 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)"
+options: "89cfc5032260f1d15b21278efbcb0d5166fd6ea9bf022ac92660306f45d9d371"
+build_start_time: [1763479978, 355388000]
+build_end_time: [1763479979, 174121000]
+inputs:
+  "/Users/vincentpower/UNIVERSX/dialog-system/backend/tools/vision-ocr/Sources/VisionOCR/main.swift": [1763479973, 112393648]

@@ -22,6 +22,7 @@
     :order 10 ;
     :inSection :PersonalInfoSection ;
     :hasInputMode vocab:NameInputMode ;
+    :hasForm :PersonalDetailsForm ;
     mm:hasTTSPrompt :FirstNameTTS ;
     mm:fieldType "text" ;
     mm:placeholder "Enter your first name" ;
@@ -55,6 +56,7 @@
     :inSection :PersonalInfoSection ;
     :hasInputMode vocab:NameInputMode ;
     mm:hasTTSPrompt :LastNameTTS ;
+    :extractableFrom doc:DrivingLicence, doc:Passport, doc:NationalIDCard ;
     mm:documentFillable true .
 
 :LastNameTTS a mm:TTSPrompt ;
@@ -78,6 +80,7 @@
     :inSection :DriversSection ;
     :hasInputMode vocab:DateInputMode ;
     mm:hasTTSPrompt :DateOfBirthTTS ;
+    :hasASRGrammar :DateASRGrammar ;
     mm:documentFillable true .
 
 :DateOfBirthTTS a mm:TTSPrompt ;
@@ -90,7 +93,32 @@
     mm:ttsRate 1.0 ;
     mm:ttsPitch 1.0 .
 
-# Q3a: Driving Licence Number
+# Q3a: Gender
+:GenderQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Gender" ;
+    :questionId "q_gender" ;
+    :questionText "What is your gender?" ;
+    :slotName "gender" ;
+    :required true ;
+    :order 13 ;
+    :inSection :PersonalInfoSection ;
+    mm:hasTTSPrompt :GenderTTS ;
+    mm:fieldType "select" ;
+    mm:selectOptions ("Male" "Female" "Other" "Prefer not to say") ;
+    mm:documentFillable true ;
+    mm:helpText "This information may be used for insurance purposes" .
+
+:GenderTTS a mm:TTSPrompt ;
+    mm:ttsText "Please tell me your gender." ;
+    mm:ttsVariant1 "Please tell me your gender." ;
+    mm:ttsVariant2 "What is your gender?" ;
+    mm:ttsVariant3 "Could you provide your gender, please?" ;
+    mm:ttsVariant4 "Are you male or female?" ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q3b: Driving Licence Number
 :DrivingLicenceQuestion a mm:MultimodalQuestion ;
     rdfs:label "Driving Licence Number" ;
     :questionId "q_driving_licence" ;
@@ -361,7 +389,7 @@
     mm:hasOption :MakeToyota, :MakeVolkswagen, :MakeFord, :MakeBMW, :MakeMercedes,
                  :MakeAudi, :MakeHonda, :MakeNissan, :MakePeugeot, :MakeRenault,
                  :MakeCitroen, :MakeMazda, :MakeHyundai, :MakeKia, :MakeSeat,
-                 :MakeSkoda, :MakeVolvo, :MakeLandRover, :MakeJaguar, :MakeMini ;
+                 :MakeSkoda, :MakeVolvo, :MakeLandRover, :MakeJaguar, :MakeMini, :MakeTesla ;
     mm:documentFillable true .
 
 :VehicleMakeTTS a mm:TTSPrompt ;
@@ -407,7 +435,9 @@
     :required true ;
     :order 23 ;
     :inSection :VehicleSection ;
+    :hasInputMode vocab:YearInputMode ;
     mm:hasTTSPrompt :VehicleYearTTS ;
+    :hasASRGrammar :YearASRGrammar ;
     mm:documentFillable true .
 
 :VehicleYearTTS a mm:TTSPrompt ;
@@ -420,7 +450,60 @@
     mm:ttsRate 1.0 ;
     mm:ttsPitch 1.0 .
 
-# Q15: Annual Mileage
+# Q15: Date of First UK Registration
+:DateFirstUKRegistrationQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Date of First UK Registration" ;
+    :questionId "q_date_first_uk_registration" ;
+    :questionText "What is the date of first UK registration?" ;
+    :slotName "dateFirstUKRegistration" ;
+    :required false ;
+    :order 24 ;
+    :inSection :VehicleSection ;
+    :hasInputMode vocab:DateInputMode ;
+    mm:hasTTSPrompt :DateFirstUKRegistrationTTS ;
+    :hasASRGrammar :DateASRGrammar ;
+    :extractableFrom doc:V5CLogBook ;
+    mm:documentFillable true ;
+    mm:uiHint "document-fillable" .
+
+:DateFirstUKRegistrationTTS a mm:TTSPrompt ;
+    mm:ttsText "What is the date of first UK registration? This is shown on your V5C log book." ;
+    mm:ttsVariant1 "What is the date of first UK registration? This is shown on your V5C log book." ;
+    mm:ttsVariant2 "When was your vehicle first registered in the UK?" ;
+    mm:ttsVariant3 "What's the date of first registration?" ;
+    mm:ttsVariant4 "Tell me the first registration date." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q15a: Vehicle Fuel Type
+:VehicleFuelTypeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Fuel Type" ;
+    :questionId "q_vehicle_fuel_type" ;
+    :questionText "What type of fuel does your vehicle use?" ;
+    :slotName "vehicleFuelType" ;
+    :required true ;
+    :order 25 ;
+    :inSection :VehicleSection ;
+    mm:hasTTSPrompt :VehicleFuelTypeTTS ;
+    mm:hasOption :FuelTypePetrol, :FuelTypeDiesel, :FuelTypeElectric,
+                 :FuelTypeHybridPetrol, :FuelTypeHybridDiesel,
+                 :FuelTypePluginHybridPetrol, :FuelTypePluginHybridDiesel,
+                 :FuelTypeLPG, :FuelTypeCNG, :FuelTypeHydrogen ;
+    :extractableFrom doc:V5CLogBook ;
+    mm:documentFillable true .
+
+:VehicleFuelTypeTTS a mm:TTSPrompt ;
+    mm:ttsText "What type of fuel does your vehicle use? For example, petrol, diesel, or electric." ;
+    mm:ttsVariant1 "What type of fuel does your vehicle use? For example, petrol, diesel, or electric." ;
+    mm:ttsVariant2 "Which fuel type does your car run on?" ;
+    mm:ttsVariant3 "What's your vehicle's fuel type?" ;
+    mm:ttsVariant4 "Tell me the fuel type." ;
+    mm:ttsVoice "en-GB-Neural2-A" ;
+    mm:ttsRate 1.0 ;
+    mm:ttsPitch 1.0 .
+
+# Q16: Annual Mileage
 :AnnualMileageQuestion a mm:MultimodalQuestion ;
     rdfs:label "Annual Mileage" ;
     :questionId "q_annual_mileage" ;
@@ -593,7 +676,9 @@
     :required true ;
     :order 31 ;
     :inSection :PolicySection ;
-    mm:hasTTSPrompt :StartDateTTS .
+    :hasInputMode vocab:DateInputMode ;
+    mm:hasTTSPrompt :StartDateTTS ;
+    :hasASRGrammar :DateASRGrammar .
 
 :StartDateTTS a mm:TTSPrompt ;
     mm:ttsText "When would you like your policy to start? Please tell me the date." ;
@@ -1462,7 +1547,9 @@
     :order 34 ;
     :inSection :AdditionalDriversSection ;
     form:inFieldGroup :AdditionalDriverFieldGroup ;
+    :hasInputMode vocab:DateInputMode ;
     mm:hasTTSPrompt :AdditionalDriverDOBTTS ;
+    :hasASRGrammar :DateASRGrammar ;
     mm:documentFillable true .
 
 :AdditionalDriverDOBTTS a mm:TTSPrompt ;

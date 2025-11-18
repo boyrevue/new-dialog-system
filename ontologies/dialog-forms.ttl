@@ -204,6 +204,47 @@ form:triggerCondition a owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     rdfs:comment "Condition that triggers the form (e.g., 'answer=yes')" .
 
+# Transformer Properties (for mapping spoken values)
+form:Transformer a owl:Class ;
+    rdfs:label "Value Transformer" ;
+    rdfs:comment "Transforms spoken/input values to normalized output values" .
+
+form:hasTransformer a owl:ObjectProperty ;
+    rdfs:label "has transformer" ;
+    rdfs:domain form:FormField ;
+    rdfs:range form:Transformer ;
+    rdfs:comment "Links a field to value transformers for spoken input" .
+
+form:transformerType a owl:DatatypeProperty ;
+    rdfs:label "transformer type" ;
+    rdfs:domain form:Transformer ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Type of transformer: 'map', 'regex', 'function', 'normalize'" .
+
+form:inputPattern a owl:DatatypeProperty ;
+    rdfs:label "input pattern" ;
+    rdfs:domain form:Transformer ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Pattern or value to match from spoken/typed input" .
+
+form:outputValue a owl:DatatypeProperty ;
+    rdfs:label "output value" ;
+    rdfs:domain form:Transformer ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Normalized value to output after transformation" .
+
+form:transformerOrder a owl:DatatypeProperty ;
+    rdfs:label "transformer order" ;
+    rdfs:domain form:Transformer ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Order in which transformers are applied (lower first)" .
+
+form:caseInsensitive a owl:DatatypeProperty ;
+    rdfs:label "case insensitive" ;
+    rdfs:domain form:Transformer ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "Whether the pattern matching is case insensitive" .
+
 # Field Properties
 form:fieldId a owl:DatatypeProperty ;
     rdfs:label "field ID" ;
@@ -515,4 +556,174 @@ form:icon a owl:DatatypeProperty ;
     form:optionValue "other" ;
     form:optionLabel "Other" ;
     form:optionOrder 7 .
+
+# ====================
+# EXAMPLE: Personal Details Form with Validation
+# ====================
+
+:PersonalDetailsForm a form:Form ;
+    form:formId "personal_details_form" ;
+    form:formTitle "Personal Details" ;
+    form:formDescription "Please provide your personal information" ;
+    form:successMessage "Personal details saved successfully" ;
+    form:onSubmitAction "next_question" ;
+    form:hasFieldGroup :PersonalDetailsGroup .
+
+:PersonalDetailsGroup a form:FieldGroup ;
+    form:groupId "personal_details_group" ;
+    form:groupLabel "Your Information" ;
+    form:groupDescription "Basic personal information" ;
+    form:groupOrder 1 ;
+    form:isRepeatable false ;
+    form:minOccurs 1 ;
+    form:maxOccurs 1 ;
+    form:groupCollapsible false ;
+    form:icon "user" ;
+    form:hasField :PersonalFirstNameField, :PersonalLastNameField, :PersonalEmailField .
+
+:PersonalFirstNameField a form:FormField ;
+    form:fieldId "first_name" ;
+    form:fieldLabel "First Name" ;
+    form:fieldType form:TextInput ;
+    form:fieldOrder 1 ;
+    form:required true ;
+    form:placeholder "Enter your first name" ;
+    form:helpText "Please provide your legal first name as it appears on your ID" ;
+    form:uiHint "half-width" ;
+    form:hasValidation :FirstNameMinLength, :FirstNameMaxLength, :FirstNamePattern .
+
+:FirstNameMinLength a form:ValidationRule ;
+    form:validationType "minLength" ;
+    form:validationValue "2" ;
+    form:validationMessage "First name must be at least 2 characters" .
+
+:FirstNameMaxLength a form:ValidationRule ;
+    form:validationType "maxLength" ;
+    form:validationValue "50" ;
+    form:validationMessage "First name must not exceed 50 characters" .
+
+:FirstNamePattern a form:ValidationRule ;
+    form:validationType "pattern" ;
+    form:validationValue "^[A-Za-z\\s'-]+$" ;
+    form:validationMessage "First name must contain only letters, spaces, hyphens, and apostrophes" .
+
+:PersonalLastNameField a form:FormField ;
+    form:fieldId "last_name" ;
+    form:fieldLabel "Last Name" ;
+    form:fieldType form:TextInput ;
+    form:fieldOrder 2 ;
+    form:required true ;
+    form:placeholder "Enter your last name" ;
+    form:helpText "Please provide your legal last name as it appears on your ID" ;
+    form:uiHint "half-width" ;
+    form:hasValidation :LastNameMinLength, :LastNameMaxLength, :LastNamePattern .
+
+:LastNameMinLength a form:ValidationRule ;
+    form:validationType "minLength" ;
+    form:validationValue "2" ;
+    form:validationMessage "Last name must be at least 2 characters" .
+
+:LastNameMaxLength a form:ValidationRule ;
+    form:validationType "maxLength" ;
+    form:validationValue "50" ;
+    form:validationMessage "Last name must not exceed 50 characters" .
+
+:LastNamePattern a form:ValidationRule ;
+    form:validationType "pattern" ;
+    form:validationValue "^[A-Za-z\\s'-]+$" ;
+    form:validationMessage "Last name must contain only letters, spaces, hyphens, and apostrophes" .
+
+:PersonalEmailField a form:FormField ;
+    form:fieldId "email" ;
+    form:fieldLabel "Email Address" ;
+    form:fieldType form:TextInput ;
+    form:fieldOrder 3 ;
+    form:required true ;
+    form:placeholder "name@example.com" ;
+    form:helpText "We'll use this to send you policy documents" ;
+    form:uiHint "full-width" ;
+    form:hasValidation :EmailPattern .
+
+:EmailPattern a form:ValidationRule ;
+    form:validationType "email" ;
+    form:validationMessage "Please enter a valid email address" .
+
+# ====================
+# EXAMPLE: Boolean Field with Transformers
+# ====================
+
+:MarketingConsentForm a form:Form ;
+    form:formId "marketing_consent_form" ;
+    form:formTitle "Marketing Preferences" ;
+    form:formDescription "Would you like to receive marketing communications?" ;
+    form:successMessage "Preferences saved" ;
+    form:onSubmitAction "next_question" ;
+    form:hasFieldGroup :MarketingConsentGroup .
+
+:MarketingConsentGroup a form:FieldGroup ;
+    form:groupId "marketing_consent_group" ;
+    form:groupLabel "Marketing" ;
+    form:groupDescription "Communication preferences" ;
+    form:groupOrder 1 ;
+    form:isRepeatable false ;
+    form:minOccurs 1 ;
+    form:maxOccurs 1 ;
+    form:groupCollapsible false ;
+    form:hasField :MarketingConsentField .
+
+:MarketingConsentField a form:FormField ;
+    form:fieldId "marketing_consent" ;
+    form:fieldLabel "Receive Marketing Communications" ;
+    form:fieldType form:Toggle ;
+    form:fieldOrder 1 ;
+    form:required true ;
+    form:helpText "We'll send you updates about new products and special offers" ;
+    form:defaultValue "false" ;
+    form:uiHint "full-width" ;
+    form:hasTransformer :YesTransformer, :NoTransformer, :YeahTransformer,
+                        :NahTransformer, :SureTransformer, :NegativeTransformer .
+
+# Transformers for spoken "yes" variants
+:YesTransformer a form:Transformer ;
+    form:transformerType "map" ;
+    form:inputPattern "yes" ;
+    form:outputValue "true" ;
+    form:transformerOrder 1 ;
+    form:caseInsensitive true .
+
+:YeahTransformer a form:Transformer ;
+    form:transformerType "map" ;
+    form:inputPattern "yeah" ;
+    form:outputValue "true" ;
+    form:transformerOrder 2 ;
+    form:caseInsensitive true .
+
+:SureTransformer a form:Transformer ;
+    form:transformerType "map" ;
+    form:inputPattern "sure" ;
+    form:outputValue "true" ;
+    form:transformerOrder 3 ;
+    form:caseInsensitive true .
+
+# Transformers for spoken "no" variants
+:NoTransformer a form:Transformer ;
+    form:transformerType "map" ;
+    form:inputPattern "no" ;
+    form:outputValue "false" ;
+    form:transformerOrder 4 ;
+    form:caseInsensitive true .
+
+:NahTransformer a form:Transformer ;
+    form:transformerType "map" ;
+    form:inputPattern "nah" ;
+    form:outputValue "false" ;
+    form:transformerOrder 5 ;
+    form:caseInsensitive true .
+
+:NegativeTransformer a form:Transformer ;
+    form:transformerType "map" ;
+    form:inputPattern "nope" ;
+    form:outputValue "false" ;
+    form:transformerOrder 6 ;
+    form:caseInsensitive true .
 

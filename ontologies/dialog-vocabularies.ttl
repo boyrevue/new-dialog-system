@@ -316,6 +316,11 @@ vocab:DateInputMode a vocab:InputMode ;
     vocab:supportsLetterByLetterSpelling false ;
     rdfs:comment "Input configuration for date fields (DD/MM/YYYY or spoken format)" .
 
+vocab:YearInputMode a vocab:InputMode ;
+    rdfs:label "Year Input Mode" ;
+    vocab:supportsLetterByLetterSpelling false ;
+    rdfs:comment "Input configuration for year fields (YYYY or spoken format like 'two thousand and twenty')" .
+
 vocab:PhoneInputMode a vocab:InputMode ;
     rdfs:label "Phone Input Mode" ;
     vocab:supportsLetterByLetterSpelling true ;

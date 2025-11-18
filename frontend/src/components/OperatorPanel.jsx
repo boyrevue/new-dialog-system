@@ -25,8 +25,12 @@ import {
   HelpCircle,
   Send,
   RefreshCw,
-  CheckCircle2
+  CheckCircle2,
+  TrendingUp,
+  Volume2,
+  Headphones
 } from 'lucide-react';
+import DialogFlowView from './DialogFlowView';
 
 const API_BASE_URL = '/api/admin';
 
@@ -64,8 +68,13 @@ const OperatorPanel = () => {
   const [reviewQueue, setReviewQueue] = useState([]);
   const [selectedReview, setSelectedReview] = useState(null);
 
+  // Low Confidence Audio Queue
+  const [audioReviewQueue, setAudioReviewQueue] = useState([]);
+  const [selectedAudioReview, setSelectedAudioReview] = useState(null);
+  const [audioElement, setAudioElement] = useState(null);
+
   // UI State
-  const [activeTab, setActiveTab] = useState('sessions'); // sessions, interventions, reviews
+  const [activeTab, setActiveTab] = useState('sessions'); // sessions, interventions, reviews, flow
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -90,12 +99,14 @@ const OperatorPanel = () => {
       loadStats();
       loadActiveSessions();
       loadInterventionQueue();
+      loadAudioReviewQueue();
       connectWebSocket();
 
       const interval = setInterval(() => {
         loadStats();
         loadActiveSessions();
         loadInterventionQueue();
+        loadAudioReviewQueue();
       }, 5000);
 
       return () => {
@@ -200,6 +211,16 @@ const OperatorPanel = () => {
     }
   };
 
+  const loadAudioReviewQueue = async () => {
+    try {
+      const response = await fetch('/api/operator/low-confidence-queue');
+      const data = await response.json();
+      setAudioReviewQueue(data || []);
+    } catch (err) {
+      console.error('Failed to load audio review queue:', err);
+    }
+  };
+
   const handleSelectIntervention = async (intervention) => {
     setSelectedIntervention(intervention);
     setCorrectedValue(intervention.current_value || '');
@@ -271,6 +292,95 @@ const OperatorPanel = () => {
       await loadActiveSessions();
     } catch (err) {
       setError('Failed to fix slot: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Audio Review Handlers
+  const handleSelectAudioReview = (review) => {
+    setSelectedAudioReview(review);
+    setCorrectedValue(review.transcript || '');
+  };
+
+  const handlePlayAudio = async (reviewId) => {
+    try {
+      // Pause any currently playing audio
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+      }
+
+      // Fetch and play the audio file
+      const response = await fetch(`/api/operator/audio/${reviewId}`);
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      const audio = new Audio(audioUrl);
+      audio.play();
+      setAudioElement(audio);
+
+      // Clean up URL when audio finishes
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+      };
+    } catch (err) {
+      console.error('Failed to play audio:', err);
+      setError('Failed to play audio recording');
+    }
+  };
+
+  const handleFixAudioAnswer = async () => {
+    if (!selectedAudioReview || !correctedValue.trim()) return;
+
+    try {
+      setLoading(true);
+
+      const response = await fetch('/api/operator/fix-answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          review_id: selectedAudioReview.id,
+          corrected_answer: correctedValue
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to fix answer');
+
+      setSuccess('Answer corrected and session updated');
+      setSelectedAudioReview(null);
+      setCorrectedValue('');
+      await loadAudioReviewQueue();
+    } catch (err) {
+      setError('Failed to fix answer: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRequestRephrase = async () => {
+    if (!selectedAudioReview) return;
+
+    try {
+      setLoading(true);
+
+      const response = await fetch('/api/operator/request-rephrase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          review_id: selectedAudioReview.id,
+          rephrase_message: null // Will use default template from ontology
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to request rephrase');
+
+      const data = await response.json();
+      setSuccess(`Rephrase request sent: "${data.rephrase_message}"`);
+      setSelectedAudioReview(null);
+      await loadAudioReviewQueue();
+    } catch (err) {
+      setError('Failed to send rephrase request: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -465,6 +575,28 @@ const OperatorPanel = () => {
         >
           <HelpCircle className="w-4 h-4 inline mr-2" />
           Interventions ({interventionQueue.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('audioReviews')}
+          className={`px-4 py-2 font-medium ${
+            activeTab === 'audioReviews'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Headphones className="w-4 h-4 inline mr-2" />
+          Audio Reviews ({audioReviewQueue.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('flow')}
+          className={`px-4 py-2 font-medium ${
+            activeTab === 'flow'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4 inline mr-2" />
+          Session Flow
         </button>
       </div>
 
@@ -710,6 +842,172 @@ const OperatorPanel = () => {
               </div>
             )}
           </Card>
+        </div>
+      )}
+
+      {/* Audio Reviews Tab */}
+      {activeTab === 'audioReviews' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Audio Review Queue */}
+          <Card>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Low Confidence Audio Queue</h3>
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              {audioReviewQueue.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No audio reviews pending</p>
+              ) : (
+                audioReviewQueue.map((review) => (
+                  <div
+                    key={review.id}
+                    onClick={() => handleSelectAudioReview(review)}
+                    className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                      selectedAudioReview?.id === review.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge color={review.status === 'pending' ? 'warning' : 'success'}>
+                        {review.status.toUpperCase()}
+                      </Badge>
+                      <Badge color="info">
+                        {(review.confidence * 100).toFixed(0)}% confidence
+                      </Badge>
+                    </div>
+                    <p className="font-semibold text-gray-900 text-sm mb-1">
+                      {review.question_text}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Transcript: <span className="italic">"{review.transcript}"</span>
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Session: {review.session_id.substring(0, 8)}...
+                    </p>
+                    {review.is_select_question && (
+                      <Badge color="purple" size="sm" className="mt-2">
+                        Select Question
+                      </Badge>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+
+          {/* Audio Review Details */}
+          <Card>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Review Details</h3>
+            {!selectedAudioReview ? (
+              <p className="text-center text-gray-500 py-8">
+                Select an audio review to view details
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {/* Question */}
+                <div>
+                  <Label className="text-gray-700 font-semibold">Question</Label>
+                  <p className="text-gray-900 mt-1">{selectedAudioReview.question_text}</p>
+                </div>
+
+                {/* Audio Playback */}
+                <div>
+                  <Label className="text-gray-700 font-semibold mb-2">Audio Recording</Label>
+                  <Button
+                    color="info"
+                    onClick={() => handlePlayAudio(selectedAudioReview.id)}
+                    className="w-full"
+                  >
+                    <Volume2 className="w-4 h-4 mr-2" />
+                    Play Audio Recording
+                  </Button>
+                </div>
+
+                {/* Transcript */}
+                <div>
+                  <Label className="text-gray-700 font-semibold">Speech Recognition Transcript</Label>
+                  <p className="text-gray-600 italic mt-1">"{selectedAudioReview.transcript}"</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Confidence: {(selectedAudioReview.confidence * 100).toFixed(0)}%
+                  </p>
+                </div>
+
+                {/* Select Options (if applicable) */}
+                {selectedAudioReview.is_select_question && selectedAudioReview.select_options.length > 0 && (
+                  <div>
+                    <Label className="text-gray-700 font-semibold">Available Options</Label>
+                    <Select
+                      value={correctedValue}
+                      onChange={(e) => setCorrectedValue(e.target.value)}
+                      className="mt-1"
+                    >
+                      <option value="">Select the correct option...</option>
+                      {selectedAudioReview.select_options.map((option, index) => (
+                        <option key={index} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                )}
+
+                {/* Corrected Answer */}
+                <div>
+                  <Label htmlFor="correctedAnswer" className="text-gray-700 font-semibold">
+                    Corrected Answer
+                  </Label>
+                  <TextInput
+                    id="correctedAnswer"
+                    value={correctedValue}
+                    onChange={(e) => setCorrectedValue(e.target.value)}
+                    placeholder="Type or select the correct answer..."
+                    className="mt-1"
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-2 pt-4">
+                  <Button
+                    color="success"
+                    onClick={handleFixAudioAnswer}
+                    disabled={!correctedValue.trim() || loading}
+                    className="w-full"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Fix Answer & Update Session
+                  </Button>
+
+                  <Button
+                    color="warning"
+                    onClick={handleRequestRephrase}
+                    disabled={loading}
+                    className="w-full"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Request User to Rephrase
+                  </Button>
+                </div>
+
+                {/* Session Info */}
+                <div className="pt-4 border-t border-gray-200">
+                  <p className="text-xs text-gray-500">
+                    <strong>Session ID:</strong> {selectedAudioReview.session_id}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    <strong>Question ID:</strong> {selectedAudioReview.question_id}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    <strong>Timestamp:</strong> {new Date(selectedAudioReview.timestamp).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* Session Flow Tab */}
+      {activeTab === 'flow' && (
+        <div className="mt-6">
+          <DialogFlowView embedded={true} />
         </div>
       )}
     </div>

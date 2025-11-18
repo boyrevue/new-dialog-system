@@ -1,0 +1,24 @@
+{
+  "formId": "PersonalDetailsForm",
+  "fields": [
+    {
+      "fieldId": "q_first_name",
+      "label": "First name",
+      "required": true,
+      "type": "text",
+      "validation": {
+        "min_length": 2,
+        "max_length": 50,
+        "pattern": "^[A-Za-z-' ]+$"
+      },
+      "mapping": {
+        "transformation_type": "word-to-format",
+        "rules": [
+          { "spoken": "oh", "formatted": "o" }
+        ]
+      }
+    }
+  ]
+}
+
+
