@@ -1236,7 +1236,7 @@ const DialogEditor = () => {
                   <div>
                     <Label>Validation Library Predicates</Label>
                     <div className="grid grid-cols-2 gap-2 mt-2">
-                      {['isDigit', 'isNumber', 'isInteger', 'isFloat', 'isDate', 'isPastDate', 'isFutureDate', 'isMonth', 'isDayOfMonth', 'isLeapYear', 'isPostcode', 'isEmail', 'isPhone', 'isUKPostcode', 'isUKDrivingLicence', 'isUKDrivingLicenceCategory', 'isUKDrivingOffenceCode', 'isUKCarRegistration'].map((pred) => (
+                      {['isDigit', 'isNumber', 'isInteger', 'isFloat', 'isDate', 'isPastDate', 'isFutureDate', 'isMonth', 'isDayOfMonth', 'isLeapYear', 'isPostcode', 'isEmail', 'isPhone', 'isUKPostcode', 'isUKDrivingLicence', 'isUKDrivingLicenceCategory', 'isUKDrivingOffenceCode', 'isUKCarRegistration', 'isSelect'].map((pred) => (
                         <label key={pred} className="flex items-center gap-2 p-2 bg-white rounded border border-green-200 hover:bg-green-50 cursor-pointer">
                           <input type="checkbox" className="rounded" />
                           <span className="text-sm font-mono text-gray-700">{pred}</span>
@@ -1259,6 +1259,12 @@ const DialogEditor = () => {
                         <li><span className="font-mono text-purple-700">isUKDrivingLicenceCategory</span>: Validates licence categories (A, A1, A2, AM, B, BE, C, C1, C1E, CE, D, D1, D1E, DE, f, g, h, k, l, n, p, q)</li>
                         <li><span className="font-mono text-purple-700">isUKDrivingOffenceCode</span>: Validates UK driving offence codes (e.g., SP30, CD10, DR10, IN10, MS50, TT99)</li>
                         <li><span className="font-mono text-purple-700">isUKCarRegistration</span>: Validates UK vehicle registration (e.g., AB12 CDE, AB12CDE)</li>
+                      </ul>
+                    </div>
+                    <div className="mt-2 p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
+                      <p className="text-xs text-gray-700 font-semibold mb-2">Select Option Validators:</p>
+                      <ul className="text-xs text-gray-600 space-y-1">
+                        <li><span className="font-mono text-cyan-700">isSelect</span>: Validates value against TTL ontology select options with 6-phase matching (exact, label, alias, phonetic exact, fuzzy phonetic, partial). Supports semantic alternatives like "Benzine" → "Petrol"</li>
                       </ul>
                       <details className="mt-2">
                         <summary className="text-xs font-semibold text-purple-800 cursor-pointer hover:text-purple-900">View UK Driving Offence Codes</summary>
@@ -1437,9 +1443,65 @@ accept | decline
 
                 <Alert color="info" className="mb-4">
                   <p className="text-sm">
-                    Configure dropdown/select options. Define display labels, internal values, and link to ontology terms if needed.
+                    Configure dropdown/select options. Load from TTL ontology or define manually.
                   </p>
                 </Alert>
+
+                {/* Load from TTL Ontology */}
+                <div className="mb-4 p-3 bg-white rounded-lg border border-blue-300">
+                  <Label htmlFor="ontology-question">Load Options from TTL Ontology</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Select
+                      id="ontology-question"
+                      className="flex-1"
+                      onChange={(e) => {
+                        // Load options from the selected question
+                        const questionId = e.target.value;
+                        if (questionId) {
+                          // Fetch options for this question from the API
+                          fetch(`${API_BASE_URL}/select-list/${questionId}`)
+                            .then(res => res.json())
+                            .then(data => {
+                              if (data.options) {
+                                const loadedOptions = data.options.map(opt => ({
+                                  label: opt.label || opt.optionLabel,
+                                  value: opt.value || opt.optionValue,
+                                  ontologyUri: opt.uri || opt.option_uri
+                                }));
+                                setSelectOptions(loadedOptions);
+                                setSuccess(`Loaded ${loadedOptions.length} options from ${questionId}`);
+                                setTimeout(() => setSuccess(null), 3000);
+                              }
+                            })
+                            .catch(err => {
+                              setError(`Failed to load options: ${err.message}`);
+                            });
+                        }
+                      }}
+                    >
+                      <option value="">-- Select a question with options --</option>
+                      <option value="q_vehicle_make">Vehicle Manufacturer (Toyota, BMW, Mercedes...)</option>
+                      <option value="q_vehicle_fuel_type">Vehicle Fuel Type (Petrol, Diesel, Electric...)</option>
+                      <option value="q_vehicle_type">Vehicle Type</option>
+                      <option value="q_cover_type">Cover Type</option>
+                      <option value="q_driving_licence_type">Licence Type</option>
+                    </Select>
+                    <Button
+                      size="sm"
+                      color="blue"
+                      onClick={() => {
+                        setSuccess('Select a question from the dropdown to load its options');
+                        setTimeout(() => setSuccess(null), 2000);
+                      }}
+                    >
+                      <Sparkles className="w-4 h-4 mr-1" />
+                      Load from TTL
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-2">
+                    Select a question to automatically load its options from the TTL ontology with aliases and phonetics
+                  </p>
+                </div>
 
                 <div className="space-y-3">
                   {selectOptions.map((option, index) => (
@@ -1496,7 +1558,7 @@ accept | decline
                     }}
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    Add Option
+                    Add Option Manually
                   </Button>
                 </div>
               </Card>
