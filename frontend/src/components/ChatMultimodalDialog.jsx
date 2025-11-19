@@ -992,7 +992,7 @@ const ChatMultimodalDialog = () => {
     };
   }, [ttsOnHold]);
 
-  const startSpeechRecognition = useCallback(() => {
+  const startSpeechRecognition = useCallback(async () => {
     if (!recognitionRef.current) {
       setError('Speech recognition not supported in this browser');
       return;
@@ -1002,9 +1002,14 @@ const ChatMultimodalDialog = () => {
       setError(null);
       console.log('Starting speech recognition...');
 
-      // Stop any current TTS
-      console.log('🔇 Stopping TTS - user is speaking');
-      speechSynthesis.cancel();
+      // Stop any current TTS and wait for it to fully stop
+      if (speechSynthesis.speaking) {
+        console.log('🔇 Stopping TTS - user is speaking');
+        speechSynthesis.cancel();
+        // Wait 500ms for TTS to fully stop before starting ASR
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('✅ TTS stopped, now starting ASR');
+      }
 
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
