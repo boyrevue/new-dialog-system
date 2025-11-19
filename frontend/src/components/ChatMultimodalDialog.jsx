@@ -519,6 +519,7 @@ const ChatMultimodalDialog = () => {
   const audioChunksRef = useRef([]);
   const lastSpokenQuestionIdRef = useRef(null);
   const virtualKeyboardProcessorRef = useRef(null);
+  const lastProcessedTranscriptRef = useRef(null); // Track last processed transcript to avoid duplicates
 
   // Load existing session or start new one
   useEffect(() => {
@@ -567,6 +568,15 @@ const ChatMultimodalDialog = () => {
       recognitionRef.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         const confidence = event.results[0][0].confidence;
+
+        // Check if we've already processed this exact transcript
+        if (lastProcessedTranscriptRef.current === transcript) {
+          console.log('⏭ Skipping duplicate transcript:', transcript);
+          return;
+        }
+
+        // Store this transcript as processed
+        lastProcessedTranscriptRef.current = transcript;
 
         console.log('🎤 Speech recognized:', transcript, 'Confidence:', confidence);
 
@@ -1001,6 +1011,10 @@ const ChatMultimodalDialog = () => {
     try {
       setError(null);
       console.log('Starting speech recognition...');
+
+      // Reset transcript tracking for new recording session
+      lastProcessedTranscriptRef.current = null;
+      console.log('🔄 Reset transcript tracking');
 
       // Stop any current TTS and wait for it to fully stop
       if (speechSynthesis.speaking) {
