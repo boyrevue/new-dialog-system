@@ -65,6 +65,12 @@ const VirtualKeyboard = ({
   const [pressedKey, setPressedKey] = useState(null); // for visual feedback
   const audioContextRef = React.useRef(null);
 
+  // Sync value prop to internal state when prop changes from parent
+  React.useEffect(() => {
+    setCurrentValue(value);
+    console.log('🔄 VirtualKeyboard value synced from parent:', value);
+  }, [value]);
+
   // Play click sound
   const playClickSound = () => {
     try {
