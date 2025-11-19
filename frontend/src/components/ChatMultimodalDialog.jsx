@@ -520,13 +520,14 @@ const ChatMultimodalDialog = () => {
   const lastSpokenQuestionIdRef = useRef(null);
   const virtualKeyboardProcessorRef = useRef(null);
   const lastProcessedTranscriptRef = useRef(null); // Track last processed transcript to avoid duplicates
+  const isStartingSessionRef = useRef(false); // Prevent duplicate session starts in React Strict Mode
 
   // Load existing session or start new one
   useEffect(() => {
     const activeSession = sessions[activeSessionIndex];
-    if (!activeSession.id) {
+    if (!activeSession.id && !isStartingSessionRef.current) {
       startSession();
-    } else {
+    } else if (activeSession.id) {
       setSessionId(activeSession.id);
       setMessages(activeSession.messages || []);
     }
@@ -816,13 +817,24 @@ const ChatMultimodalDialog = () => {
       return;
     }
 
+    // Don't speak while ASR is recording - prevents TTS/ASR interference
+    if (isRecording) {
+      console.log('🎤 Skipping TTS - ASR is currently recording');
+      return;
+    }
+
     console.log('═══════════════════════════════════════════════════');
     console.log('🎙 speakText called with:', text.substring(0, 50));
-    console.log('📊 Current selectedVoice state:', selectedVoice?.name || 'NONE');
-    console.log('📊 Available voices count:', availableVoices?.length || 0);
+
+    // Get voices directly from speechSynthesis (not from stale state)
+    const currentVoices = speechSynthesis.getVoices();
+    const targetVoice = currentVoices.find(v => v.name === 'Google UK English Female');
+
+    console.log('📊 Current voices available:', currentVoices.length);
+    console.log('📊 Target voice found:', targetVoice?.name || 'NONE');
 
     // If voices haven't loaded yet, wait and retry (up to 2 seconds)
-    if (!selectedVoice && retryCount < 10) {
+    if (currentVoices.length === 0 && retryCount < 10) {
       console.log(`⏳ Waiting for voices to load... (retry ${retryCount + 1}/10)`);
       setTimeout(() => {
         speakText(text, retryCount + 1);
@@ -830,8 +842,8 @@ const ChatMultimodalDialog = () => {
       return;
     }
 
-    if (!selectedVoice) {
-      console.warn('⚠️  WARNING: No voice selected after waiting, using browser default');
+    if (!targetVoice && currentVoices.length > 0) {
+      console.warn('⚠️  WARNING: Target voice not found, using browser default');
     }
 
     // Only cancel if currently speaking (not pending)
@@ -854,16 +866,14 @@ const ChatMultimodalDialog = () => {
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
 
-      console.log('🔍 BEFORE setting voice on utterance:');
-      console.log('   selectedVoice from state:', selectedVoice?.name || 'NULL');
-      console.log('   selectedVoice object:', selectedVoice);
+      console.log('🔍 Setting voice on utterance:');
+      console.log('   Target voice:', targetVoice?.name || 'NULL');
 
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-        console.log('✅ Voice SET on utterance:', selectedVoice.name, '(', selectedVoice.lang, ')');
-        console.log('   Voice object:', selectedVoice);
-        console.log('   Is local service:', selectedVoice.localService);
-        console.log('   Voice URI:', selectedVoice.voiceURI);
+      if (targetVoice) {
+        utterance.voice = targetVoice;
+        console.log('✅ Voice SET on utterance:', targetVoice.name, '(', targetVoice.lang, ')');
+        console.log('   Is local service:', targetVoice.localService);
+        console.log('   Voice URI:', targetVoice.voiceURI);
       } else {
         console.warn('❌ CRITICAL: No voice selected! Using browser default');
       }
@@ -883,9 +893,9 @@ const ChatMultimodalDialog = () => {
         console.error('❌ Speech error:', e.error, e);
 
         // If Google voice fails, try with local voice
-        if (selectedVoice && !selectedVoice.localService && e.error === 'network') {
+        if (targetVoice && !targetVoice.localService && e.error === 'network') {
           console.log('🔄 Google voice failed, trying local voice...');
-          const localVoice = availableVoices.find(v => v.lang === 'en-GB' && v.localService);
+          const localVoice = currentVoices.find(v => v.lang === 'en-GB' && v.localService);
           if (localVoice) {
             const retryUtterance = new SpeechSynthesisUtterance(text);
             retryUtterance.voice = localVoice;
@@ -906,7 +916,7 @@ const ChatMultimodalDialog = () => {
         }
       }, 100);
     }
-  }, [ttsEnabled, selectedVoice, availableVoices]);
+  }, [ttsEnabled, isRecording]);
 
   // Auto-rephrase timer (every 60 seconds of no input)
   useEffect(() => {
@@ -1157,6 +1167,15 @@ const ChatMultimodalDialog = () => {
   };
 
   const startSession = async () => {
+    // Prevent duplicate session starts in React Strict Mode
+    if (isStartingSessionRef.current) {
+      console.log('⏭ Skipping duplicate startSession call (already in progress)');
+      return;
+    }
+
+    isStartingSessionRef.current = true;
+    console.log('🚀 Starting new session...');
+
     try {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/session/start`, {
@@ -1181,6 +1200,8 @@ const ChatMultimodalDialog = () => {
       setError('Failed to start session: ' + err.message);
     } finally {
       setLoading(false);
+      isStartingSessionRef.current = false;
+      console.log('✅ Session start complete');
     }
   };
 
