@@ -504,6 +504,7 @@ const ChatMultimodalDialog = () => {
 
   const wsRef = useRef(null);
   const rephraseTimerRef = useRef(null);
+  const snoreTimerRef = useRef(null);
   const lastInputTimeRef = useRef(Date.now());
   const recognitionRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -910,6 +911,48 @@ const ChatMultimodalDialog = () => {
       }
     };
   }, [currentQuestion, ttsEnabled, ttsOnHold]);
+
+  // Snore sound timer (plays every 5 minutes when TTS is on hold)
+  useEffect(() => {
+    if (!ttsOnHold) {
+      // Clear any existing snore timer when TTS is not on hold
+      if (snoreTimerRef.current) {
+        clearInterval(snoreTimerRef.current);
+        snoreTimerRef.current = null;
+        console.log('😴 Snore timer cleared');
+      }
+      return;
+    }
+
+    console.log('😴 Starting snore timer - will play every 5 minutes during autopause');
+
+    const playSnore = () => {
+      try {
+        const snoreAudio = new Audio('/sounds/snore.wav');
+        snoreAudio.volume = 0.5; // 50% volume
+        snoreAudio.play().catch(err => {
+          console.warn('😴 Could not play snore sound:', err.message);
+        });
+        console.log('😴 *SNORE* Playing snore sound...');
+      } catch (err) {
+        console.warn('😴 Error creating snore audio:', err.message);
+      }
+    };
+
+    // Play immediately when entering autopause
+    playSnore();
+
+    // Then play every 5 minutes (300000ms)
+    snoreTimerRef.current = setInterval(playSnore, 300000);
+
+    return () => {
+      if (snoreTimerRef.current) {
+        clearInterval(snoreTimerRef.current);
+        snoreTimerRef.current = null;
+        console.log('😴 Snore timer cleared');
+      }
+    };
+  }, [ttsOnHold]);
 
   const startSpeechRecognition = useCallback(() => {
     if (!recognitionRef.current) {
