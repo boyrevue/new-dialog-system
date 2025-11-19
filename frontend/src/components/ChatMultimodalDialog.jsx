@@ -794,7 +794,7 @@ const ChatMultimodalDialog = () => {
   }, []);
 
   // TTS speak function
-  const speakText = useCallback((text) => {
+  const speakText = useCallback((text, retryCount = 0) => {
     if (!ttsEnabled || !text) {
       console.log('🔇 TTS disabled or no text');
       return;
@@ -805,8 +805,17 @@ const ChatMultimodalDialog = () => {
     console.log('📊 Current selectedVoice state:', selectedVoice?.name || 'NONE');
     console.log('📊 Available voices count:', availableVoices?.length || 0);
 
+    // If voices haven't loaded yet, wait and retry (up to 2 seconds)
+    if (!selectedVoice && retryCount < 10) {
+      console.log(`⏳ Waiting for voices to load... (retry ${retryCount + 1}/10)`);
+      setTimeout(() => {
+        speakText(text, retryCount + 1);
+      }, 200);
+      return;
+    }
+
     if (!selectedVoice) {
-      console.warn('⚠️  WARNING: No voice selected yet, speech may use browser default');
+      console.warn('⚠️  WARNING: No voice selected after waiting, using browser default');
     }
 
     // Only cancel if currently speaking (not pending)
@@ -927,17 +936,34 @@ const ChatMultimodalDialog = () => {
     }
 
     console.log('😴 Starting snore timer - will play every 5 minutes during autopause');
+    addSystemMessage('😴 *SNORE* No response detected... playing snore sound');
 
     const playSnore = () => {
       try {
+        console.log('😴 *SNORE* Attempting to play snore sound from /sounds/snore.wav');
         const snoreAudio = new Audio('/sounds/snore.wav');
         snoreAudio.volume = 0.5; // 50% volume
-        snoreAudio.play().catch(err => {
-          console.warn('😴 Could not play snore sound:', err.message);
+
+        snoreAudio.addEventListener('canplaythrough', () => {
+          console.log('✅ Snore audio loaded successfully');
         });
-        console.log('😴 *SNORE* Playing snore sound...');
+
+        snoreAudio.addEventListener('error', (e) => {
+          console.error('❌ Snore audio error:', e);
+          addSystemMessage('⚠️ Could not load snore.wav file');
+        });
+
+        snoreAudio.play()
+          .then(() => {
+            console.log('✅ Snore sound playing');
+          })
+          .catch(err => {
+            console.warn('😴 Could not play snore sound:', err.message);
+            addSystemMessage(`⚠️ Audio play failed: ${err.message}`);
+          });
       } catch (err) {
         console.warn('😴 Error creating snore audio:', err.message);
+        addSystemMessage(`⚠️ Could not create audio: ${err.message}`);
       }
     };
 
@@ -945,7 +971,11 @@ const ChatMultimodalDialog = () => {
     playSnore();
 
     // Then play every 5 minutes (300000ms)
-    snoreTimerRef.current = setInterval(playSnore, 300000);
+    snoreTimerRef.current = setInterval(() => {
+      console.log('⏰ 5 minutes passed - playing snore sound again');
+      addSystemMessage('😴 *SNORE* Still waiting... (5 min reminder)');
+      playSnore();
+    }, 300000);
 
     return () => {
       if (snoreTimerRef.current) {
