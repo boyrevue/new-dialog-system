@@ -60,16 +60,10 @@ const VirtualKeyboard = ({
   placeholder = 'Type using keyboard or voice...',
   onSpeechRecognized // callback for ASR-driven key presses
 }) => {
-  const [currentValue, setCurrentValue] = useState(value);
+  // Remove internal state - use value prop directly (controlled component)
   const [lastKey, setLastKey] = useState(null);
   const [pressedKey, setPressedKey] = useState(null); // for visual feedback
   const audioContextRef = React.useRef(null);
-
-  // Sync value prop to internal state when prop changes from parent
-  React.useEffect(() => {
-    setCurrentValue(value);
-    console.log('🔄 VirtualKeyboard value synced from parent:', value);
-  }, [value]);
 
   // Play click sound
   const playClickSound = () => {
@@ -100,6 +94,7 @@ const VirtualKeyboard = ({
 
   const handleKeyPress = (key, fromSpeech = false) => {
     console.log('🔤 Key pressed:', key, fromSpeech ? '(via speech)' : '(via click)');
+    console.log('🔤 Current value from prop:', value);
 
     // Visual feedback - longer timeout for speech recognition visibility
     setPressedKey(key);
@@ -108,8 +103,9 @@ const VirtualKeyboard = ({
     // Play click sound
     playClickSound();
 
-    const newValue = currentValue + key;
-    setCurrentValue(newValue);
+    // Use value prop (controlled component pattern)
+    const newValue = value + key;
+    console.log('🔤 New accumulated value:', newValue);
     setLastKey(key);
     if (onValueChange) {
       onValueChange(newValue);
@@ -117,8 +113,7 @@ const VirtualKeyboard = ({
   };
 
   const handleBackspace = () => {
-    const newValue = currentValue.slice(0, -1);
-    setCurrentValue(newValue);
+    const newValue = value.slice(0, -1);
     setLastKey(null);
     if (onValueChange) {
       onValueChange(newValue);
@@ -126,8 +121,7 @@ const VirtualKeyboard = ({
   };
 
   const handleSpace = () => {
-    const newValue = currentValue + ' ';
-    setCurrentValue(newValue);
+    const newValue = value + ' ';
     setLastKey(' ');
     if (onValueChange) {
       onValueChange(newValue);
@@ -135,7 +129,6 @@ const VirtualKeyboard = ({
   };
 
   const handleClear = () => {
-    setCurrentValue('');
     setLastKey(null);
     if (onValueChange) {
       onValueChange('');
@@ -144,7 +137,7 @@ const VirtualKeyboard = ({
 
   const handleSubmit = () => {
     if (onSubmit) {
-      onSubmit(currentValue);
+      onSubmit(value);
     }
     if (onClose) {
       onClose();
@@ -241,15 +234,14 @@ const VirtualKeyboard = ({
         <div className="relative">
           <input
             type="text"
-            value={currentValue}
+            value={value}
             onChange={(e) => {
-              setCurrentValue(e.target.value);
               if (onValueChange) onValueChange(e.target.value);
             }}
             placeholder={placeholder}
             className="w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
           />
-          {currentValue && (
+          {value && (
             <button
               onClick={handleClear}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -356,9 +348,9 @@ const VirtualKeyboard = ({
       {/* Submit Button */}
       <button
         onClick={handleSubmit}
-        disabled={!currentValue.trim()}
+        disabled={!value.trim()}
         className={`w-full flex items-center justify-center gap-2 h-12 rounded-lg font-semibold transition-all ${
-          currentValue.trim()
+          value.trim()
             ? 'bg-green-600 hover:bg-green-700 text-white active:scale-95'
             : 'bg-gray-200 text-gray-400 cursor-not-allowed'
         }`}
