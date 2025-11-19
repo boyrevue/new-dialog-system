@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, Button, Badge, Alert } from 'flowbite-react';
-import { Users, AlertTriangle, Settings, HelpCircle, Volume2, VolumeX } from 'lucide-react';
+import { Users, AlertTriangle, Settings, HelpCircle, Volume2, VolumeX, Play } from 'lucide-react';
 import VirtualKeyboard from './VirtualKeyboard';
 
 const API_BASE_URL = '/api';
@@ -22,7 +22,9 @@ const ChatDialogView = ({
   loading,
   sessionId,
   ttsEnabled,
+  ttsOnHold,
   onToggleTTS,
+  onResumeTTS,
   onResetTTS,
   onTestTTS,
   selectedVoice,
@@ -196,6 +198,17 @@ const ChatDialogView = ({
             <Badge color="light" size="sm">
               {sessionId.slice(0, 8)}
             </Badge>
+          )}
+          {/* Resume Button (appears when TTS is on hold after 4 rephrase attempts) */}
+          {ttsOnHold && (
+            <button
+              onClick={onResumeTTS}
+              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-2 animate-pulse"
+              title="Resume TTS"
+            >
+              <Play className="w-4 h-4 fill-white" />
+              <span className="text-sm font-medium">Resume</span>
+            </button>
           )}
           {/* Settings Cog Icon with Dropdown */}
           <div className="relative" ref={settingsMenuRef}>
@@ -486,6 +499,8 @@ const ChatMultimodalDialog = () => {
   const [availableVoices, setAvailableVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [rephraseCount, setRephraseCount] = useState(0);
+  const [ttsOnHold, setTtsOnHold] = useState(false);
 
   const wsRef = useRef(null);
   const rephraseTimerRef = useRef(null);
@@ -867,8 +882,8 @@ const ChatMultimodalDialog = () => {
 
   // Auto-rephrase timer (every 60 seconds of no input)
   useEffect(() => {
-    if (!currentQuestion || !ttsEnabled) {
-      console.log('Auto-rephrase disabled:', { hasQuestion: !!currentQuestion, ttsEnabled });
+    if (!currentQuestion || !ttsEnabled || ttsOnHold) {
+      console.log('Auto-rephrase disabled:', { hasQuestion: !!currentQuestion, ttsEnabled, ttsOnHold });
       return;
     }
 
@@ -894,7 +909,7 @@ const ChatMultimodalDialog = () => {
         console.log('Auto-rephrase timer cleared');
       }
     };
-  }, [currentQuestion, ttsEnabled]);
+  }, [currentQuestion, ttsEnabled, ttsOnHold]);
 
   const startSpeechRecognition = useCallback(() => {
     if (!recognitionRef.current) {
@@ -960,9 +975,19 @@ const ChatMultimodalDialog = () => {
   const handleRephrase = () => {
     console.log('handleRephrase called');
     console.log('currentQuestion:', currentQuestion);
+    console.log('rephraseCount:', rephraseCount);
 
     if (!currentQuestion || !currentQuestion.tts) {
       console.warn('Cannot rephrase: missing question or TTS data');
+      return;
+    }
+
+    // Check if we've already rephrased 4 times
+    if (rephraseCount >= 4) {
+      console.log('⏸️ Reached 4 rephrase attempts, putting TTS on hold');
+      setTtsOnHold(true);
+      speechSynthesis.cancel(); // Stop any current speech
+      addSystemMessage('⏸️ Waiting for your response... Press "Resume" when ready to continue.');
       return;
     }
 
@@ -988,12 +1013,33 @@ const ChatMultimodalDialog = () => {
 
     const nextIndex = (currentVariantIndex + 1) % variants.length;
     setCurrentVariantIndex(nextIndex);
+    setRephraseCount(prev => prev + 1);
 
     const rephraseText = variants[nextIndex];
-    console.log('🔄 Rephrasing with variant', nextIndex + 1, ':', rephraseText);
+    console.log(`🔄 Rephrasing with variant ${nextIndex + 1} (attempt ${rephraseCount + 1}/4):`, rephraseText);
 
     speakText(rephraseText);
-    addSystemMessage(`🔄 Let me rephrase: ${rephraseText}`);
+    addSystemMessage(`🔄 Let me rephrase (${rephraseCount + 1}/4): ${rephraseText}`);
+  };
+
+  const handleResume = () => {
+    console.log('▶️ Resume button clicked - restarting TTS');
+    setRephraseCount(0);
+    setTtsOnHold(false);
+    lastInputTimeRef.current = Date.now(); // Reset timer
+
+    // Re-speak the current question
+    if (currentQuestion && currentQuestion.tts) {
+      const variants = [];
+      if (currentQuestion.tts.variant1) variants.push(currentQuestion.tts.variant1);
+      if (currentQuestion.tts.variant2) variants.push(currentQuestion.tts.variant2);
+      if (currentQuestion.tts.variant3) variants.push(currentQuestion.tts.variant3);
+      if (currentQuestion.tts.variant4) variants.push(currentQuestion.tts.variant4);
+
+      const textToSpeak = variants[0] || currentQuestion.question_text;
+      speakText(textToSpeak);
+      addSystemMessage('▶️ Resuming: ' + textToSpeak);
+    }
   };
 
   const startSession = async () => {
@@ -1061,9 +1107,11 @@ const ChatMultimodalDialog = () => {
         console.log('⏭ Skipping speech - already spoken this question:', data.question_id);
       }
 
-      // Reset input timer for rephrase
+      // Reset input timer and rephrase counter for new question
       lastInputTimeRef.current = Date.now();
       setCurrentVariantIndex(0); // Reset variant index for new question
+      setRephraseCount(0); // Reset rephrase counter
+      setTtsOnHold(false); // Resume TTS if it was on hold
     } catch (err) {
       setError('Failed to load question: ' + err.message);
     } finally {
@@ -1076,6 +1124,8 @@ const ChatMultimodalDialog = () => {
 
     // Reset input timer when user sends a message
     lastInputTimeRef.current = Date.now();
+    setRephraseCount(0); // Reset rephrase counter when user responds
+    setTtsOnHold(false); // Resume TTS if it was on hold
 
     // Add user message to chat
     const userMessage = {
@@ -1324,7 +1374,9 @@ const ChatMultimodalDialog = () => {
         loading={loading}
         sessionId={sessionId}
         ttsEnabled={ttsEnabled}
+        ttsOnHold={ttsOnHold}
         onToggleTTS={handleToggleTTS}
+        onResumeTTS={handleResume}
         onResetTTS={resetSpeechSynthesis}
         onTestTTS={() => {
           console.log('🧪 Test TTS button clicked');
