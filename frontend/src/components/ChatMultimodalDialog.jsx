@@ -548,8 +548,9 @@ const ChatMultimodalDialog = () => {
 
         // If virtual keyboard is active, pass to its processor
         if (virtualKeyboardProcessorRef.current) {
-          console.log('📱 Passing to virtual keyboard processor');
+          console.log('📱 Passing to virtual keyboard processor:', transcript);
           const handled = virtualKeyboardProcessorRef.current(transcript);
+          console.log('📱 Virtual keyboard processor returned:', handled);
           if (handled) {
             console.log('✅ Virtual keyboard handled the speech input');
             // Continue listening for next word
@@ -563,7 +564,11 @@ const ChatMultimodalDialog = () => {
               }, 300);
             }
             return;
+          } else {
+            console.log('❌ Virtual keyboard did NOT handle:', transcript);
           }
+        } else {
+          console.log('📱 No virtual keyboard processor registered');
         }
 
         // Otherwise, handle normally
