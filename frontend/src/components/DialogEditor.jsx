@@ -48,13 +48,12 @@ import {
   GitBranch,
   Layers,
   Move,
-  Copy,
-  Settings,
   Info,
   Sparkles,
   Code
 } from 'lucide-react';
 import WorkflowEditor from './WorkflowEditor';
+import ASRGrammarPalette from './ASRGrammarPalette';
 
 const API_BASE_URL = '/api/config';
 
@@ -80,6 +79,7 @@ const DialogEditor = () => {
   const [showFieldSettings, setShowFieldSettings] = useState(false);
   const [showFieldHelp, setShowFieldHelp] = useState(false);
   const [selectedFieldIndex, setSelectedFieldIndex] = useState(null);
+  const [currentFieldType, setCurrentFieldType] = useState('text');
 
   // Word-to-Format Mappings for ASR
   const [wordMappings, setWordMappings] = useState([{ spokenWord: '', format: '' }]);
@@ -90,11 +90,24 @@ const DialogEditor = () => {
   // Configuration Editor State
   const [configTab, setConfigTab] = useState('json'); // 'json' or 'ttl'
   const [jsonConfig, setJsonConfig] = useState('');
+
+  // ASR Pattern Generation State
+  const [generatedPatterns, setGeneratedPatterns] = useState([]);
   const [ttlConfig, setTtlConfig] = useState('');
 
   useEffect(() => {
     loadQuestions();
   }, []);
+
+  // Debug: Log when field settings modal state changes
+  useEffect(() => {
+    if (showFieldSettings) {
+      console.log('🔍 Field Settings Modal OPENED');
+      console.log('🔍 selectedFieldForSettings:', selectedFieldForSettings);
+      console.log('🔍 selectedFieldIndex:', selectedFieldIndex);
+      console.log('🔍 droppedFields:', droppedFields);
+    }
+  }, [showFieldSettings, selectedFieldForSettings, selectedFieldIndex]);
 
   const loadQuestions = async () => {
     try {
@@ -109,7 +122,7 @@ const DialogEditor = () => {
     }
   };
 
-  const handleSelectQuestion = (question) => {
+  const handleSelectQuestion = async (question) => {
     setSelectedQuestion(question);
     setEditedQuestion({...question});
 
@@ -125,6 +138,27 @@ const DialogEditor = () => {
         generateVariant(mainText, 2),
         generateVariant(mainText, 3)
       ]);
+    }
+
+    // Load saved form fields if available
+    try {
+      const response = await fetch(`${API_BASE_URL}/question/${question.question_id}/form-fields`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.fields && data.fields.length > 0) {
+          console.log('📥 Loaded', data.fields.length, 'saved form fields for question', question.question_id);
+          setDroppedFields(data.fields);
+        } else {
+          console.log('📭 No saved form fields found for question', question.question_id);
+          setDroppedFields([]);
+        }
+      } else {
+        console.log('⚠️ Could not load form fields, starting with empty canvas');
+        setDroppedFields([]);
+      }
+    } catch (err) {
+      console.error('Error loading form fields:', err);
+      setDroppedFields([]);
     }
   };
 
@@ -144,14 +178,18 @@ const DialogEditor = () => {
     try {
       setLoading(true);
 
-      // Include TTS variants in the save
+      // Include TTS variants and form fields in the save
       const questionToSave = {
         ...editedQuestion,
         tts: {
           ...editedQuestion.tts,
           variants: ttsVariants
-        }
+        },
+        // Include dropped form fields
+        formFields: droppedFields
       };
+
+      console.log('💾 Saving question with data:', questionToSave);
 
       const response = await fetch(`${API_BASE_URL}/question/${editedQuestion.question_id}`, {
         method: 'POST',
@@ -413,14 +451,15 @@ const DialogEditor = () => {
         </div>
 
         <div className="grid grid-cols-12 gap-6">
-          {/* Left Panel - Field Palette */}
-          <div className="col-span-3">
+          {/* Left Panel - Field Palettes */}
+          <div className="col-span-3 space-y-4">
+            {/* Standard Field Palette */}
             <Card className="sticky top-4">
               <h4 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800">
                 <Layers className="w-5 h-5 text-blue-600" />
                 Field Palette
               </h4>
-              <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {formFields.map((field) => {
                   const Icon = field.icon;
                   return (
@@ -455,6 +494,11 @@ const DialogEditor = () => {
                 })}
               </div>
             </Card>
+
+            {/* ASR Grammar Palette */}
+            <div className="max-h-[600px] overflow-y-auto">
+              <ASRGrammarPalette />
+            </div>
           </div>
 
           {/* Center Panel - Form Canvas (Node-RED Style) */}
@@ -463,16 +507,6 @@ const DialogEditor = () => {
               {/* Header with dark background */}
               <div className="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-gray-700">
                 <h4 className="font-bold text-lg text-gray-200">Form Canvas</h4>
-                <div className="flex gap-2">
-                  <Button size="sm" color="dark">
-                    <Copy className="w-4 h-4 mr-1" />
-                    Duplicate
-                  </Button>
-                  <Button size="sm" color="dark">
-                    <Settings className="w-4 h-4 mr-1" />
-                    Settings
-                  </Button>
-                </div>
               </div>
 
               {/* Canvas Area with Grid Pattern */}
@@ -492,6 +526,8 @@ const DialogEditor = () => {
                 }}
                 onDrop={(e) => {
                   e.preventDefault();
+
+                  // Check if it's a standard field
                   const fieldData = e.dataTransfer.getData('field');
                   if (fieldData) {
                     const field = JSON.parse(fieldData);
@@ -502,6 +538,38 @@ const DialogEditor = () => {
                       required: false
                     };
                     setDroppedFields([...droppedFields, newField]);
+                    return;
+                  }
+
+                  // Check if it's an ASR template
+                  const asrTemplateData = e.dataTransfer.getData('asrTemplate');
+                  if (asrTemplateData) {
+                    const template = JSON.parse(asrTemplateData);
+                    console.log('🎤 Dropped ASR template:', template);
+
+                    // Create field from ASR template
+                    const newField = {
+                      id: `${template.id}_${Date.now()}`,
+                      label: template.label,
+                      type: template.id,
+                      icon: template.icon,
+                      iconName: 'User', // Default icon name
+                      color: template.color,
+                      desc: template.description,
+                      required: false,
+
+                      // Copy ASR configuration
+                      asr: { ...template.asr },
+
+                      // Copy validation rules
+                      validation: { ...template.validation },
+
+                      // Copy UI hints
+                      ui: { ...template.ui }
+                    };
+
+                    setDroppedFields([...droppedFields, newField]);
+                    console.log('✅ Added ASR grammar field:', newField);
                   }
                 }}
               >
@@ -543,6 +611,7 @@ const DialogEditor = () => {
                               onClick={() => {
                                 setSelectedFieldForSettings(field);
                                 setSelectedFieldIndex(index);
+                                setCurrentFieldType(field.type || 'text');
                                 setShowFieldSettings(true);
                               }}
                               className="p-2 hover:bg-gray-700/50 rounded transition-colors"
@@ -1186,7 +1255,11 @@ const DialogEditor = () => {
                   </div>
                   <div>
                     <Label htmlFor="field-type">Field Type</Label>
-                    <Select id="field-type" defaultValue={selectedFieldForSettings.id}>
+                    <Select
+                      id="field-type"
+                      defaultValue={selectedFieldForSettings.type || 'text'}
+                      onChange={(e) => setCurrentFieldType(e.target.value)}
+                    >
                       <option value="text">Text Input</option>
                       <option value="textarea">Text Area</option>
                       <option value="number">Number</option>
@@ -1202,6 +1275,7 @@ const DialogEditor = () => {
                     <Label htmlFor="field-placeholder">Placeholder</Label>
                     <TextInput
                       id="field-placeholder"
+                      defaultValue={selectedFieldForSettings.placeholder || ''}
                       placeholder="enter the question"
                     />
                   </div>
@@ -1236,14 +1310,26 @@ const DialogEditor = () => {
                   <div>
                     <Label>Validation Library Predicates</Label>
                     <div className="grid grid-cols-2 gap-2 mt-2">
-                      {['isDigit', 'isNumber', 'isInteger', 'isFloat', 'isDate', 'isPastDate', 'isFutureDate', 'isMonth', 'isDayOfMonth', 'isLeapYear', 'isPostcode', 'isEmail', 'isPhone', 'isUKPostcode', 'isUKDrivingLicence', 'isUKDrivingLicenceCategory', 'isUKDrivingOffenceCode', 'isUKCarRegistration', 'isSelect'].map((pred) => (
-                        <label key={pred} className="flex items-center gap-2 p-2 bg-white rounded border border-green-200 hover:bg-green-50 cursor-pointer">
-                          <input type="checkbox" className="rounded" />
-                          <span className="text-sm font-mono text-gray-700">{pred}</span>
-                        </label>
-                      ))}
+                      {['isString', 'isAlphanumeric', 'isAlpha', 'isNumeric', 'isDigit', 'isNumber', 'isInteger', 'isFloat', 'isDate', 'isPastDate', 'isFutureDate', 'isMonth', 'isDayOfMonth', 'isLeapYear', 'isPostcode', 'isEmail', 'isPhone', 'isUKPostcode', 'isUKDrivingLicence', 'isUKDrivingLicenceCategory', 'isUKDrivingOffenceCode', 'isUKCarRegistration', 'isSelect'].map((pred) => {
+                        const isChecked = selectedFieldForSettings.validation?.validators?.includes(pred) || false;
+                        return (
+                          <label key={pred} className="flex items-center gap-2 p-2 bg-white rounded border border-green-200 hover:bg-green-50 cursor-pointer">
+                            <input type="checkbox" className="rounded" defaultChecked={isChecked} />
+                            <span className="text-sm font-mono text-gray-700">{pred}</span>
+                          </label>
+                        );
+                      })}
                     </div>
-                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-xs text-gray-700 font-semibold mb-2">String Validators:</p>
+                      <ul className="text-xs text-gray-600 space-y-1">
+                        <li><span className="font-mono text-green-700">isString</span>: Validates if value is a string</li>
+                        <li><span className="font-mono text-green-700">isAlphanumeric</span>: Validates string contains only letters and numbers (no spaces or special characters)</li>
+                        <li><span className="font-mono text-green-700">isAlpha</span>: Validates string contains only alphabetic characters (letters only, no numbers or special characters)</li>
+                        <li><span className="font-mono text-green-700">isNumeric</span>: Validates string contains only numeric characters (digits 0-9, spaces, and hyphens allowed)</li>
+                      </ul>
+                    </div>
+                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-xs text-gray-700 font-semibold mb-2">Date/Time Validators:</p>
                       <ul className="text-xs text-gray-600 space-y-1">
                         <li><span className="font-mono text-blue-700">isMonth</span>: Validates month number (1-12)</li>
@@ -1294,6 +1380,7 @@ const DialogEditor = () => {
                     <TextInput
                       id="min-length"
                       type="number"
+                      defaultValue={selectedFieldForSettings.validation?.minLength || 0}
                       placeholder="0"
                     />
                   </div>
@@ -1303,6 +1390,7 @@ const DialogEditor = () => {
                     <TextInput
                       id="max-length"
                       type="number"
+                      defaultValue={selectedFieldForSettings.validation?.maxLength || 255}
                       placeholder="255"
                     />
                   </div>
@@ -1406,35 +1494,202 @@ const DialogEditor = () => {
                 </Alert>
 
                 <div className="space-y-4">
+                  {/* Prominent AI Generate Button */}
+                  <div className="bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 border-4 border-purple-500 rounded-xl p-6 shadow-2xl">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 p-4 bg-yellow-400 rounded-xl shadow-lg animate-pulse">
+                        <Sparkles className="w-10 h-10 text-purple-900" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-2xl text-white mb-3 flex items-center gap-2">
+                          <span className="animate-pulse">✨</span>
+                          AI-Powered Grammar Generator
+                        </h4>
+                        <p className="text-base text-purple-100 mb-4 leading-relaxed">
+                          <strong className="text-yellow-300">Automatically generate ASR grammar patterns</strong> from your TTS question variants.
+                          Includes response patterns like <code className="bg-purple-700 px-2 py-1 rounded text-yellow-200">"my first name is"</code>,
+                          <code className="bg-purple-700 px-2 py-1 rounded text-yellow-200 ml-1">"my name is"</code>,
+                          <code className="bg-purple-700 px-2 py-1 rounded text-yellow-200 ml-1">"I'm Vincent"</code>.
+                        </p>
+                        <Button
+                          size="xl"
+                          className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-purple-900 font-bold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+                          onClick={async () => {
+                            setLoading(true);
+                            try {
+                              // Get the current question and its TTS variants
+                              const questionText = selectedFieldForSettings?.label || '';
+                              const variants = ttsVariants || [];
+
+                              console.log('🤖 Generating ASR grammar for question:', questionText);
+                              console.log('📝 Using TTS variants:', variants);
+
+                              // Call backend API to generate ASR grammar
+                              const response = await fetch(`${API_BASE_URL}/generate-asr-grammar`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  questionText,
+                                  ttsVariants: variants,
+                                  fieldLabel: questionText
+                                })
+                              });
+
+                              if (!response.ok) {
+                                throw new Error('Failed to generate ASR grammar');
+                              }
+
+                              const data = await response.json();
+                              console.log('✅ Generated ASR grammar:', data);
+                              console.log('📊 Response patterns:', data.patterns);
+
+                              // Store the generated patterns for checklist display
+                              if (data.patterns && Array.isArray(data.patterns)) {
+                                setGeneratedPatterns(data.patterns.map((pattern, idx) => ({
+                                  id: idx,
+                                  pattern: pattern,
+                                  selected: true // All patterns selected by default
+                                })));
+                              }
+
+                              // Update the ASR grammar textarea
+                              const grammarTextarea = document.getElementById('asr-grammar');
+                              if (grammarTextarea && data.grammar) {
+                                grammarTextarea.value = data.grammar;
+                                setSuccess(`✅ Generated ${data.patterns?.length || 0} ASR response patterns! Review and select patterns below.`);
+                              }
+
+                              setLoading(false);
+                              setTimeout(() => setSuccess(null), 8000);
+                            } catch (err) {
+                              console.error('❌ Error generating ASR grammar:', err);
+                              setError(`Failed to generate ASR grammar: ${err.message}`);
+                              setLoading(false);
+                              setTimeout(() => setError(null), 3000);
+                            }
+                          }}
+                        >
+                          <Sparkles className="w-5 h-5 mr-2" />
+                          Generate ASR Grammar from TTS Variants
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ASR Grammar Patterns - Enhanced Textarea */}
                   <div>
-                    <Label htmlFor="asr-grammar">ASR Grammar Patterns</Label>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label htmlFor="asr-grammar" className="text-base font-semibold">Generated JSGF Grammar</Label>
+                      <Badge color="purple">JSGF Format</Badge>
+                    </div>
                     <Textarea
                       id="asr-grammar"
-                      rows={4}
-                      placeholder="Enter expected phrases, one per line:
+                      rows={12}
+                      placeholder="Click 'Generate ASR Grammar' above to auto-generate JSGF patterns...
+
+Or enter manually:
 yes | no
 accept | decline
 {month} {day} {year}"
-                      className="font-mono text-sm"
+                      className="font-mono text-sm bg-gray-50 border-2 border-indigo-200"
                     />
-                    <p className="text-xs text-gray-600 mt-1">
-                      Define grammar patterns for speech recognition. Supports JSGF, GRXML, ABNF, and regex formats.
-                    </p>
-                  </div>
-
-                  <div>
-                    <Label>Grammar Variants</Label>
-                    <div className="space-y-2">
-                      <Button size="sm" color="purple">
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Grammar Variant
-                      </Button>
+                    <div className="flex items-start gap-2 mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                      <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-blue-800">
+                        Supports JSGF, GRXML, ABNF, and regex formats. Generated grammars include response patterns,
+                        NATO phonetic alphabet, and parameter variations.
+                      </p>
                     </div>
                   </div>
+
+                  {/* Generated Response Patterns Checklist */}
+                  {generatedPatterns.length > 0 && (
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h4 className="text-lg font-bold text-green-900 flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5" />
+                            Generated Response Patterns ({generatedPatterns.filter(p => p.selected).length}/{generatedPatterns.length} selected)
+                          </h4>
+                          <p className="text-sm text-green-700 mt-1">
+                            Review and select which patterns to include in your ASR grammar
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="xs"
+                            color="success"
+                            onClick={() => setGeneratedPatterns(generatedPatterns.map(p => ({ ...p, selected: true })))}
+                          >
+                            Select All
+                          </Button>
+                          <Button
+                            size="xs"
+                            color="light"
+                            onClick={() => setGeneratedPatterns(generatedPatterns.map(p => ({ ...p, selected: false })))}
+                          >
+                            Deselect All
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2 bg-white rounded-lg border border-green-200">
+                        {generatedPatterns.map((item) => (
+                          <label
+                            key={item.id}
+                            className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                              item.selected
+                                ? 'bg-green-100 border-green-400 shadow-sm'
+                                : 'bg-gray-50 border-gray-200 hover:border-green-300'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={item.selected}
+                              onChange={(e) => {
+                                const updated = generatedPatterns.map(p =>
+                                  p.id === item.id ? { ...p, selected: e.target.checked } : p
+                                );
+                                setGeneratedPatterns(updated);
+                              }}
+                              className="w-4 h-4 text-green-600 rounded"
+                            />
+                            <code className={`text-sm flex-1 ${item.selected ? 'text-green-900 font-medium' : 'text-gray-600'}`}>
+                              {item.pattern}
+                            </code>
+                          </label>
+                        ))}
+                      </div>
+
+                      <div className="mt-4 flex gap-2">
+                        <Button
+                          size="sm"
+                          color="success"
+                          onClick={async () => {
+                            // Regenerate grammar with only selected patterns
+                            const selectedPatterns = generatedPatterns.filter(p => p.selected).map(p => p.pattern);
+                            setSuccess(`✅ Applied ${selectedPatterns.length} selected patterns to grammar`);
+                            setTimeout(() => setSuccess(null), 3000);
+                          }}
+                        >
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Apply Selected Patterns
+                        </Button>
+                        <Button
+                          size="sm"
+                          color="light"
+                          onClick={() => setGeneratedPatterns([])}
+                        >
+                          Clear All
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
 
-              {/* Select List Data Management */}
+              {/* Select List Data Management - Only show for select/dropdown fields */}
+              {currentFieldType === 'select' && (
               <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <List className="w-5 h-5 text-blue-600" />
@@ -1562,6 +1817,7 @@ accept | decline
                   </Button>
                 </div>
               </Card>
+              )}
 
               {/* Mapping & Transformation Rules */}
               <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
@@ -1880,9 +2136,94 @@ Example 3: ..."
             <Button
               color="success"
               onClick={() => {
+                console.log('🔍 Save Field Settings button clicked');
+                console.log('🔍 selectedFieldIndex:', selectedFieldIndex);
+                console.log('🔍 selectedFieldForSettings:', selectedFieldForSettings);
+                console.log('🔍 Current droppedFields:', droppedFields);
+
+                // Get updated values from form inputs
+                const labelInput = document.getElementById('field-label');
+                const keyInput = document.getElementById('field-key');
+                const typeInput = document.getElementById('field-type');
+                const placeholderInput = document.getElementById('field-placeholder');
+                const requiredInput = document.getElementById('toggle-field-required');
+                const minLengthInput = document.getElementById('min-length');
+                const maxLengthInput = document.getElementById('max-length');
+
+                console.log('🔍 Found DOM elements:', {
+                  labelInput,
+                  keyInput,
+                  typeInput,
+                  placeholderInput,
+                  requiredInput,
+                  minLengthInput,
+                  maxLengthInput
+                });
+
+                const label = labelInput?.value || selectedFieldForSettings.label;
+                const key = keyInput?.value || selectedFieldForSettings.id;
+                const fieldType = typeInput?.value || selectedFieldForSettings.id;
+                const placeholder = placeholderInput?.value || '';
+                const required = requiredInput?.checked || false;
+                const minLength = parseInt(minLengthInput?.value || '0');
+                const maxLength = parseInt(maxLengthInput?.value || '999');
+
+                console.log('🔍 Extracted values:', {
+                  label,
+                  key,
+                  fieldType,
+                  placeholder,
+                  required,
+                  minLength,
+                  maxLength
+                });
+
+                // Get selected validators
+                const validators = [];
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+                console.log('🔍 Found', checkboxes.length, 'checked checkboxes');
+
+                checkboxes.forEach(checkbox => {
+                  const labelText = checkbox.nextElementSibling?.textContent;
+                  console.log('🔍 Checkbox label text:', labelText);
+                  if (labelText && labelText.startsWith('is')) {
+                    validators.push(labelText);
+                  }
+                });
+
+                console.log('🔍 Collected validators:', validators);
+
+                // Update the field in droppedFields array
+                const updatedFields = [...droppedFields];
+                if (selectedFieldIndex !== null && updatedFields[selectedFieldIndex]) {
+                  console.log('🔍 Updating field at index:', selectedFieldIndex);
+                  console.log('🔍 Original field:', updatedFields[selectedFieldIndex]);
+
+                  updatedFields[selectedFieldIndex] = {
+                    ...updatedFields[selectedFieldIndex],
+                    label,
+                    id: key,
+                    type: fieldType,
+                    placeholder,
+                    required,
+                    validation: {
+                      minLength,
+                      maxLength,
+                      validators
+                    }
+                  };
+
+                  console.log('🔍 Updated field:', updatedFields[selectedFieldIndex]);
+                  setDroppedFields(updatedFields);
+                  console.log('✅ Field settings saved:', updatedFields[selectedFieldIndex]);
+                } else {
+                  console.error('❌ Cannot save: selectedFieldIndex is null or field not found');
+                  console.error('selectedFieldIndex:', selectedFieldIndex);
+                  console.error('updatedFields length:', updatedFields.length);
+                }
+
                 setSuccess('Field settings saved successfully!');
                 setShowFieldSettings(false);
-                // TODO: Implement save logic
               }}
             >
               <Save className="w-4 h-4 mr-2" />
