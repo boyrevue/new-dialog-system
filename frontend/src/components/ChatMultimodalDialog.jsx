@@ -43,6 +43,15 @@ const ChatDialogView = ({
   const fileInputRef = useRef(null);
   const settingsMenuRef = useRef(null);
 
+    // Memoized registration to avoid repeated logs/registrations on re-render
+    const registerVirtualKeyboardProcessor = useCallback((processor) => {
+      if (!virtualKeyboardProcessorRef) return;
+      if (virtualKeyboardProcessorRef.current !== processor) {
+        virtualKeyboardProcessorRef.current = processor;
+        console.log('📱 Virtual keyboard processor registered');
+      }
+    }, [virtualKeyboardProcessorRef]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -83,6 +92,13 @@ const ChatDialogView = ({
       setShowVirtualKeyboard(false);
     }
   }, [isRecording, currentQuestion]);
+
+    // Clear processor when the keyboard hides to prevent stale handlers
+    useEffect(() => {
+      if (!showVirtualKeyboard && virtualKeyboardProcessorRef) {
+        virtualKeyboardProcessorRef.current = null;
+      }
+    }, [showVirtualKeyboard, virtualKeyboardProcessorRef]);
 
   const handleSend = () => {
     if (!inputValue.trim()) return;
@@ -436,8 +452,12 @@ const ChatDialogView = ({
             <VirtualKeyboard
               value={inputValue}
               onValueChange={(newValue) => {
-                setInputValue(newValue);
-                console.log('📝 Virtual keyboard input:', newValue);
+                // Support both direct values and functional updaters
+                setInputValue((prev) => {
+                  const nextValue = typeof newValue === 'function' ? newValue(prev ?? '') : newValue;
+                  console.log('📝 Virtual keyboard input:', nextValue);
+                  return nextValue;
+                });
                 // Stop TTS when user starts typing
                 if (speechSynthesis.speaking) {
                   console.log('🔇 Stopping TTS - user is typing');
@@ -464,13 +484,7 @@ const ChatDialogView = ({
                 currentQuestion?.input_mode === 'numeric' ? 'numeric' : 'alphanumeric'
               }
               placeholder={currentQuestion?.question_text || 'Speak using NATO alphabet...'}
-              onSpeechRecognized={(processor) => {
-                // Store the processor callback in parent ref
-                if (virtualKeyboardProcessorRef) {
-                  virtualKeyboardProcessorRef.current = processor;
-                  console.log('📱 Virtual keyboard processor registered');
-                }
-              }}
+              onSpeechRecognized={registerVirtualKeyboardProcessor}
             />
           </div>
         </div>
@@ -1018,6 +1032,12 @@ const ChatMultimodalDialog = () => {
       return;
     }
 
+    // Check if already recording - prevent double start
+    if (isRecording) {
+      console.log('⚠️ Already recording, ignoring duplicate start request');
+      return;
+    }
+
     try {
       setError(null);
       console.log('Starting speech recognition...');
@@ -1055,9 +1075,19 @@ const ChatMultimodalDialog = () => {
           console.log(`🎤 Setting continuous mode: ${isVirtualKeyboardMode} (spelling_required: ${currentQuestion?.spelling_required})`);
 
           // Start speech recognition AFTER microphone permission is granted
-          recognitionRef.current.start();
-          console.log('SpeechRecognition.start() called');
-          setIsRecording(true);
+          try {
+            recognitionRef.current.start();
+            console.log('SpeechRecognition.start() called');
+            setIsRecording(true);
+          } catch (startErr) {
+            // Handle "already started" error gracefully
+            if (startErr.message && startErr.message.includes('already started')) {
+              console.log('ℹ️ Speech recognition already started, continuing...');
+              setIsRecording(true);
+            } else {
+              throw startErr; // Re-throw if it's a different error
+            }
+          }
         })
         .catch(err => {
           console.error('Microphone access error:', err);
