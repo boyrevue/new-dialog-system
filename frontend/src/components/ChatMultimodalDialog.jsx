@@ -1056,13 +1056,16 @@ const ChatMultimodalDialog = () => {
 
     const nextIndex = (currentVariantIndex + 1) % variants.length;
     setCurrentVariantIndex(nextIndex);
-    setRephraseCount(prev => prev + 1);
+
+    // Calculate new count before updating state
+    const newCount = rephraseCount + 1;
+    setRephraseCount(newCount);
 
     const rephraseText = variants[nextIndex];
-    console.log(`🔄 Rephrasing with variant ${nextIndex + 1} (attempt ${rephraseCount + 1}/4):`, rephraseText);
+    console.log(`🔄 Rephrasing with variant ${nextIndex + 1} (attempt ${newCount}/4):`, rephraseText);
 
     speakText(rephraseText);
-    addSystemMessage(`🔄 Let me rephrase (${rephraseCount + 1}/4): ${rephraseText}`);
+    addSystemMessage(`🔄 Let me rephrase (${newCount}/4): ${rephraseText}`);
   };
 
   const handleResume = () => {
