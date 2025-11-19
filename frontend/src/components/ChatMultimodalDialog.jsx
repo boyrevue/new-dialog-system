@@ -438,6 +438,11 @@ const ChatDialogView = ({
               onValueChange={(newValue) => {
                 setInputValue(newValue);
                 console.log('📝 Virtual keyboard input:', newValue);
+                // Stop TTS when user starts typing
+                if (speechSynthesis.speaking) {
+                  console.log('🔇 Stopping TTS - user is typing');
+                  speechSynthesis.cancel();
+                }
               }}
               onClose={() => {
                 setShowVirtualKeyboard(false);
@@ -554,6 +559,7 @@ const ChatMultimodalDialog = () => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
+      // Note: continuous mode will be set dynamically based on context
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
       recognitionRef.current.lang = 'en-GB';
@@ -997,6 +1003,7 @@ const ChatMultimodalDialog = () => {
       console.log('Starting speech recognition...');
 
       // Stop any current TTS
+      console.log('🔇 Stopping TTS - user is speaking');
       speechSynthesis.cancel();
 
       navigator.mediaDevices.getUserMedia({ audio: true })
@@ -1013,6 +1020,11 @@ const ChatMultimodalDialog = () => {
           mediaRecorderRef.current.start();
           console.log('MediaRecorder started');
 
+          // Enable continuous mode for virtual keyboard (NATO alphabet input)
+          const isVirtualKeyboardMode = currentQuestion?.spelling_required === true;
+          recognitionRef.current.continuous = isVirtualKeyboardMode;
+          console.log(`🎤 Setting continuous mode: ${isVirtualKeyboardMode} (spelling_required: ${currentQuestion?.spelling_required})`);
+
           // Start speech recognition AFTER microphone permission is granted
           recognitionRef.current.start();
           console.log('SpeechRecognition.start() called');
@@ -1028,7 +1040,7 @@ const ChatMultimodalDialog = () => {
       setError('Failed to start speech recognition: ' + err.message);
       setIsRecording(false);
     }
-  }, []);
+  }, [currentQuestion]);
 
   const stopSpeechRecognition = useCallback(() => {
     if (recognitionRef.current && isRecording) {
