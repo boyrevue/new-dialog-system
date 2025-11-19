@@ -153,41 +153,67 @@ const VirtualKeyboard = ({
   React.useEffect(() => {
     if (!onSpeechRecognized) return;
 
-    const processSpokenWord = (spokenText) => {
+    const processSpokenText = (spokenText) => {
       const text = spokenText.toLowerCase().trim();
-      console.log('🎤 Processing spoken word:', text);
+      console.log('🎤 Processing spoken text:', text);
 
-      // Check for delete/backspace commands
-      if (text === 'delete' || text === 'backspace' || text === 'clear') {
-        handleBackspace();
-        return true;
-      }
+      // Split by spaces to handle multiple words (e.g., "alpha bravo charlie")
+      const words = text.split(/\s+/);
+      console.log('🎤 Split into words:', words);
 
-      // Check for space
-      if (text === 'space') {
-        handleSpace();
-        return true;
-      }
+      let anyWordHandled = false;
 
-      // Check for NATO phonetic alphabet
-      for (const [letter, phonetic] of Object.entries(NATO_PHONETIC)) {
-        if (text === phonetic.toLowerCase() || text === letter.toLowerCase()) {
-          handleKeyPress(letter, true);
-          return true;
+      for (const word of words) {
+        if (!word) continue;
+
+        console.log('🎤 Processing word:', word);
+
+        // Check for delete/backspace commands
+        if (word === 'delete' || word === 'backspace' || word === 'clear') {
+          handleBackspace();
+          anyWordHandled = true;
+          continue;
         }
+
+        // Check for space
+        if (word === 'space') {
+          handleSpace();
+          anyWordHandled = true;
+          continue;
+        }
+
+        // Check for NATO phonetic alphabet
+        let matched = false;
+        for (const [letter, phonetic] of Object.entries(NATO_PHONETIC)) {
+          if (word === phonetic.toLowerCase() || word === letter.toLowerCase()) {
+            console.log(`✅ Matched "${word}" to letter ${letter}`);
+            handleKeyPress(letter, true);
+            anyWordHandled = true;
+            matched = true;
+            break;
+          }
+        }
+
+        if (matched) continue;
+
+        // Check for numbers (if numeric keyboard)
+        if (keyboardType === 'numeric' && /^[0-9]$/.test(word)) {
+          handleKeyPress(word, true);
+          anyWordHandled = true;
+          continue;
+        }
+
+        console.log('⚠️ Could not match word to any key:', word);
       }
 
-      // Check for numbers (if numeric keyboard)
-      if (keyboardType === 'numeric' && /^[0-9]$/.test(text)) {
-        handleKeyPress(text, true);
-        return true;
+      if (!anyWordHandled) {
+        console.log('❌ No words were matched in:', text);
       }
 
-      console.log('⚠️ Could not match spoken word to any key:', text);
-      return false;
+      return anyWordHandled;
     };
 
-    onSpeechRecognized(processSpokenWord);
+    onSpeechRecognized(processSpokenText);
   }, [onSpeechRecognized, keyboardType]);
 
   return (
