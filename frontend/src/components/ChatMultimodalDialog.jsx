@@ -66,13 +66,15 @@ const ChatDialogView = ({
   useEffect(() => {
     if (isRecording && currentQuestion) {
       // Determine if this question needs virtual keyboard
-      const needsKeyboard = currentQuestion.input_mode === 'text' ||
+      const needsKeyboard = currentQuestion.spelling_required === true ||
+                           currentQuestion.input_mode === 'text' ||
                            currentQuestion.input_mode === 'alphanumeric' ||
                            currentQuestion.input_mode === 'numeric' ||
                            currentQuestion.question_type === 'text';
 
       if (needsKeyboard) {
-        console.log('📱 Showing virtual keyboard for question:', currentQuestion.question_id);
+        console.log('📱 Showing virtual keyboard for question:', currentQuestion.question_id,
+                    '(spelling_required:', currentQuestion.spelling_required, ')');
         setShowVirtualKeyboard(true);
       }
     } else {
