@@ -95,9 +95,9 @@ const VirtualKeyboard = ({
   const handleKeyPress = (key, fromSpeech = false) => {
     console.log('🔤 Key pressed:', key, fromSpeech ? '(via speech)' : '(via click)');
 
-    // Visual feedback
+    // Visual feedback - longer timeout for speech recognition visibility
     setPressedKey(key);
-    setTimeout(() => setPressedKey(null), 200);
+    setTimeout(() => setPressedKey(null), fromSpeech ? 800 : 200);
 
     // Play click sound
     playClickSound();
@@ -300,20 +300,20 @@ const VirtualKeyboard = ({
                   <button
                     key={key}
                     onClick={() => handleKeyPress(key)}
-                    className={`relative w-14 h-16 border-2 rounded-lg font-semibold transition-all group ${
+                    className={`relative w-14 h-16 border-4 rounded-lg font-semibold transition-all group ${
                       isPressed
-                        ? 'bg-blue-500 border-blue-600 text-white scale-95'
+                        ? 'bg-yellow-300 border-yellow-500 text-gray-900 scale-95 shadow-lg'
                         : 'bg-white hover:bg-blue-50 border-gray-300 hover:border-blue-400 text-gray-800 active:scale-95'
                     }`}
                     title={`${key} - ${phonetic}`}
                   >
                     <div className="flex flex-col items-center justify-center h-full">
-                      <span className={`text-xl font-bold ${isPressed ? 'text-white' : 'text-gray-800'}`}>
+                      <span className={`text-xl font-bold ${isPressed ? 'text-gray-900' : 'text-gray-800'}`}>
                         {key}
                       </span>
                       {showPhonetic && (
                         <span className={`text-[9px] font-medium mt-0.5 ${
-                          isPressed ? 'text-blue-100' : 'text-gray-500 group-hover:text-blue-600'
+                          isPressed ? 'text-gray-700' : 'text-gray-500 group-hover:text-blue-600'
                         }`}>
                           {phonetic}
                         </span>
