@@ -210,7 +210,7 @@
 :InsuranceQuoteDialog a :Dialog ;
     rdfs:label "Car Insurance Quote Dialog" ;
     dcterms:description "Comprehensive dialog for collecting car insurance quote information" ;
-    :hasNode :WelcomeNode, :DriversSection, :VehicleSection, :PolicySection, :ClaimsSection, :PaymentSection, :ExtrasSection, :MarketingSection, :SummaryNode ;
+    :hasNode :WelcomeNode, :PersonalInfoSection, :DriversSection, :VehicleSection, :PolicySection, :ClaimsSection, :PaymentSection, :ExtrasSection, :MarketingSection, :SummaryNode ;
     :hasQuestion :FirstNameQuestion, :LastNameQuestion, :DOBQuestion, :EmailQuestion, :PhoneQuestion, :AddressQuestion, :PostcodeQuestion, :LicenceTypeQuestion, :LicenceNumberQuestion, :YearsHeldQuestion,
                  :VehicleRegQuestion, :VehicleMakeQuestion, :CarModelQuestion, :CarYearQuestion, :MileageQuestion, :VehicleValueQuestion, :OvernightLocationQuestion, :HasModificationsQuestion,
                  :CoverTypeQuestion, :StartDateQuestion, :VoluntaryExcessQuestion, :NCDYearsQuestion, :ProtectNCDQuestion,

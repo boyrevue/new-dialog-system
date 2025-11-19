@@ -3,11 +3,13 @@ Configuration Panel API - Admin interface for editing dialog configuration
 Allows viewing and editing TTS, ASR, OWL, and SHACL configurations
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List, Dict
 import logging
+import uuid
+import base64
 from pathlib import Path
 from tts_variant_generator import TTSVariantGenerator
 import json
@@ -479,6 +481,7 @@ class QuestionUpdate(BaseModel):
     tts_rate: Optional[float] = None
     tts_pitch: Optional[float] = None
     tts: Optional[TTSConfig] = None
+    formFields: Optional[List[dict]] = None  # Form builder fields
 
 
 @app.post("/api/config/question/{question_id}")
@@ -502,6 +505,31 @@ async def update_question(question_id: str, question_data: QuestionUpdate):
             else:
                 logger.warning(f"Failed to save TTS variants for question {question_id}")
 
+        # Save form fields to JSON cache if provided
+        if question_data.formFields is not None:
+            form_fields_cache_path = os.path.join(os.path.dirname(__file__), 'form_fields_cache.json')
+
+            # Load existing cache
+            if os.path.exists(form_fields_cache_path):
+                with open(form_fields_cache_path, 'r') as f:
+                    form_cache = json.load(f)
+            else:
+                form_cache = {}
+
+            # Update cache with new form fields
+            form_cache[question_id] = {
+                "fields": question_data.formFields,
+                "updated_at": str(datetime.now())
+            }
+
+            # Save cache
+            try:
+                with open(form_fields_cache_path, 'w') as f:
+                    json.dump(form_cache, f, indent=2)
+                logger.info(f"✅ Saved {len(question_data.formFields)} form fields for question {question_id}")
+            except Exception as e:
+                logger.error(f"❌ Failed to save form fields: {e}")
+
         return {
             "success": True,
             "question_id": question_id,
@@ -511,6 +539,35 @@ async def update_question(question_id: str, question_data: QuestionUpdate):
     except Exception as e:
         logger.error(f"Error updating question: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/question/{question_id}/form-fields")
+async def get_form_fields(question_id: str):
+    """
+    Retrieve saved form fields for a question.
+    Returns the form fields from the cache file.
+    """
+    try:
+        form_fields_cache_path = os.path.join(os.path.dirname(__file__), 'form_fields_cache.json')
+
+        if not os.path.exists(form_fields_cache_path):
+            return {"fields": []}
+
+        with open(form_fields_cache_path, 'r') as f:
+            form_cache = json.load(f)
+
+        if question_id in form_cache:
+            logger.info(f"📥 Loading {len(form_cache[question_id]['fields'])} form fields for question {question_id}")
+            return {
+                "fields": form_cache[question_id]["fields"],
+                "updated_at": form_cache[question_id].get("updated_at")
+            }
+        else:
+            return {"fields": []}
+
+    except Exception as e:
+        logger.error(f"Error loading form fields: {e}")
+        return {"fields": []}
 
 
 class QuestionMetadataUpdate(BaseModel):
@@ -1444,6 +1501,784 @@ async def check_ontology_consistency():
 
     except Exception as e:
         logger.error(f"Error checking consistency: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/asr-templates")
+async def get_asr_templates():
+    """
+    Get pre-built ASR grammar templates for drag-and-drop
+
+    Returns:
+        - name_fields: First Name, Last Name
+        - date_time: Date of Birth
+        - uk_specific: UK Postcode, Driving Licence, Car Registration
+        - contact: Email, Phone
+        - boolean: Yes/No
+    """
+    try:
+        from asr_grammar_templates import ASR_GRAMMAR_TEMPLATES, ALL_ASR_TEMPLATES
+
+        return {
+            "templates": ASR_GRAMMAR_TEMPLATES,
+            "all": ALL_ASR_TEMPLATES
+        }
+
+    except Exception as e:
+        logger.error(f"Error loading ASR templates: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/config/generate-asr-grammar")
+async def generate_asr_grammar(request: dict):
+    """
+    AI-powered ASR grammar generator
+
+    Generates JSGF grammar patterns from TTS question variants
+
+    Example:
+        Input TTS variants:
+        - "What is your first name?"
+        - "Please tell me your first name"
+        - "Can you provide your first name?"
+
+        Output JSGF grammar:
+        #JSGF V1.0;
+        grammar first_name_response;
+
+        public <response> = [my first name is] <name> |
+                           [I am] <name> |
+                           <name>;
+
+        <name> = <letter> [<name>];
+        <letter> = alpha | bravo | charlie | ... ;
+
+    Args:
+        request: {
+            "questionText": str - Main question text
+            "ttsVariants": List[str] - All TTS question variants
+            "fieldLabel": str - Field label for context
+        }
+
+    Returns:
+        {
+            "grammar": str - Generated JSGF grammar
+            "patterns": List[str] - Extracted response patterns
+            "confidence": float - Confidence score
+        }
+    """
+    try:
+        from asr_pattern_extractor import (
+            extract_response_patterns_from_questions,
+            extract_subject_from_questions,
+            generate_all_permutations,
+            build_jsgf_from_permutations
+        )
+        from tts_question_generator import generate_all_tts_variants
+
+        question_text = request.get("questionText", "")
+        tts_variants = request.get("ttsVariants", [])
+        field_label = request.get("fieldLabel", "")
+
+        logger.info(f"🤖 Generating ASR grammar for: {field_label}")
+        logger.info(f"📝 Original TTS variants ({len(tts_variants)}): {tts_variants}")
+
+        # Auto-generate additional TTS question variants if we have few variants
+        if len(tts_variants) < 10 and question_text:
+            logger.info(f"🔄 Auto-generating additional TTS variants from base question...")
+            generated_variants = generate_all_tts_variants(question_text)
+            logger.info(f"✨ Generated {len(generated_variants)} TTS variants")
+
+            # Combine original and generated variants
+            all_variants = list(set(tts_variants + generated_variants))
+            logger.info(f"📊 Total TTS variants: {len(all_variants)}")
+            tts_variants = all_variants
+
+        logger.info(f"📝 Final TTS variants ({len(tts_variants)}): {tts_variants}")
+
+        # Extract response patterns from ALL TTS question variants
+        extracted_patterns = extract_response_patterns_from_questions(tts_variants)
+        question_subject = extract_subject_from_questions(tts_variants)
+
+        logger.info(f"🔍 Extracted subject: {question_subject}")
+        logger.info(f"🔍 Extracted {len(extracted_patterns)} response patterns: {extracted_patterns}")
+
+        # Analyze ALL TTS variants to extract question patterns
+        all_variants_text = " ".join([question_text] + tts_variants).lower()
+
+        # Analyze question variants to extract common patterns
+        response_patterns = extracted_patterns
+
+        # Detect THE SPECIFIC question type (only one should match!)
+        is_name_question = any(word in all_variants_text for word in [
+            "first name", "given name", "forename", "christian name",
+            "name", "called", "surname", "last name", "family name", "full name"
+        ])
+        is_email_question = any(word in all_variants_text for word in [
+            "email", "e-mail", "email address", "mail address", "electronic mail"
+        ])
+        is_postcode_question = any(word in all_variants_text for word in [
+            "postcode", "postal code", "post code", "zip", "zip code"
+        ])
+        is_dob_question = any(word in all_variants_text for word in [
+            "date of birth", "birthday", "born", "dob", "birth date", "when were you born"
+        ])
+        is_phone_question = any(word in all_variants_text for word in [
+            "phone", "telephone", "mobile", "cell phone", "contact number", "phone number", "telephone number"
+        ])
+        is_address_question = any(word in all_variants_text for word in [
+            "address", "street", "where do you live", "residence", "home address", "postal address"
+        ])
+        is_yes_no_question = any(word in all_variants_text for word in [
+            "do you", "have you", "are you", "is it", "yes or no", "confirm", "agree"
+        ])
+        is_number_question = any(word in all_variants_text for word in [
+            "how many", "number of", "quantity", "amount", "count"
+        ])
+
+        logger.info(f"🔍 Question analysis:")
+        logger.info(f"  Name question: {is_name_question}")
+        logger.info(f"  Email question: {is_email_question}")
+        logger.info(f"  Postcode question: {is_postcode_question}")
+        logger.info(f"  Date of Birth question: {is_dob_question}")
+        logger.info(f"  Phone question: {is_phone_question}")
+        logger.info(f"  Address question: {is_address_question}")
+        logger.info(f"  Yes/No question: {is_yes_no_question}")
+        logger.info(f"  Number question: {is_number_question}")
+
+        # Generate grammar ONLY for the specific question type detected
+        if is_name_question:
+            # Generate all permutations
+            permutations = generate_all_permutations(
+                response_patterns,
+                question_subject,
+                "name"
+            )
+
+            logger.info(f"📊 Generated {len(permutations['prefixes'])} prefix permutations")
+            logger.info(f"📊 Prefixes: {permutations['prefixes']}")
+            logger.info(f"📊 Examples: {permutations['examples']}")
+
+            # Token definition for name (NATO phonetic alphabet)
+            token_def = """<answer> = <letter> [<answer>];
+
+<letter> = alpha | bravo | charlie | delta | echo | foxtrot | golf | hotel |
+           india | juliet | kilo | lima | mike | november | oscar | papa |
+           quebec | romeo | sierra | tango | uniform | victor | whiskey |
+           x-ray | yankee | zulu;"""
+
+            # Build JSGF grammar dynamically
+            grammar = build_jsgf_from_permutations(
+                response_patterns,
+                question_subject,
+                "name",
+                token_def
+            )
+
+        elif any(word in question_text.lower() for word in ["email", "e-mail", "address"]):
+            response_patterns = [
+                "my email is <email>",
+                "it's <email>",
+                "<email>",
+                "the email is <email>"
+            ]
+
+            grammar = """#JSGF V1.0;
+grammar email_response;
+
+public <response> = [my email is] <email> |
+                   [it's] <email> |
+                   [the email is] <email> |
+                   <email>;
+
+<email> = <local_part> <at> <domain>;
+
+<local_part> = <alphanumeric> [<local_part>];
+<domain> = <alphanumeric> [<domain>] <dot> <tld>;
+
+<alphanumeric> = <letter> | <digit> | <special>;
+
+<letter> = alpha | bravo | charlie | delta | echo | foxtrot | golf | hotel |
+           india | juliet | kilo | lima | mike | november | oscar | papa |
+           quebec | romeo | sierra | tango | uniform | victor | whiskey |
+           x-ray | yankee | zulu;
+
+<digit> = zero | one | two | three | four | five | six | seven | eight | nine;
+
+<special> = dot | hyphen | underscore;
+
+<at> = at | at sign;
+<dot> = dot | period | point;
+
+<tld> = com | co uk | org | net | gmail | outlook | yahoo | hotmail;
+"""
+
+        elif any(word in question_text.lower() for word in ["postcode", "postal code", "zip"]):
+            response_patterns = [
+                "my postcode is <postcode>",
+                "it's <postcode>",
+                "<postcode>",
+                "the postcode is <postcode>"
+            ]
+
+            grammar = """#JSGF V1.0;
+grammar postcode_response;
+
+public <response> = [my postcode is] <postcode> |
+                   [it's] <postcode> |
+                   [the postcode is] <postcode> |
+                   <postcode>;
+
+<postcode> = <outward> [space] <inward>;
+
+<outward> = <area> <district> [<sub_district>];
+<inward> = <sector> <unit>;
+
+<area> = <letter> [<letter>];
+<district> = <digit> [<digit>];
+<sub_district> = <letter>;
+<sector> = <digit>;
+<unit> = <letter> <letter>;
+
+<letter> = alpha | bravo | charlie | delta | echo | foxtrot | golf | hotel |
+           india | juliet | kilo | lima | mike | november | oscar | papa |
+           quebec | romeo | sierra | tango | uniform | victor | whiskey |
+           x-ray | yankee | zulu;
+
+<digit> = zero | one | two | three | four | five | six | seven | eight | nine;
+"""
+
+        elif is_dob_question:
+            response_patterns = [
+                "<day> <month> <year>",
+                "the <day> of <month> <year>",
+                "<month> <day> <year>",
+                "I was born on <day> <month> <year>"
+            ]
+
+            grammar = """#JSGF V1.0;
+grammar date_of_birth_response;
+
+public <response> = [I was born on] [the] <day> [of] <month> [comma] <year> |
+                   <month> <day> [comma] <year>;
+
+<month> = january | february | march | april | may | june |
+          july | august | september | october | november | december;
+
+<day> = first | second | third | fourth | fifth | sixth | seventh | eighth | ninth | tenth |
+        eleventh | twelfth | thirteenth | fourteenth | fifteenth | sixteenth | seventeenth |
+        eighteenth | nineteenth | twentieth | twenty first | twenty second | twenty third |
+        twenty fourth | twenty fifth | twenty sixth | twenty seventh | twenty eighth |
+        twenty ninth | thirtieth | thirty first;
+
+<year> = <digit> <digit> <digit> <digit>;
+
+<digit> = zero | one | two | three | four | five | six | seven | eight | nine;
+"""
+
+        elif is_phone_question:
+            response_patterns = [
+                "<phone_number>",
+                "my phone is <phone_number>",
+                "my number is <phone_number>",
+                "it's <phone_number>",
+                "the number is <phone_number>"
+            ]
+
+            grammar = """#JSGF V1.0;
+grammar phone_response;
+
+public <response> = [my phone is] <phone_number> |
+                   [my number is] <phone_number> |
+                   [it's] <phone_number> |
+                   [the number is] <phone_number> |
+                   <phone_number>;
+
+<phone_number> = [<country_code>] <number>;
+
+<country_code> = plus <digit> <digit> [<digit>];
+<number> = <digit> [<number>];
+
+<digit> = zero | one | two | three | four | five | six | seven | eight | nine |
+          oh | double <digit>;
+
+<plus> = plus;
+"""
+
+        elif is_address_question:
+            response_patterns = [
+                "<address>",
+                "my address is <address>",
+                "I live at <address>",
+                "it's <address>",
+                "the address is <address>"
+            ]
+
+            grammar = """#JSGF V1.0;
+grammar address_response;
+
+public <response> = [my address is] <address> |
+                   [I live at] <address> |
+                   [it's] <address> |
+                   [the address is] <address> |
+                   <address>;
+
+<address> = <street_number> <street_name> [<city>] [<postcode>];
+
+<street_number> = <digit> [<street_number>];
+<street_name> = <word> [<street_name>];
+<city> = <word> [<city>];
+<postcode> = <letter> <letter> <digit> [<digit>] <digit> <letter> <letter>;
+
+<word> = <letter> [<word>];
+
+<letter> = alpha | bravo | charlie | delta | echo | foxtrot | golf | hotel |
+           india | juliet | kilo | lima | mike | november | oscar | papa |
+           quebec | romeo | sierra | tango | uniform | victor | whiskey |
+           x-ray | yankee | zulu;
+
+<digit> = zero | one | two | three | four | five | six | seven | eight | nine;
+"""
+
+        elif is_yes_no_question:
+            response_patterns = [
+                "yes",
+                "no",
+                "yeah",
+                "nope",
+                "affirmative",
+                "negative"
+            ]
+
+            grammar = """#JSGF V1.0;
+grammar yes_no_response;
+
+public <response> = <yes> | <no>;
+
+<yes> = yes | yeah | yep | yup | sure | correct | affirmative | true |
+        okay | ok | accept | agree | confirm | absolutely | definitely |
+        of course | certainly;
+
+<no> = no | nope | nah | negative | false | incorrect |
+       decline | disagree | deny | reject | not really | absolutely not;
+"""
+
+        elif is_number_question:
+            response_patterns = [
+                "<number>",
+                "it's <number>",
+                "the number is <number>",
+                "<number> of them"
+            ]
+
+            grammar = """#JSGF V1.0;
+grammar number_response;
+
+public <response> = [it's] <number> |
+                   [the number is] <number> |
+                   <number> [of them];
+
+<number> = <digit> [<number>] |
+           <word_number>;
+
+<word_number> = zero | one | two | three | four | five | six | seven | eight | nine | ten |
+                eleven | twelve | thirteen | fourteen | fifteen | sixteen | seventeen | eighteen | nineteen | twenty |
+                thirty | forty | fifty | sixty | seventy | eighty | ninety | hundred | thousand;
+
+<digit> = zero | one | two | three | four | five | six | seven | eight | nine;
+"""
+
+        else:
+            # Generic free-form response
+            response_patterns = [
+                "<answer>",
+                "my answer is <answer>",
+                "it's <answer>",
+                "the answer is <answer>"
+            ]
+
+            grammar = """#JSGF V1.0;
+grammar generic_response;
+
+public <response> = [my answer is] <answer> |
+                   [it's] <answer> |
+                   [the answer is] <answer> |
+                   <answer>;
+
+<answer> = <word> [<answer>];
+
+<word> = <alphanumeric> [<word>];
+
+<alphanumeric> = <letter> | <digit>;
+
+<letter> = alpha | bravo | charlie | delta | echo | foxtrot | golf | hotel |
+           india | juliet | kilo | lima | mike | november | oscar | papa |
+           quebec | romeo | sierra | tango | uniform | victor | whiskey |
+           x-ray | yankee | zulu;
+
+<digit> = zero | one | two | three | four | five | six | seven | eight | nine;
+"""
+
+        logger.info(f"✅ Generated {len(response_patterns)} response patterns")
+
+        return {
+            "grammar": grammar.strip(),
+            "patterns": response_patterns,
+            "confidence": 0.85
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Error generating ASR grammar: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Low-Confidence WAV Recording Endpoints
+# Directory for storing low-confidence audio recordings
+REVIEW_QUEUE_DIR = BASE_DIR / "review_queue"
+REVIEW_QUEUE_DIR.mkdir(exist_ok=True)
+
+
+class LowConfidenceRecording(BaseModel):
+    question_id: str
+    question_text: str
+    user_answer: str
+    confidence_score: float
+    session_id: Optional[str] = None
+    timestamp: Optional[str] = None
+
+
+@app.post("/api/config/low-confidence-recording")
+async def save_low_confidence_recording(
+    audio_file: UploadFile = File(...),
+    question_id: str = None,
+    question_text: str = None,
+    user_answer: str = None,
+    confidence_score: float = None,
+    session_id: str = None
+):
+    """
+    Save a WAV recording for low-confidence ASR responses
+
+    This endpoint receives:
+    - WAV audio file
+    - Question metadata (ID, text)
+    - User's transcribed answer
+    - ASR confidence score
+    - Session ID for tracking
+
+    Files are stored in review_queue/ for operator review
+    """
+    try:
+        # Generate unique ID for this review item
+        review_id = str(uuid.uuid4())
+        timestamp = datetime.now().isoformat()
+
+        # Create review item directory
+        review_dir = REVIEW_QUEUE_DIR / review_id
+        review_dir.mkdir(exist_ok=True)
+
+        # Save the WAV file
+        wav_path = review_dir / "recording.wav"
+        with open(wav_path, "wb") as f:
+            content = await audio_file.read()
+            f.write(content)
+
+        # Save metadata
+        metadata = {
+            "review_id": review_id,
+            "question_id": question_id,
+            "question_text": question_text,
+            "user_answer": user_answer,
+            "confidence_score": confidence_score,
+            "session_id": session_id,
+            "timestamp": timestamp,
+            "status": "pending",
+            "wav_file": "recording.wav",
+            "reviewed_by": None,
+            "reviewed_at": None,
+            "operator_correction": None
+        }
+
+        metadata_path = review_dir / "metadata.json"
+        with open(metadata_path, "w") as f:
+            json.dump(metadata, f, indent=2)
+
+        logger.info(f"💾 Saved low-confidence recording: {review_id}")
+        logger.info(f"   Question: {question_text}")
+        logger.info(f"   Answer: {user_answer}")
+        logger.info(f"   Confidence: {confidence_score}")
+
+        return {
+            "success": True,
+            "review_id": review_id,
+            "message": f"Recording queued for operator review (confidence: {confidence_score})"
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Error saving low-confidence recording: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/review-queue")
+async def get_review_queue(status: str = "pending"):
+    """
+    Get all pending low-confidence recordings for operator review
+
+    Returns list of review items with metadata and audio data
+    """
+    try:
+        review_items = []
+
+        for review_dir in REVIEW_QUEUE_DIR.iterdir():
+            if not review_dir.is_dir():
+                continue
+
+            metadata_path = review_dir / "metadata.json"
+            if not metadata_path.exists():
+                continue
+
+            with open(metadata_path, "r") as f:
+                metadata = json.load(f)
+
+            # Filter by status
+            if metadata.get("status") != status:
+                continue
+
+            # Read WAV file and encode as base64
+            wav_path = review_dir / metadata.get("wav_file", "recording.wav")
+            if wav_path.exists():
+                with open(wav_path, "rb") as f:
+                    audio_data = base64.b64encode(f.read()).decode('utf-8')
+                metadata["audio_data"] = audio_data
+
+            review_items.append(metadata)
+
+        # Sort by timestamp (newest first)
+        review_items.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+
+        logger.info(f"📋 Retrieved {len(review_items)} review queue items (status: {status})")
+
+        return {
+            "items": review_items,
+            "count": len(review_items)
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Error retrieving review queue: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/config/review-queue/{review_id}/resolve")
+async def resolve_review_item(
+    review_id: str,
+    operator_correction: str = None,
+    reviewed_by: str = "operator"
+):
+    """
+    Mark a review item as resolved with operator's correction
+    """
+    try:
+        review_dir = REVIEW_QUEUE_DIR / review_id
+        metadata_path = review_dir / "metadata.json"
+
+        if not metadata_path.exists():
+            raise HTTPException(status_code=404, detail=f"Review item {review_id} not found")
+
+        with open(metadata_path, "r") as f:
+            metadata = json.load(f)
+
+        metadata["status"] = "resolved"
+        metadata["reviewed_by"] = reviewed_by
+        metadata["reviewed_at"] = datetime.now().isoformat()
+        metadata["operator_correction"] = operator_correction
+
+        with open(metadata_path, "w") as f:
+            json.dump(metadata, f, indent=2)
+
+        logger.info(f"✅ Resolved review item: {review_id}")
+        logger.info(f"   Original: {metadata.get('user_answer')}")
+        logger.info(f"   Corrected: {operator_correction}")
+
+        return {
+            "success": True,
+            "review_id": review_id,
+            "status": "resolved"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error resolving review item: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ASR Grammar Storage Endpoints
+# Directory for storing saved ASR grammars
+ASR_GRAMMAR_DIR = BASE_DIR / "asr_grammars"
+ASR_GRAMMAR_DIR.mkdir(exist_ok=True)
+
+
+@app.post("/api/config/save-asr-grammar")
+async def save_asr_grammar(request: dict):
+    """
+    Save ASR grammar for a field
+
+    Request body:
+    {
+        "field_id": "1234567890",
+        "field_label": "Text Input",
+        "field_type": "text",
+        "question_text": "What is your first name?",
+        "tts_variants": ["What is your first name?", ...],
+        "selected_patterns": ["<answer>", "my name is <answer>", ...],
+        "total_patterns": 75,
+        "confidence": 0.85,
+        "grammar": "full JSGF grammar text"
+    }
+    """
+    try:
+        field_id = request.get('field_id')
+        field_label = request.get('field_label')
+        selected_patterns = request.get('selected_patterns', [])
+
+        if not field_id:
+            raise HTTPException(status_code=400, detail="field_id is required")
+
+        if not selected_patterns:
+            raise HTTPException(status_code=400, detail="No patterns selected")
+
+        # Create grammar file
+        grammar_data = {
+            "field_id": field_id,
+            "field_label": field_label,
+            "field_type": request.get('field_type'),
+            "question_text": request.get('question_text'),
+            "tts_variants": request.get('tts_variants', []),
+            "selected_patterns": selected_patterns,
+            "total_patterns": request.get('total_patterns'),
+            "selected_count": len(selected_patterns),
+            "confidence": request.get('confidence'),
+            "grammar": request.get('grammar'),
+            "saved_at": datetime.now().isoformat(),
+            "saved_by": "form_asr_tester"
+        }
+
+        # Save to JSON file
+        grammar_file = ASR_GRAMMAR_DIR / f"{field_id}.json"
+        with open(grammar_file, 'w') as f:
+            json.dump(grammar_data, f, indent=2)
+
+        logger.info(f"💾 Saved ASR grammar for field: {field_label}")
+        logger.info(f"   Field ID: {field_id}")
+        logger.info(f"   Selected patterns: {len(selected_patterns)}/{request.get('total_patterns')}")
+        logger.info(f"   File: {grammar_file}")
+
+        return {
+            "success": True,
+            "field_id": field_id,
+            "field_label": field_label,
+            "selected_count": len(selected_patterns),
+            "total_count": request.get('total_patterns'),
+            "saved_at": grammar_data['saved_at'],
+            "file_path": str(grammar_file)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error saving ASR grammar: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/asr-grammar/{field_id}")
+async def get_asr_grammar(field_id: str):
+    """
+    Retrieve saved ASR grammar for a field
+    """
+    try:
+        grammar_file = ASR_GRAMMAR_DIR / f"{field_id}.json"
+
+        if not grammar_file.exists():
+            raise HTTPException(status_code=404, detail=f"Grammar not found for field {field_id}")
+
+        with open(grammar_file, 'r') as f:
+            grammar_data = json.load(f)
+
+        logger.info(f"📖 Retrieved ASR grammar for field: {grammar_data.get('field_label')}")
+
+        return grammar_data
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error retrieving ASR grammar: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/asr-grammars")
+async def list_asr_grammars():
+    """
+    List all saved ASR grammars
+    """
+    try:
+        grammars = []
+
+        for grammar_file in ASR_GRAMMAR_DIR.glob("*.json"):
+            with open(grammar_file, 'r') as f:
+                grammar_data = json.load(f)
+                grammars.append({
+                    "field_id": grammar_data.get('field_id'),
+                    "field_label": grammar_data.get('field_label'),
+                    "field_type": grammar_data.get('field_type'),
+                    "selected_count": grammar_data.get('selected_count'),
+                    "total_patterns": grammar_data.get('total_patterns'),
+                    "saved_at": grammar_data.get('saved_at')
+                })
+
+        # Sort by saved_at (newest first)
+        grammars.sort(key=lambda x: x.get('saved_at', ''), reverse=True)
+
+        logger.info(f"📋 Retrieved {len(grammars)} saved ASR grammars")
+
+        return {
+            "grammars": grammars,
+            "count": len(grammars)
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Error listing ASR grammars: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/config/asr-grammar/{field_id}")
+async def delete_asr_grammar(field_id: str):
+    """
+    Delete saved ASR grammar for a field
+    """
+    try:
+        grammar_file = ASR_GRAMMAR_DIR / f"{field_id}.json"
+
+        if not grammar_file.exists():
+            raise HTTPException(status_code=404, detail=f"Grammar not found for field {field_id}")
+
+        # Read before deleting for logging
+        with open(grammar_file, 'r') as f:
+            grammar_data = json.load(f)
+
+        grammar_file.unlink()
+
+        logger.info(f"🗑️ Deleted ASR grammar for field: {grammar_data.get('field_label')}")
+
+        return {
+            "success": True,
+            "field_id": field_id,
+            "field_label": grammar_data.get('field_label')
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error deleting ASR grammar: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

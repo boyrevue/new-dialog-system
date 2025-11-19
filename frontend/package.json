@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "dagre": "^0.8.5",
+    "dompurify": "^3.3.0",
     "flowbite": "^4.0.0",
     "flowbite-react": "^0.12.10",
     "lucide-react": "^0.553.0",

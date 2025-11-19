@@ -1,8 +1,11 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { MessageSquare, UserCog, Menu, X, Settings, Edit3, FolderTree, GitBranch, TrendingUp, CreditCard } from 'lucide-react'
+import { MessageSquare, UserCog, Menu, X, Settings, Edit3, FolderTree, GitBranch, TrendingUp, CreditCard, AlertTriangle, TestTube2 } from 'lucide-react'
 import MultimodalDialog from './components/MultimodalDialog'
+import ChatMultimodalDialog from './components/ChatMultimodalDialog'
 import OperatorPanel from './components/OperatorPanel'
+import OperatorReviewQueue from './components/OperatorReviewQueue'
+import FormASRTester from './components/FormASRTester'
 import ConfigPanel from './components/ConfigPanel'
 import DialogEditor from './components/DialogEditor'
 import SectionManager from './components/SectionManager'
@@ -106,6 +109,28 @@ function AppContent() {
                 >
                   <CreditCard className="h-4 w-4" />
                   Licence Template
+                </Link>
+                <Link
+                  to="/review-queue"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium ${
+                    location.pathname === '/review-queue'
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  Review Queue
+                </Link>
+                <Link
+                  to="/form-asr-tester"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium ${
+                    location.pathname === '/form-asr-tester'
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  <TestTube2 className="h-4 w-4" />
+                  ASR Tester
                 </Link>
               </div>
             </div>
@@ -212,6 +237,30 @@ function AppContent() {
                 <CreditCard className="h-5 w-5" />
                 Licence Template
               </Link>
+              <Link
+                to="/review-queue"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium ${
+                  location.pathname === '/review-queue'
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`}
+              >
+                <AlertTriangle className="h-5 w-5" />
+                Review Queue
+              </Link>
+              <Link
+                to="/form-asr-tester"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium ${
+                  location.pathname === '/form-asr-tester'
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`}
+              >
+                <TestTube2 className="h-5 w-5" />
+                ASR Tester
+              </Link>
             </div>
           </div>
         )}
@@ -221,10 +270,13 @@ function AppContent() {
         <Route path="/flow" element={<DialogFlowEditor />} />
         <Route path="/sessions" element={<DialogFlowView />} />
         <Route path="/licence-template" element={<LicenceTemplateEditor />} />
+        <Route path="/review-queue" element={<OperatorReviewQueue />} />
+        <Route path="/form-asr-tester" element={<FormASRTester />} />
         <Route path="*" element={
           <main className="container mx-auto px-4 py-8">
             <Routes>
-              <Route path="/" element={<MultimodalDialog />} />
+              <Route path="/" element={<ChatMultimodalDialog />} />
+              <Route path="/classic" element={<MultimodalDialog />} />
               <Route path="/operator" element={<OperatorPanel />} />
               <Route path="/config" element={<ConfigPanel />} />
               <Route path="/editor" element={<DialogEditor />} />
