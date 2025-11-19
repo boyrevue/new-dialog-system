@@ -505,6 +505,8 @@ const ChatMultimodalDialog = () => {
   const wsRef = useRef(null);
   const rephraseTimerRef = useRef(null);
   const snoreTimerRef = useRef(null);
+  const rephraseCountRef = useRef(0); // Use ref to avoid closure issues
+  const variantIndexRef = useRef(0); // Use ref to avoid closure issues
   const lastInputTimeRef = useRef(Date.now());
   const recognitionRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -1018,15 +1020,15 @@ const ChatMultimodalDialog = () => {
   const handleRephrase = () => {
     console.log('handleRephrase called');
     console.log('currentQuestion:', currentQuestion);
-    console.log('rephraseCount:', rephraseCount);
+    console.log('rephraseCountRef.current:', rephraseCountRef.current);
 
     if (!currentQuestion || !currentQuestion.tts) {
       console.warn('Cannot rephrase: missing question or TTS data');
       return;
     }
 
-    // Check if we've already rephrased 4 times
-    if (rephraseCount >= 4) {
+    // Check if we've already rephrased 4 times (use ref value)
+    if (rephraseCountRef.current >= 4) {
       console.log('⏸️ Reached 4 rephrase attempts, putting TTS on hold');
       setTtsOnHold(true);
       speechSynthesis.cancel(); // Stop any current speech
@@ -1054,11 +1056,13 @@ const ChatMultimodalDialog = () => {
       return;
     }
 
-    const nextIndex = (currentVariantIndex + 1) % variants.length;
+    // Use ref values and increment them
+    const nextIndex = (variantIndexRef.current + 1) % variants.length;
+    variantIndexRef.current = nextIndex;
     setCurrentVariantIndex(nextIndex);
 
-    // Calculate new count before updating state
-    const newCount = rephraseCount + 1;
+    const newCount = rephraseCountRef.current + 1;
+    rephraseCountRef.current = newCount;
     setRephraseCount(newCount);
 
     const rephraseText = variants[nextIndex];
@@ -1070,7 +1074,10 @@ const ChatMultimodalDialog = () => {
 
   const handleResume = () => {
     console.log('▶️ Resume button clicked - restarting TTS');
+    rephraseCountRef.current = 0;
+    variantIndexRef.current = 0;
     setRephraseCount(0);
+    setCurrentVariantIndex(0);
     setTtsOnHold(false);
     lastInputTimeRef.current = Date.now(); // Reset timer
 
@@ -1155,6 +1162,8 @@ const ChatMultimodalDialog = () => {
 
       // Reset input timer and rephrase counter for new question
       lastInputTimeRef.current = Date.now();
+      rephraseCountRef.current = 0;
+      variantIndexRef.current = 0;
       setCurrentVariantIndex(0); // Reset variant index for new question
       setRephraseCount(0); // Reset rephrase counter
       setTtsOnHold(false); // Resume TTS if it was on hold
@@ -1170,6 +1179,8 @@ const ChatMultimodalDialog = () => {
 
     // Reset input timer when user sends a message
     lastInputTimeRef.current = Date.now();
+    rephraseCountRef.current = 0;
+    variantIndexRef.current = 0;
     setRephraseCount(0); // Reset rephrase counter when user responds
     setTtsOnHold(false); // Resume TTS if it was on hold
 
