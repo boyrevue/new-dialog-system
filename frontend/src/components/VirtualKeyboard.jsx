@@ -655,20 +655,6 @@ const VirtualKeyboard = ({
         <Check className="w-5 h-5" />
         <span>Submit</span>
       </button>
-
-      {/* NATO Alphabet Reference */}
-      {showPhonetic && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <div className="text-xs font-semibold text-gray-600 mb-2">NATO Phonetic Alphabet:</div>
-          <div className="grid grid-cols-5 gap-1 text-xs text-gray-600">
-            {Object.entries(NATO_PHONETIC).map(([letter, word]) => (
-              <div key={letter} className="truncate" title={`${letter} - ${word}`}>
-                <span className="font-semibold">{letter}</span>: {word}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
