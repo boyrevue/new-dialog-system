@@ -910,8 +910,8 @@ const ChatMultimodalDialog = () => {
         setIsSpeaking(false);
         console.error('❌ Speech error:', e.error, e);
 
-        // If Google voice fails, try with local voice
-        if (targetVoice && !targetVoice.localService && e.error === 'network') {
+        // If Google voice fails, try with local voice (only if TTS still enabled)
+        if (ttsEnabled && targetVoice && !targetVoice.localService && e.error === 'network') {
           console.log('🔄 Google voice failed, trying local voice...');
           const localVoice = currentVoices.find(v => v.lang === 'en-GB' && v.localService);
           if (localVoice) {
