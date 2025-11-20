@@ -37,6 +37,54 @@ const NATO_PHONETIC = {
   'Z': 'Zulu'
 };
 
+// Phonetic similarity groups - letters that sound similar and are often confused
+const PHONETIC_SIMILARITY_GROUPS = {
+  // Plosive sounds (often confused)
+  'B': ['B', 'V', 'P', 'D'],
+  'V': ['V', 'B', 'F'],
+  'P': ['P', 'B', 'T'],
+  'D': ['D', 'B', 'T'],
+  'T': ['T', 'D', 'P'],
+
+  // Nasal sounds
+  'M': ['M', 'N'],
+  'N': ['N', 'M'],
+
+  // Fricatives
+  'F': ['F', 'V', 'S'],
+  'S': ['S', 'F', 'Z'],
+  'Z': ['Z', 'S'],
+
+  // Sibilants
+  'C': ['C', 'S', 'K'],
+  'K': ['K', 'C', 'G'],
+  'G': ['G', 'K', 'J'],
+  'J': ['J', 'G'],
+
+  // Similar vowels
+  'I': ['I', 'E', 'Y'],
+  'E': ['E', 'I', 'A'],
+  'A': ['A', 'E', 'O'],
+  'O': ['O', 'A', 'U'],
+  'U': ['U', 'O'],
+  'Y': ['Y', 'I'],
+
+  // Liquids
+  'L': ['L', 'R'],
+  'R': ['R', 'L'],
+
+  // Other
+  'Q': ['Q', 'K'],
+  'W': ['W', 'V'],
+  'X': ['X', 'S'],
+  'H': ['H']
+};
+
+// Get phonetically similar letters for a given letter
+const getPhoneticallySimilar = (letter) => {
+  return PHONETIC_SIMILARITY_GROUPS[letter.toUpperCase()] || [letter.toUpperCase()];
+};
+
 const KEYBOARD_ROWS = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
   ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
@@ -64,6 +112,14 @@ const VirtualKeyboard = ({
   const [lastKey, setLastKey] = useState(null);
   const [pressedKey, setPressedKey] = useState(null); // for visual feedback
   const audioContextRef = React.useRef(null);
+
+  // Clear input field when component mounts
+  React.useEffect(() => {
+    if (onValueChange) {
+      onValueChange('');
+      console.log('🧹 Virtual keyboard input cleared');
+    }
+  }, []);
 
   // Play click sound
   const playClickSound = () => {
@@ -94,7 +150,6 @@ const VirtualKeyboard = ({
 
   const handleKeyPress = (key, fromSpeech = false) => {
     console.log('🔤 Key pressed:', key, fromSpeech ? '(via speech)' : '(via click)');
-    console.log('🔤 Current value from prop:', value);
 
     // Visual feedback - longer timeout for speech recognition visibility
     setPressedKey(key);
@@ -103,35 +158,43 @@ const VirtualKeyboard = ({
     // Play click sound
     playClickSound();
 
-    // Use value prop (controlled component pattern)
-    const newValue = value + key;
-    console.log('🔤 New accumulated value:', newValue);
     setLastKey(key);
     if (onValueChange) {
-      onValueChange(newValue);
+      // Functional update ensures correct accumulation within same event loop tick
+      onValueChange(prev => {
+        const newValue = (prev ?? '') + key;
+        currentValueRef.current = newValue; // Keep ref in sync
+        return newValue;
+      });
     }
   };
 
   const handleBackspace = () => {
-    const newValue = value.slice(0, -1);
     setLastKey(null);
     if (onValueChange) {
-      onValueChange(newValue);
+      onValueChange(prev => {
+        const newValue = (prev ?? '').slice(0, -1);
+        currentValueRef.current = newValue; // Keep ref in sync
+        return newValue;
+      });
     }
   };
 
   const handleSpace = () => {
-    const newValue = value + ' ';
     setLastKey(' ');
     if (onValueChange) {
-      onValueChange(newValue);
+      onValueChange(prev => {
+        const newValue = (prev ?? '') + ' ';
+        currentValueRef.current = newValue; // Keep ref in sync
+        return newValue;
+      });
     }
   };
 
   const handleClear = () => {
     setLastKey(null);
     if (onValueChange) {
-      onValueChange('');
+      onValueChange(() => '');
     }
   };
 
@@ -148,13 +211,86 @@ const VirtualKeyboard = ({
     return NATO_PHONETIC[letter.toUpperCase()] || '';
   };
 
+  // Keep internal ref of current value to avoid prop update lag
+  const currentValueRef = React.useRef(value);
+
+  // Update ref whenever value prop changes
+  React.useEffect(() => {
+    currentValueRef.current = value;
+  }, [value]);
+
   // Process speech recognition result
   React.useEffect(() => {
     if (!onSpeechRecognized) return;
 
-    const processSpokenText = (spokenText) => {
+    const processSpokenText = async (spokenText) => {
       const text = spokenText.toLowerCase().trim();
       console.log('🎤 Processing spoken text:', text);
+
+      // Check for change/swap commands first
+      // Patterns: "change B for V", "change the D for V", "change the first B for V", "swap B for V"
+      // Also handles common speech recognition errors: "james" (instead of "change"), "chains", etc.
+      // Skip articles "a" and "an" before the target letter
+      const changePattern = /(?:change|swap|james|chains|jane|changed)(?:\s+the)?(?:\s+(first|last|def|deaf|death))?\s+([a-z]|alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu)\s+(?:for|to|with|of|off)(?:\s+(?:a|an|av))?\s+([a-z]|alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu)/i;
+
+      const changeMatch = text.match(changePattern);
+      if (changeMatch) {
+        let position = changeMatch[1]; // 'first', 'last', 'def', 'deaf', 'death', or undefined (all)
+        const fromLetter = changeMatch[2];
+        const toLetter = changeMatch[3];
+
+        // Normalize common mis-transcriptions of "first"
+        if (position && ['def', 'deaf', 'death'].includes(position.toLowerCase())) {
+          position = 'first';
+        }
+
+        console.log(`🔄 Change command detected: position=${position}, from=${fromLetter}, to=${toLetter}`);
+
+        // Convert NATO phonetic to letter
+        const getLetterFromPhonetic = (word) => {
+          for (const [letter, phonetic] of Object.entries(NATO_PHONETIC)) {
+            if (word.toLowerCase() === phonetic.toLowerCase() || word.toLowerCase() === letter.toLowerCase()) {
+              return letter;
+            }
+          }
+          return word.toUpperCase();
+        };
+
+        const from = getLetterFromPhonetic(fromLetter);
+        const to = getLetterFromPhonetic(toLetter);
+
+        console.log(`🔄 Replacing: ${from} → ${to} (position: ${position || 'all'})`);
+
+        // Use ref to get most current value (avoids prop update lag)
+        const currentValue = currentValueRef.current || '';
+        console.log(`🔄 Current value: "${currentValue}"`);
+        let newValue = currentValue;
+
+        if (position === 'first') {
+          // Replace first occurrence
+          newValue = currentValue.replace(new RegExp(from, 'i'), to);
+        } else if (position === 'last') {
+          // Replace last occurrence
+          const lastIndex = currentValue.toUpperCase().lastIndexOf(from);
+          if (lastIndex !== -1) {
+            newValue = currentValue.substring(0, lastIndex) + to + currentValue.substring(lastIndex + 1);
+          }
+        } else {
+          // Replace all occurrences
+          newValue = currentValue.replace(new RegExp(from, 'gi'), to);
+        }
+
+        if (newValue !== currentValue) {
+          console.log(`✅ Changed: "${currentValue}" → "${newValue}"`);
+          if (onValueChange) {
+            onValueChange(newValue);
+          }
+          return true;
+        } else {
+          console.log(`⚠️ No changes made - letter "${from}" not found`);
+          return false;
+        }
+      }
 
       // Split by spaces to handle multiple words (e.g., "alpha bravo charlie")
       const words = text.split(/\s+/);
@@ -162,7 +298,9 @@ const VirtualKeyboard = ({
 
       let anyWordHandled = false;
 
-      for (const word of words) {
+      // Process words sequentially with delay for visual feedback
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
         if (!word) continue;
 
         console.log('🎤 Processing word:', word);
@@ -171,6 +309,8 @@ const VirtualKeyboard = ({
         if (word === 'delete' || word === 'backspace' || word === 'clear') {
           handleBackspace();
           anyWordHandled = true;
+          // Add delay before next word
+          if (i < words.length - 1) await new Promise(resolve => setTimeout(resolve, 150));
           continue;
         }
 
@@ -178,6 +318,8 @@ const VirtualKeyboard = ({
         if (word === 'space') {
           handleSpace();
           anyWordHandled = true;
+          // Add delay before next word
+          if (i < words.length - 1) await new Promise(resolve => setTimeout(resolve, 150));
           continue;
         }
 
@@ -189,6 +331,8 @@ const VirtualKeyboard = ({
             handleKeyPress(letter, true);
             anyWordHandled = true;
             matched = true;
+            // Add delay before next word to show visual feedback
+            if (i < words.length - 1) await new Promise(resolve => setTimeout(resolve, 150));
             break;
           }
         }
@@ -199,6 +343,8 @@ const VirtualKeyboard = ({
         if (keyboardType === 'numeric' && /^[0-9]$/.test(word)) {
           handleKeyPress(word, true);
           anyWordHandled = true;
+          // Add delay before next word
+          if (i < words.length - 1) await new Promise(resolve => setTimeout(resolve, 150));
           continue;
         }
 
@@ -227,6 +373,35 @@ const VirtualKeyboard = ({
         >
           <X className="w-5 h-5 text-gray-600" />
         </button>
+      </div>
+
+      {/* Instructions */}
+      <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+        <div className="text-sm font-semibold text-blue-900 mb-2">How to enter your answer:</div>
+        <ul className="text-xs text-blue-800 space-y-1">
+          <li className="flex items-start gap-2">
+            <span className="font-bold text-blue-600 mt-0.5">1.</span>
+            <span><strong>Voice spell</strong> letter by letter (e.g., say "V I N C E N T")</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="font-bold text-blue-600 mt-0.5">2.</span>
+            <span><strong>Use NATO alphabet</strong> (e.g., say "Victor India November Charlie Echo November Tango")</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="font-bold text-blue-600 mt-0.5">3.</span>
+            <span><strong>Type manually</strong> using the on-screen keyboard or your physical keyboard</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="font-bold text-blue-600 mt-0.5">4.</span>
+            <span><strong>Fix mistakes</strong> by saying "change B for V" or "change the first B for V"</span>
+          </li>
+        </ul>
+        <div className="mt-2 pt-2 border-t border-blue-300 text-xs text-blue-700">
+          <div className="font-medium mb-1">When finished, click the green <strong>Submit</strong> button below</div>
+          <div className="text-blue-600 italic">
+            💡 Tip: The system recognizes phonetically similar letters (B/V, M/N, F/S) for easier corrections
+          </div>
+        </div>
       </div>
 
       {/* Input Display */}
