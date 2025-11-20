@@ -527,6 +527,7 @@ const ChatMultimodalDialog = () => {
   const rephraseCountRef = useRef(0); // Use ref to avoid closure issues
   const variantIndexRef = useRef(0); // Use ref to avoid closure issues
   const lastInputTimeRef = useRef(Date.now());
+  const ttsEnabledRef = useRef(ttsEnabled); // Track current TTS state to avoid stale closure
   const recognitionRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -569,6 +570,12 @@ const ChatMultimodalDialog = () => {
       }
     };
   }, [sessionId]);
+
+  // Keep ttsEnabledRef in sync with ttsEnabled state (avoid stale closure in intervals)
+  useEffect(() => {
+    ttsEnabledRef.current = ttsEnabled;
+    console.log('📌 ttsEnabledRef updated:', ttsEnabled);
+  }, [ttsEnabled]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -1032,17 +1039,17 @@ const ChatMultimodalDialog = () => {
     };
 
     // Play immediately when entering autopause (only if TTS still enabled)
-    if (ttsEnabled) {
+    if (ttsEnabledRef.current) {
       playSnore();
     } else {
-      console.log('⏹ Skipping initial snore - TTS disabled');
+      console.log('⏹ Skipping initial snore - TTS disabled (ref:', ttsEnabledRef.current, ')');
     }
 
     // Then play every 5 minutes (300000ms)
     snoreTimerRef.current = setInterval(() => {
-      // Defensive check: ensure TTS is still enabled before playing
-      if (!ttsEnabled) {
-        console.log('⏹ Skipping snore - TTS is now disabled');
+      // Defensive check: use REF to get current TTS state (not stale closure)
+      if (!ttsEnabledRef.current) {
+        console.log('⏹ Skipping snore - TTS is now disabled (ref:', ttsEnabledRef.current, ')');
         return;
       }
 
