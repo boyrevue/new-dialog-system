@@ -1502,13 +1502,29 @@ const ChatMultimodalDialog = () => {
   };
 
   const handleToggleTTS = () => {
-    setTtsEnabled(!ttsEnabled);
-    if (!ttsEnabled) {
+    console.log('═══════════════════════════════════════════════════');
+    console.log('🔘 TTS TOGGLE BUTTON CLICKED');
+    console.log('   Current ttsEnabled state:', ttsEnabled);
+    console.log('   About to toggle to:', !ttsEnabled);
+    console.log('   speechSynthesis.speaking:', speechSynthesis.speaking);
+    console.log('   speechSynthesis.pending:', speechSynthesis.pending);
+
+    const newState = !ttsEnabled;
+    setTtsEnabled(newState);
+
+    if (newState) {
+      console.log('✅ ENABLING TTS');
       addSystemMessage('🔊 TTS enabled - questions will be spoken aloud');
     } else {
+      console.log('❌ DISABLING TTS');
+      console.log('   Calling speechSynthesis.cancel()...');
       speechSynthesis.cancel(); // Stop any current speech
+      console.log('   speechSynthesis.cancel() completed');
       addSystemMessage('🔇 TTS disabled');
     }
+
+    console.log('   New ttsEnabled state will be:', newState);
+    console.log('═══════════════════════════════════════════════════');
   };
 
   const switchSession = (index) => {
