@@ -581,8 +581,21 @@ const ChatMultimodalDialog = () => {
       recognitionRef.current.lang = 'en-GB';
 
       recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        const confidence = event.results[0][0].confidence;
+        // IMPORTANT: In continuous mode, event.results is a growing array
+        // Always read the LAST result, not index 0!
+        const lastResultIndex = event.results.length - 1;
+        const lastResult = event.results[lastResultIndex];
+        const transcript = lastResult[0].transcript;
+        const confidence = lastResult[0].confidence;
+        const isFinal = lastResult.isFinal;
+
+        console.log(`🎤 Speech result [${lastResultIndex}]: "${transcript}" (final: ${isFinal}, confidence: ${confidence})`);
+
+        // Only process final results to avoid duplicates
+        if (!isFinal) {
+          console.log('⏭ Skipping interim result');
+          return;
+        }
 
         // Check if we've already processed this exact transcript
         if (lastProcessedTranscriptRef.current === transcript) {
@@ -593,7 +606,7 @@ const ChatMultimodalDialog = () => {
         // Store this transcript as processed
         lastProcessedTranscriptRef.current = transcript;
 
-        console.log('🎤 Speech recognized:', transcript, 'Confidence:', confidence);
+        console.log('🎤 Processing final transcript:', transcript, 'Confidence:', confidence);
 
         // If virtual keyboard is active, pass to its processor
         if (virtualKeyboardProcessorRef.current) {
@@ -602,16 +615,7 @@ const ChatMultimodalDialog = () => {
           console.log('📱 Virtual keyboard processor returned:', handled);
           if (handled) {
             console.log('✅ Virtual keyboard handled the speech input');
-            // Continue listening for next word
-            if (isRecording && recognitionRef.current) {
-              setTimeout(() => {
-                try {
-                  recognitionRef.current.start();
-                } catch (err) {
-                  console.log('Recognition already started');
-                }
-              }, 300);
-            }
+            // In continuous mode, recognition keeps running automatically - no need to restart
             return;
           } else {
             console.log('❌ Virtual keyboard did NOT handle:', transcript);
@@ -934,14 +938,34 @@ const ChatMultimodalDialog = () => {
 
   // Auto-rephrase timer (every 60 seconds of no input)
   useEffect(() => {
-    if (!currentQuestion || !ttsEnabled || ttsOnHold) {
-      console.log('Auto-rephrase disabled:', { hasQuestion: !!currentQuestion, ttsEnabled, ttsOnHold });
+    if (!currentQuestion || !ttsEnabled || ttsOnHold || isRecording) {
+      console.log('Auto-rephrase disabled:', { hasQuestion: !!currentQuestion, ttsEnabled, ttsOnHold, isRecording });
       return;
     }
 
     console.log('Auto-rephrase timer started for question:', currentQuestion.question_id);
 
+    // Capture the question ID at the time this timer is set up
+    const questionIdAtSetup = currentQuestion.question_id;
+
     const checkRephrase = () => {
+      // Don't rephrase if user is actively recording
+      if (isRecording) {
+        console.log('⏭ Skipping rephrase - user is recording');
+        return;
+      }
+
+      // CRITICAL FIX: Check if we're still on the same question
+      if (currentQuestion?.question_id !== questionIdAtSetup) {
+        console.log(`⏭ Skipping rephrase - question changed from ${questionIdAtSetup} to ${currentQuestion?.question_id}`);
+        // Clear the timer since we're on a different question now
+        if (rephraseTimerRef.current) {
+          clearInterval(rephraseTimerRef.current);
+          rephraseTimerRef.current = null;
+        }
+        return;
+      }
+
       const timeSinceInput = Date.now() - lastInputTimeRef.current;
       console.log('Checking rephrase... Time since input:', Math.round(timeSinceInput / 1000), 'seconds');
 
@@ -961,16 +985,16 @@ const ChatMultimodalDialog = () => {
         console.log('Auto-rephrase timer cleared');
       }
     };
-  }, [currentQuestion, ttsEnabled, ttsOnHold]);
+  }, [currentQuestion, ttsEnabled, ttsOnHold, isRecording]);
 
   // Snore sound timer (plays every 5 minutes when TTS is on hold)
   useEffect(() => {
-    if (!ttsOnHold) {
-      // Clear any existing snore timer when TTS is not on hold
+    // Clear any existing snore timer when TTS is not on hold OR when TTS is disabled (snoozed)
+    if (!ttsOnHold || !ttsEnabled) {
       if (snoreTimerRef.current) {
         clearInterval(snoreTimerRef.current);
         snoreTimerRef.current = null;
-        console.log('😴 Snore timer cleared');
+        console.log('😴 Snore timer cleared' + (!ttsEnabled ? ' (TTS snoozed)' : ''));
       }
       return;
     }
@@ -1024,7 +1048,7 @@ const ChatMultimodalDialog = () => {
         console.log('😴 Snore timer cleared');
       }
     };
-  }, [ttsOnHold]);
+  }, [ttsOnHold, ttsEnabled]);
 
   const startSpeechRecognition = useCallback(async () => {
     if (!recognitionRef.current) {
@@ -1069,10 +1093,11 @@ const ChatMultimodalDialog = () => {
           mediaRecorderRef.current.start();
           console.log('MediaRecorder started');
 
-          // Enable continuous mode for virtual keyboard (NATO alphabet input)
+          // Enable continuous mode AND interim results for virtual keyboard (NATO alphabet input)
           const isVirtualKeyboardMode = currentQuestion?.spelling_required === true;
           recognitionRef.current.continuous = isVirtualKeyboardMode;
-          console.log(`🎤 Setting continuous mode: ${isVirtualKeyboardMode} (spelling_required: ${currentQuestion?.spelling_required})`);
+          recognitionRef.current.interimResults = isVirtualKeyboardMode; // Enable interim results for faster feedback
+          console.log(`🎤 Setting continuous mode: ${isVirtualKeyboardMode}, interimResults: ${isVirtualKeyboardMode} (spelling_required: ${currentQuestion?.spelling_required})`);
 
           // Start speech recognition AFTER microphone permission is granted
           try {
@@ -1287,7 +1312,23 @@ const ChatMultimodalDialog = () => {
   };
 
   const handleSendMessage = async (messageText) => {
-    if (!sessionId || !currentQuestion) return;
+    console.log('📤 handleSendMessage called with:', messageText);
+    console.log('📊 Current state:', {
+      sessionId: sessionId || 'MISSING',
+      currentQuestion: currentQuestion?.question_id || 'MISSING',
+      messageText
+    });
+
+    if (!sessionId || !currentQuestion) {
+      console.error('❌ CRITICAL: Cannot submit answer - missing required data:', {
+        sessionId: sessionId || 'MISSING',
+        currentQuestion: currentQuestion || 'MISSING'
+      });
+      addSystemMessage('❌ Error: Session or question not loaded. Please refresh the page.');
+      return;
+    }
+
+    console.log('✅ Validation passed - submitting answer to backend');
 
     // Reset input timer when user sends a message
     lastInputTimeRef.current = Date.now();
@@ -1308,17 +1349,30 @@ const ChatMultimodalDialog = () => {
     // Submit answer to backend
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/session/${sessionId}/answer`, {
+      console.log(`📡 POST ${API_BASE_URL}/answer/submit`, {
+        session_id: sessionId,
+        question_id: currentQuestion.question_id,
+        answer_text: messageText,
+        answer_type: 'text',
+        recognition_confidence: null
+      });
+
+      const response = await fetch(`${API_BASE_URL}/answer/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          session_id: sessionId,
           question_id: currentQuestion.question_id,
-          answer: messageText,
-          input_mode: 'text'
+          answer_text: messageText,
+          answer_type: 'text',
+          recognition_confidence: null
         })
       });
 
+      console.log('📡 Response status:', response.status);
+
       const data = await response.json();
+      console.log('📡 Response data:', data);
 
       // Add confidence feedback if available
       if (data.confidence !== undefined) {
@@ -1337,8 +1391,10 @@ const ChatMultimodalDialog = () => {
       }
 
       // Load next question
+      console.log('🔄 Loading next question...');
       await loadCurrentQuestion(sessionId);
     } catch (err) {
+      console.error('❌ Error submitting answer:', err);
       setError('Failed to submit answer: ' + err.message);
       addSystemMessage('❌ Failed to submit answer. Please try again.');
     } finally {
