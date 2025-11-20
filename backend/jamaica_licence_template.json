@@ -1,0 +1,249 @@
+{
+  "templateName": "jamaica_driving_licence_front_v1",
+  "imageSize": {
+    "width": 856,
+    "height": 540
+  },
+  "cardRect": {
+    "absolute": {
+      "x": 0,
+      "y": 0,
+      "width": 856,
+      "height": 540
+    },
+    "normalized": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+    }
+  },
+  "fields": [
+    {
+      "fieldId": "photo",
+      "label": "Photograph",
+      "rectCard": {
+        "x": 50,
+        "y": 120,
+        "width": 180,
+        "height": 220
+      },
+      "normalizedCard": {
+        "x": 0.05841121495327103,
+        "y": 0.2222222222222222,
+        "width": 0.21028037383177572,
+        "height": 0.4074074074074074
+      },
+      "extractionType": "image"
+    },
+    {
+      "fieldId": "signature",
+      "label": "Signature",
+      "rectCard": {
+        "x": 250,
+        "y": 440,
+        "width": 300,
+        "height": 70
+      },
+      "normalizedCard": {
+        "x": 0.29205607476635514,
+        "y": 0.8148148148148148,
+        "width": 0.35046728971962615,
+        "height": 0.12962962962962962
+      },
+      "extractionType": "image"
+    },
+    {
+      "fieldId": "surname",
+      "label": "Surname",
+      "rectCard": {
+        "x": 260,
+        "y": 80,
+        "width": 320,
+        "height": 35
+      },
+      "normalizedCard": {
+        "x": 0.30373831775700933,
+        "y": 0.14814814814814814,
+        "width": 0.3738317757009346,
+        "height": 0.06481481481481481
+      }
+    },
+    {
+      "fieldId": "first_name",
+      "label": "First Name",
+      "rectCard": {
+        "x": 260,
+        "y": 120,
+        "width": 320,
+        "height": 35
+      },
+      "normalizedCard": {
+        "x": 0.30373831775700933,
+        "y": 0.2222222222222222,
+        "width": 0.3738317757009346,
+        "height": 0.06481481481481481
+      }
+    },
+    {
+      "fieldId": "middle_name",
+      "label": "Middle Name",
+      "rectCard": {
+        "x": 260,
+        "y": 160,
+        "width": 320,
+        "height": 35
+      },
+      "normalizedCard": {
+        "x": 0.30373831775700933,
+        "y": 0.2962962962962963,
+        "width": 0.3738317757009346,
+        "height": 0.06481481481481481
+      }
+    },
+    {
+      "fieldId": "licence_number",
+      "label": "Licence Number",
+      "rectCard": {
+        "x": 260,
+        "y": 200,
+        "width": 250,
+        "height": 35
+      },
+      "normalizedCard": {
+        "x": 0.30373831775700933,
+        "y": 0.37037037037037035,
+        "width": 0.29205607476635514,
+        "height": 0.06481481481481481
+      }
+    },
+    {
+      "fieldId": "date_of_birth",
+      "label": "Date of Birth",
+      "rectCard": {
+        "x": 260,
+        "y": 240,
+        "width": 180,
+        "height": 35
+      },
+      "normalizedCard": {
+        "x": 0.30373831775700933,
+        "y": 0.4444444444444444,
+        "width": 0.21028037383177572,
+        "height": 0.06481481481481481
+      }
+    },
+    {
+      "fieldId": "blood_type",
+      "label": "Blood Type",
+      "rectCard": {
+        "x": 460,
+        "y": 240,
+        "width": 80,
+        "height": 35
+      },
+      "normalizedCard": {
+        "x": 0.5373831775700935,
+        "y": 0.4444444444444444,
+        "width": 0.09345794392523364,
+        "height": 0.06481481481481481
+      }
+    },
+    {
+      "fieldId": "issue_date",
+      "label": "Issue Date",
+      "rectCard": {
+        "x": 260,
+        "y": 280,
+        "width": 180,
+        "height": 35
+      },
+      "normalizedCard": {
+        "x": 0.30373831775700933,
+        "y": 0.5185185185185185,
+        "width": 0.21028037383177572,
+        "height": 0.06481481481481481
+      }
+    },
+    {
+      "fieldId": "expiry_date",
+      "label": "Expiry Date",
+      "rectCard": {
+        "x": 260,
+        "y": 320,
+        "width": 180,
+        "height": 35
+      },
+      "normalizedCard": {
+        "x": 0.30373831775700933,
+        "y": 0.5925925925925926,
+        "width": 0.21028037383177572,
+        "height": 0.06481481481481481
+      }
+    },
+    {
+      "fieldId": "categories",
+      "label": "Categories",
+      "rectCard": {
+        "x": 590,
+        "y": 80,
+        "width": 240,
+        "height": 180
+      },
+      "normalizedCard": {
+        "x": 0.6893457943925234,
+        "y": 0.14814814814814814,
+        "width": 0.2803738317757009,
+        "height": 0.3333333333333333
+      }
+    },
+    {
+      "fieldId": "address",
+      "label": "Address",
+      "rectCard": {
+        "x": 260,
+        "y": 360,
+        "width": 320,
+        "height": 75
+      },
+      "normalizedCard": {
+        "x": 0.30373831775700933,
+        "y": 0.6666666666666666,
+        "width": 0.3738317757009346,
+        "height": 0.1388888888888889
+      }
+    },
+    {
+      "fieldId": "issuing_authority",
+      "label": "Issuing Authority",
+      "rectCard": {
+        "x": 590,
+        "y": 270,
+        "width": 240,
+        "height": 85
+      },
+      "normalizedCard": {
+        "x": 0.6893457943925234,
+        "y": 0.5,
+        "width": 0.2803738317757009,
+        "height": 0.1574074074074074
+      }
+    },
+    {
+      "fieldId": "restrictions",
+      "label": "Restrictions",
+      "rectCard": {
+        "x": 590,
+        "y": 360,
+        "width": 240,
+        "height": 75
+      },
+      "normalizedCard": {
+        "x": 0.6893457943925234,
+        "y": 0.6666666666666666,
+        "width": 0.2803738317757009,
+        "height": 0.1388888888888889
+      }
+    }
+  ]
+}

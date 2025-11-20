@@ -28,9 +28,11 @@ import {
   CheckCircle2,
   TrendingUp,
   Volume2,
-  Headphones
+  Headphones,
+  Database
 } from 'lucide-react';
 import DialogFlowView from './DialogFlowView';
+import FieldStatusPanel from './FieldStatusPanel';
 
 const API_BASE_URL = '/api/admin';
 
@@ -598,6 +600,17 @@ const OperatorPanel = () => {
           <TrendingUp className="w-4 h-4 inline mr-2" />
           Session Flow
         </button>
+        <button
+          onClick={() => setActiveTab('fields')}
+          className={`px-4 py-2 font-medium ${
+            activeTab === 'fields'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Database className="w-4 h-4 inline mr-2" />
+          Field States
+        </button>
       </div>
 
       {/* Sessions Tab */}
@@ -1008,6 +1021,13 @@ const OperatorPanel = () => {
       {activeTab === 'flow' && (
         <div className="mt-6">
           <DialogFlowView embedded={true} />
+        </div>
+      )}
+
+      {/* Field States Tab */}
+      {activeTab === 'fields' && (
+        <div className="mt-6">
+          <FieldStatusPanel sessionId={selectedSession} />
         </div>
       )}
     </div>
