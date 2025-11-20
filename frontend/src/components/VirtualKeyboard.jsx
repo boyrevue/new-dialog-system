@@ -340,6 +340,80 @@ const VirtualKeyboard = ({
         return true;
       }
 
+      // Check for delete specific letter at end commands
+      // Patterns: "delete the A at the end", "delete A at end", "remove the B at the end"
+      // Common ASR errors: "de Leet" → "delete", "the lead" → "delete"
+      const deleteSpecificEndPattern = /(?:delete|remove|de leet|the lead)(?:\s+the)?\s+([a-z]|alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu)\s+(?:at\s+)?(?:the\s+)?(?:end|last|back)/i;
+
+      const deleteSpecificEndMatch = text.match(deleteSpecificEndPattern);
+
+      if (deleteSpecificEndMatch) {
+        const letter = deleteSpecificEndMatch[1];
+        console.log(`🗑️ Delete specific letter at end command detected: letter=${letter}`);
+
+        // Convert NATO phonetic to letter
+        const getLetterFromPhonetic = (word) => {
+          for (const [l, phonetic] of Object.entries(NATO_PHONETIC)) {
+            if (word.toLowerCase() === phonetic.toLowerCase() || word.toLowerCase() === l.toLowerCase()) {
+              return l;
+            }
+          }
+          return word.toUpperCase();
+        };
+
+        const letterToDelete = getLetterFromPhonetic(letter);
+        console.log(`🗑️ Looking to delete: ${letterToDelete} at end`);
+
+        // Use ref to get most current value (avoids prop update lag)
+        const currentValue = currentValueRef.current || '';
+        console.log(`🗑️ Current value: "${currentValue}"`);
+
+        if (currentValue.length > 0) {
+          const lastChar = currentValue.charAt(currentValue.length - 1).toUpperCase();
+
+          if (lastChar === letterToDelete) {
+            const newValue = currentValue.slice(0, -1); // Remove last character
+            console.log(`✅ Deleted ${letterToDelete} at end: "${currentValue}" → "${newValue}"`);
+            if (onValueChange) {
+              onValueChange(newValue);
+            }
+            return true;
+          } else {
+            console.log(`⚠️ Last character is "${lastChar}", not "${letterToDelete}" - no deletion`);
+            return false;
+          }
+        } else {
+          console.log(`⚠️ Nothing to delete - value is empty`);
+          return false;
+        }
+      }
+
+      // Check for delete any character at end commands
+      // Patterns: "delete the character at the end", "delete last character", "remove character at end"
+      const deleteEndPattern = /(?:delete|remove|de leet|the lead)(?:\s+(?:the|a))?\s+(?:character|letter|char)?\s*(?:at\s+)?(?:the\s+)?(?:end|last|back)/i;
+
+      const deleteEndMatch = text.match(deleteEndPattern);
+
+      if (deleteEndMatch) {
+        console.log(`🗑️ Delete end command detected`);
+
+        // Use ref to get most current value (avoids prop update lag)
+        const currentValue = currentValueRef.current || '';
+        console.log(`🗑️ Current value: "${currentValue}"`);
+
+        if (currentValue.length > 0) {
+          const newValue = currentValue.slice(0, -1); // Remove last character
+          console.log(`✅ Deleted last char: "${currentValue}" → "${newValue}"`);
+          if (onValueChange) {
+            onValueChange(newValue);
+          }
+          return true;
+        } else {
+          console.log(`⚠️ Nothing to delete - value is empty`);
+          return false;
+        }
+      }
+
       // Split by spaces to handle multiple words (e.g., "alpha bravo charlie")
       const words = text.split(/\s+/);
       console.log('🎤 Split into words:', words);
