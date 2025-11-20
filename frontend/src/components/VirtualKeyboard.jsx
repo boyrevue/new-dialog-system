@@ -292,6 +292,54 @@ const VirtualKeyboard = ({
         }
       }
 
+      // Check for insert commands
+      // Patterns: "insert A at the beginning", "insert B at the end"
+      // Also handles: "insert alpha at the beginning", "insert bravo at the end"
+      // Common ASR errors: "in cert" → "insert", "cert" → "insert"
+      const insertBeginningPattern = /(?:insert|in cert|cert)(?:\s+(?:a|an))?\s+([a-z]|alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu)\s+(?:at\s+)?(?:the\s+)?(?:beginning|start|front)/i;
+
+      const insertEndPattern = /(?:insert|in cert|cert)(?:\s+(?:a|an))?\s+([a-z]|alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu)\s+(?:at\s+)?(?:the\s+)?(?:end|back)/i;
+
+      const insertBeginningMatch = text.match(insertBeginningPattern);
+      const insertEndMatch = text.match(insertEndPattern);
+
+      if (insertBeginningMatch || insertEndMatch) {
+        const isBeginning = !!insertBeginningMatch;
+        const letter = isBeginning ? insertBeginningMatch[1] : insertEndMatch[1];
+
+        console.log(`➕ Insert command detected: ${isBeginning ? 'beginning' : 'end'}, letter=${letter}`);
+
+        // Convert NATO phonetic to letter
+        const getLetterFromPhonetic = (word) => {
+          for (const [l, phonetic] of Object.entries(NATO_PHONETIC)) {
+            if (word.toLowerCase() === phonetic.toLowerCase() || word.toLowerCase() === l.toLowerCase()) {
+              return l;
+            }
+          }
+          return word.toUpperCase();
+        };
+
+        const letterToInsert = getLetterFromPhonetic(letter);
+        console.log(`➕ Inserting: ${letterToInsert} at ${isBeginning ? 'beginning' : 'end'}`);
+
+        // Use ref to get most current value (avoids prop update lag)
+        const currentValue = currentValueRef.current || '';
+        console.log(`➕ Current value: "${currentValue}"`);
+
+        let newValue;
+        if (isBeginning) {
+          newValue = letterToInsert + currentValue;
+        } else {
+          newValue = currentValue + letterToInsert;
+        }
+
+        console.log(`✅ Inserted: "${currentValue}" → "${newValue}"`);
+        if (onValueChange) {
+          onValueChange(newValue);
+        }
+        return true;
+      }
+
       // Split by spaces to handle multiple words (e.g., "alpha bravo charlie")
       const words = text.split(/\s+/);
       console.log('🎤 Split into words:', words);
