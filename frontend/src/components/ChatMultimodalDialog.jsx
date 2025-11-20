@@ -528,6 +528,7 @@ const ChatMultimodalDialog = () => {
   const variantIndexRef = useRef(0); // Use ref to avoid closure issues
   const lastInputTimeRef = useRef(Date.now());
   const ttsEnabledRef = useRef(ttsEnabled); // Track current TTS state to avoid stale closure
+  const isRecordingRef = useRef(isRecording); // Track current recording state to avoid stale closure
   const recognitionRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -576,6 +577,12 @@ const ChatMultimodalDialog = () => {
     ttsEnabledRef.current = ttsEnabled;
     console.log('📌 ttsEnabledRef updated:', ttsEnabled);
   }, [ttsEnabled]);
+
+  // Keep isRecordingRef in sync with isRecording state (avoid stale closure in callbacks)
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+    console.log('📌 isRecordingRef updated:', isRecording);
+  }, [isRecording]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -1073,11 +1080,13 @@ const ChatMultimodalDialog = () => {
       return;
     }
 
-    // Check if already recording - prevent double start
-    if (isRecording) {
-      console.log('⚠️ Already recording, ignoring duplicate start request');
+    // Check if already recording - prevent double start (use ref to avoid stale closure)
+    if (isRecordingRef.current) {
+      console.log('⚠️ Already recording (ref:', isRecordingRef.current, '), ignoring duplicate start request');
       return;
     }
+
+    console.log('✅ Not currently recording (ref:', isRecordingRef.current, '), starting now...');
 
     try {
       setError(null);
