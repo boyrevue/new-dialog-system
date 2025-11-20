@@ -1031,11 +1031,21 @@ const ChatMultimodalDialog = () => {
       }
     };
 
-    // Play immediately when entering autopause
-    playSnore();
+    // Play immediately when entering autopause (only if TTS still enabled)
+    if (ttsEnabled) {
+      playSnore();
+    } else {
+      console.log('⏹ Skipping initial snore - TTS disabled');
+    }
 
     // Then play every 5 minutes (300000ms)
     snoreTimerRef.current = setInterval(() => {
+      // Defensive check: ensure TTS is still enabled before playing
+      if (!ttsEnabled) {
+        console.log('⏹ Skipping snore - TTS is now disabled');
+        return;
+      }
+
       console.log('⏰ 5 minutes passed - playing snore sound again');
       addSystemMessage('😴 *SNORE* Still waiting... (5 min reminder)');
       playSnore();
