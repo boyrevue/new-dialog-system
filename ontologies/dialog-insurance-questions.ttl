@@ -77,7 +77,7 @@
     :slotName "dateOfBirth" ;
     :required true ;
     :order 12 ;
-    :inSection :DriversSection ;
+    :inSection :PersonalInfoSection ;
     :hasInputMode vocab:DateInputMode ;
     mm:hasTTSPrompt :DateOfBirthTTS ;
     :hasASRGrammar :DateASRGrammar ;

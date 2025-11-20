@@ -418,14 +418,14 @@ const SectionManager = () => {
                       <Badge color="info" className="text-sm">
                         Order: {section.section_order}
                       </Badge>
-                      <h3 className="text-xl font-bold text-gray-900">
+                      <h3 className="text-xl font-bold text-white">
                         {section.section_title}
                       </h3>
                       <Badge color="gray" size="sm" className="ml-2">
                         {questionsBySection[section.section_id]?.length || 0} questions
                       </Badge>
                     </div>
-                    <p className="text-gray-600 text-sm mt-2">{section.section_description}</p>
+                    <p className="text-gray-300 text-sm mt-2">{section.section_description}</p>
                     <div className="flex gap-2 mt-2">
                       <Badge color="gray" size="xs">
                         ID: {section.section_id}
@@ -460,8 +460,8 @@ const SectionManager = () => {
                 {expandedSections[section.section_id] && (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 mb-3">
-                      <Move className="w-4 h-4 text-gray-500" />
-                      <p className="text-sm font-semibold text-gray-700">
+                      <Move className="w-4 h-4 text-gray-400" />
+                      <p className="text-sm font-semibold text-gray-200">
                         Questions ({questionsBySection[section.section_id]?.length || 0})
                       </p>
                     </div>
@@ -469,7 +469,7 @@ const SectionManager = () => {
                     {questionsBySection[section.section_id]?.length === 0 ||
                     !questionsBySection[section.section_id] ? (
                       <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                        <p className="text-gray-500 text-sm">
+                        <p className="text-gray-600 text-sm">
                           Drop questions here to assign them to this section
                         </p>
                       </div>
