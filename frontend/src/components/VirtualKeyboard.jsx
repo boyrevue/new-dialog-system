@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import { X, Delete, Space, Check } from 'lucide-react';
+import { X, Delete, Space, Check, Mic, Radio, Info } from 'lucide-react';
 
 const NATO_PHONETIC = {
   'A': 'Alpha',
@@ -106,11 +106,13 @@ const VirtualKeyboard = ({
   showPhonetic = true,
   keyboardType = 'alphanumeric', // 'alphanumeric' or 'numeric'
   placeholder = 'Type using keyboard or voice...',
-  onSpeechRecognized // callback for ASR-driven key presses
+  onSpeechRecognized, // callback for ASR-driven key presses
+  isRecording = false // recording lamp indicator
 }) => {
   // Remove internal state - use value prop directly (controlled component)
   const [lastKey, setLastKey] = useState(null);
   const [pressedKey, setPressedKey] = useState(null); // for visual feedback
+  const [showInfo, setShowInfo] = useState(false); // collapsed info panel
   const audioContextRef = React.useRef(null);
 
   // Clear input field when component mounts
@@ -485,46 +487,83 @@ const VirtualKeyboard = ({
 
   return (
     <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">Virtual Keyboard</h3>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-          title="Close keyboard"
-        >
-          <X className="w-5 h-5 text-gray-600" />
-        </button>
+      {/* Recording Status Banner - Full Width */}
+      <div className={`mb-4 p-4 rounded-lg text-center ${
+        isRecording
+          ? 'bg-red-100 border-2 border-red-400'
+          : 'bg-blue-50 border-2 border-blue-300'
+      }`}>
+        <div className="flex items-center justify-center gap-3">
+          {isRecording ? (
+            <>
+              <div className="relative">
+                <div className="w-4 h-4 bg-red-600 rounded-full animate-ping absolute"></div>
+                <div className="w-4 h-4 bg-red-600 rounded-full relative"></div>
+              </div>
+              <span className="text-lg font-bold text-red-700">LISTENING - Speak Now</span>
+              <Mic className="w-5 h-5 text-red-600 animate-pulse" />
+            </>
+          ) : (
+            <>
+              <div className="relative">
+                <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+              </div>
+              <span className="text-lg font-bold text-blue-700">ASR STANDBY</span>
+              <Radio className="w-5 h-5 text-blue-600" />
+            </>
+          )}
+        </div>
+        <p className={`text-sm mt-1 ${isRecording ? 'text-red-600' : 'text-blue-600'}`}>
+          {isRecording
+            ? 'Say NATO letters: "Alpha Bravo Charlie..."'
+            : 'Type using keyboard below or use voice input'}
+        </p>
       </div>
 
-      {/* Instructions */}
-      <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
-        <div className="text-sm font-semibold text-blue-900 mb-2">How to enter your answer:</div>
-        <ul className="text-xs text-blue-800 space-y-1">
-          <li className="flex items-start gap-2">
-            <span className="font-bold text-blue-600 mt-0.5">1.</span>
-            <span><strong>Voice spell</strong> letter by letter (e.g., say "V I N C E N T")</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="font-bold text-blue-600 mt-0.5">2.</span>
-            <span><strong>Use NATO alphabet</strong> (e.g., say "Victor India November Charlie Echo November Tango")</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="font-bold text-blue-600 mt-0.5">3.</span>
-            <span><strong>Type manually</strong> using the on-screen keyboard or your physical keyboard</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="font-bold text-blue-600 mt-0.5">4.</span>
-            <span><strong>Fix mistakes</strong> by saying "change B for V" or "change the first B for V"</span>
-          </li>
-        </ul>
-        <div className="mt-2 pt-2 border-t border-blue-300 text-xs text-blue-700">
-          <div className="font-medium mb-1">When finished, click the green <strong>Submit</strong> button below</div>
-          <div className="text-blue-600 italic">
-            💡 Tip: The system recognizes phonetically similar letters (B/V, M/N, F/S) for easier corrections
-          </div>
+      {/* Header with Info/Close */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-semibold text-gray-800">Virtual Keyboard</h3>
+
+        <div className="flex items-center gap-2">
+          {/* Info Button */}
+          <button
+            onClick={() => setShowInfo(!showInfo)}
+            className={`p-2 rounded-lg transition-colors ${
+              showInfo
+                ? 'bg-blue-100 text-blue-700'
+                : 'hover:bg-gray-100 text-gray-500 hover:text-blue-600'
+            }`}
+            title="How to use this keyboard"
+          >
+            <Info className="w-5 h-5" />
+          </button>
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Close keyboard"
+          >
+            <X className="w-5 h-5 text-gray-600" />
+          </button>
         </div>
       </div>
+
+      {/* Collapsible Instructions Panel */}
+      {showInfo && (
+        <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg text-xs">
+          <div className="font-semibold text-blue-900 mb-2">How to enter your answer:</div>
+          <ul className="text-blue-800 space-y-1">
+            <li><strong>1.</strong> Voice spell letter by letter (e.g., say "V I N C E N T")</li>
+            <li><strong>2.</strong> Use NATO alphabet (e.g., "Victor India November...")</li>
+            <li><strong>3.</strong> Type using the on-screen or physical keyboard</li>
+            <li><strong>4.</strong> Fix mistakes: say "change B for V" or "change the first B for V"</li>
+          </ul>
+          <div className="mt-2 pt-2 border-t border-blue-300 text-blue-600 italic">
+            Tip: Recognizes similar letters (B/V, M/N, F/S) for easier corrections
+          </div>
+        </div>
+      )}
 
       {/* Input Display */}
       <div className="mb-4">
@@ -595,7 +634,7 @@ const VirtualKeyboard = ({
                   <button
                     key={key}
                     onClick={() => handleKeyPress(key)}
-                    className={`relative w-14 h-16 border-4 rounded-lg font-semibold transition-all group ${
+                    className={`relative w-16 h-20 border-4 rounded-lg font-semibold transition-all group ${
                       isPressed
                         ? 'bg-yellow-300 border-yellow-500 text-gray-900 scale-95 shadow-lg'
                         : 'bg-white hover:bg-blue-50 border-gray-300 hover:border-blue-400 text-gray-800 active:scale-95'
@@ -603,12 +642,12 @@ const VirtualKeyboard = ({
                     title={`${key} - ${phonetic}`}
                   >
                     <div className="flex flex-col items-center justify-center h-full">
-                      <span className={`text-xl font-bold ${isPressed ? 'text-gray-900' : 'text-gray-800'}`}>
+                      <span className={`text-2xl font-bold ${isPressed ? 'text-gray-900' : 'text-gray-800'}`}>
                         {key}
                       </span>
                       {showPhonetic && (
-                        <span className={`text-[9px] font-medium mt-0.5 ${
-                          isPressed ? 'text-gray-700' : 'text-gray-500 group-hover:text-blue-600'
+                        <span className={`text-[10px] font-semibold leading-tight ${
+                          isPressed ? 'text-gray-700' : 'text-blue-600'
                         }`}>
                           {phonetic}
                         </span>

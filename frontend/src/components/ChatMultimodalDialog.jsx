@@ -9,8 +9,16 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, Button, Badge, Alert } from 'flowbite-react';
 import { Users, AlertTriangle, Settings, HelpCircle, Volume2, VolumeX, Play, Calendar } from 'lucide-react';
 import VirtualKeyboard from './VirtualKeyboard';
+import SmartSelectWithSearch from './SmartSelectWithSearch';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { parseDateFromSpeech, parseDateComponent } from '../utils/DateParser';
+import { generateDateGrammar, getDateFormatExamples } from '../utils/DateGrammarGenerator';
+import DocumentFastTrack from './DocumentFastTrack';
+import EmailVoiceKeyboard from './EmailVoiceKeyboard';
+import UKDrivingLicenceInput from './UKDrivingLicenceInput';
+
+import { getOptionsByVodflag, vodflagMapping } from '../utils/carInsuranceOptions';
 
 const API_BASE_URL = '/api';
 
@@ -167,10 +175,10 @@ const ChatDialogView = ({
 
           <div
             className={`rounded-2xl px-4 py-3 ${isUser
-                ? 'bg-blue-600 text-white rounded-tr-sm'
-                : isOperator
-                  ? 'bg-green-100 text-gray-900 rounded-tl-sm border border-green-300'
-                  : 'bg-gray-100 text-gray-900 rounded-tl-sm'
+              ? 'bg-blue-600 text-white rounded-tr-sm'
+              : isOperator
+                ? 'bg-green-100 text-gray-900 rounded-tl-sm border border-green-300'
+                : 'bg-gray-100 text-gray-900 rounded-tl-sm'
               }`}
           >
             {message.htmlContent ? (
@@ -182,19 +190,42 @@ const ChatDialogView = ({
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>
             )}
 
-            {/* Options for select questions */}
+            {/* Options for select questions - Use SmartSelectWithSearch for better UX */}
             {message.options && message.options.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {message.options.map((option, index) => (
-                  <button
-                    key={index}
-                    onClick={() => onSendMessage(option.value || option.label)}
-                    className="w-full text-left px-3 py-2 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 text-sm transition-colors"
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+              message.options.length > 5 ? (
+                <div className="mt-3">
+                  <SmartSelectWithSearch
+                    options={message.options}
+                    value={null}
+                    onChange={(option) => onSendMessage(option.value || option.label)}
+                    onVoiceSearch={(callback) => {
+                      // Trigger voice search for this select
+                      if (onStartSpeechRecognition) {
+                        onStartSpeechRecognition();
+                        // The speech result will be handled by the main speech handler
+                      }
+                    }}
+                    placeholder="Search or speak to find..."
+                    maxInitialDisplay={20}
+                    enableVoiceSearch={true}
+                    enableKeyboardSearch={true}
+                    isDependent={message.cascading?.is_dependent}
+                    parentValue={message.cascading?.parent_question_id ? answers[message.cascading.parent_question_id] : null}
+                  />
+                </div>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {message.options.map((option, index) => (
+                    <button
+                      key={index}
+                      onClick={() => onSendMessage(option.value || option.label)}
+                      className="w-full text-left px-3 py-2 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 text-sm transition-colors"
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )
             )}
           </div>
         </div>
@@ -345,8 +376,34 @@ const ChatDialogView = ({
 
       {/* Input Area */}
       <div className="border-t border-gray-200 bg-white px-6 py-4">
+        {/* Documents Fast Track Section - Shows for documents_fast_track section type */}
+        {currentQuestion && currentQuestion.section_type === 'documents_fast_track' && (
+          <DocumentFastTrack
+            documentsRequested={currentQuestion.documents_requested || []}
+            onDocumentsExtracted={async (data) => {
+              console.log('📄 Documents extracted:', data);
+
+              // Optimistically update answers with extracted data
+              setAnswers(prev => ({
+                ...prev,
+                ...data
+              }));
+
+              // Move to next section
+              addSystemMessage('✅ Documents processed! Moving to next section...');
+              await loadCurrentQuestion(sessionId);
+            }}
+            onSkip={async () => {
+              console.log('⏭️ User skipped document upload');
+              addSystemMessage('⏭️ Skipping document upload. You can enter details manually.');
+              await loadCurrentQuestion(sessionId);
+            }}
+            sessionId={sessionId}
+          />
+        )}
+
         {/* Date Picker - Shows for date questions */}
-        {currentQuestion && (currentQuestion.input_mode === 'date' || currentQuestion.input_mode?.includes('Date')) && (
+        {currentQuestion && currentQuestion.input_type === 'date' && (
           <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
             <div className="flex items-center gap-2 mb-3">
               <Calendar className="w-5 h-5 text-blue-600" />
@@ -386,10 +443,55 @@ const ChatDialogView = ({
               yearDropdownItemNumber={100}
               scrollableYearDropdown
             />
+
+            {/* Date Format Examples */}
+            <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="text-xs font-semibold text-gray-700 mb-2">💬 Voice Input Examples:</div>
+              <div className="text-xs text-gray-600 space-y-1">
+                {getDateFormatExamples().slice(0, 5).map((example, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span className="text-gray-400">•</span>
+                    <span className="font-mono">{example}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Radio Buttons / Select - Shows for select questions */}
+        {/* Email Voice Keyboard - Shows for email questions */}
+        {currentQuestion && currentQuestion.input_type === 'email' && (
+          <div className="mb-4">
+            <EmailVoiceKeyboard
+              value={inputValue}
+              onChange={(email) => setInputValue(email)}
+              onComplete={(email) => {
+                console.log('📧 Email completed:', email);
+                handleSendMessage(email);
+              }}
+              customTLDs={currentQuestion.custom_tlds || []}
+            />
+          </div>
+        )}
+
+        {/* UK Driving Licence Input - Shows for uk_driving_licence questions */}
+        {currentQuestion && currentQuestion.input_type === 'uk_driving_licence' && (
+          <div className="mb-4 max-h-[60vh] overflow-y-auto rounded-lg">
+            <UKDrivingLicenceInput
+              value={inputValue}
+              onChange={(licence) => setInputValue(licence)}
+              onComplete={(licence) => {
+                console.log('🚗 Licence completed:', licence);
+                handleSendMessage(licence);
+              }}
+              dateOfBirth={currentQuestion.auto_fill_dob}
+              fullName={currentQuestion.auto_fill_name}
+              allowDocumentUpload={currentQuestion.allow_document_upload !== false}
+            />
+          </div>
+        )}
+
+        {/* Select with Search - Shows for select questions with many options */}
         {currentQuestion && currentQuestion.input_type === 'select' && Array.isArray(currentQuestion.options) && currentQuestion.options.length > 0 && (
           <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
             <div className="flex items-center gap-2 mb-3">
@@ -463,8 +565,8 @@ const ChatDialogView = ({
           <button
             onClick={onToggleTTS}
             className={`flex-shrink-0 p-3 rounded-xl transition-all ${ttsEnabled
-                ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
               }`}
             title={ttsEnabled ? 'TTS enabled - click to disable' : 'TTS disabled - click to enable'}
           >
@@ -523,8 +625,8 @@ const ChatDialogView = ({
                 }
               }}
               className={`px-3 py-4 transition-colors ${isRecording
-                  ? 'text-red-600 hover:text-red-700 animate-pulse'
-                  : 'text-gray-500 hover:text-gray-700'
+                ? 'text-red-600 hover:text-red-700 animate-pulse'
+                : 'text-gray-500 hover:text-gray-700'
                 }`}
               title={isRecording ? 'Stop recording' : 'Start voice input'}
             >
@@ -539,8 +641,8 @@ const ChatDialogView = ({
             onClick={handleSend}
             disabled={!inputValue.trim() || loading}
             className={`flex-shrink-0 p-4 rounded-2xl transition-all ${inputValue.trim() && !loading
-                ? 'bg-gray-800 text-white hover:bg-gray-700'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              ? 'bg-gray-800 text-white hover:bg-gray-700'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             title="Send message"
           >
@@ -618,6 +720,7 @@ const ChatMultimodalDialog = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [answers, setAnswers] = useState({}); // Track answers for cascading logic
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
   const [inputMode, setInputMode] = useState('text'); // 'text' or 'speech'
@@ -930,7 +1033,7 @@ const ChatMultimodalDialog = () => {
     // Initial load
     loadVoices();
 
-    // Also load when voices change (Chrome loads voices asynchronously)
+    // Chrome loads voices asynchronously
     if (speechSynthesis.onvoiceschanged !== undefined) {
       speechSynthesis.onvoiceschanged = loadVoices;
     }
@@ -940,6 +1043,89 @@ const ChatMultimodalDialog = () => {
 
     return () => clearTimeout(timeout);
   }, []);
+
+  // Effect to handle cascading selects
+  useEffect(() => {
+    const handleCascading = async () => {
+      if (currentQuestion && currentQuestion.cascading && currentQuestion.cascading.is_dependent) {
+        const parentId = currentQuestion.cascading.parent_question_id;
+        const parentValue = answers[parentId];
+
+        console.log('🔄 Cascading check:', {
+          currentId: currentQuestion.question_id,
+          parentId,
+          parentValue,
+          answers
+        });
+
+        if (parentId) {
+          // Fetch options with parent value
+          try {
+            const url = `${API_BASE_URL}/config/question/${currentQuestion.question_id}/options${parentValue ? `?parent_value=${encodeURIComponent(parentValue)}` : ''}`;
+            console.log('🔄 Fetching cascading options from:', url);
+
+            const response = await fetch(url);
+            if (response.ok) {
+              const options = await response.json();
+              console.log('✅ Received cascading options:', options.length);
+
+              // Update current question options
+              setCurrentQuestion(prev => ({
+                ...prev,
+                options: options
+              }));
+
+              // Also update the last message if it's the system message for this question
+              setMessages(prev => {
+                const newMessages = [...prev];
+                const lastMsg = newMessages[newMessages.length - 1];
+                if (lastMsg && lastMsg.type === 'system' && lastMsg.options) {
+                  lastMsg.options = options;
+                }
+                return newMessages;
+              });
+            }
+          } catch (err) {
+            console.error('❌ Error fetching cascading options:', err);
+          }
+        }
+      }
+    };
+
+    handleCascading();
+  }, [currentQuestion?.question_id, answers]);
+
+  // Initial load of answers from session history (if available)
+  useEffect(() => {
+    const fetchSessionAnswers = async () => {
+      if (sessionId) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/sessions`);
+          if (response.ok) {
+            const sessions = await response.json();
+            const currentSession = sessions.find(s => s.id === sessionId);
+            if (currentSession && currentSession.questions) {
+              const loadedAnswers = {};
+              currentSession.questions.forEach(q => {
+                // Extra defensive check for q and q.answer
+                if (q && typeof q === 'object' && q.answer) {
+                  if (q.id) {
+                    loadedAnswers[q.id] = q.answer;
+                  }
+                }
+              });
+              setAnswers(prev => ({ ...prev, ...loadedAnswers }));
+              console.log('✅ Loaded session answers:', Object.keys(loadedAnswers).length);
+            }
+          }
+        } catch (err) {
+          console.error('❌ Error loading session answers:', err);
+        }
+      }
+    };
+
+    fetchSessionAnswers();
+  }, [sessionId]);
 
   // Force reset speech synthesis (Chrome bug workaround)
   const resetSpeechSynthesis = useCallback(() => {
@@ -1329,6 +1515,106 @@ const ChatMultimodalDialog = () => {
   const handleSpeechResult = (transcript, confidence) => {
     setIsRecording(false);
 
+    // Check if current question is a date field
+    if (currentQuestion && currentQuestion.input_type === 'date') {
+      const componentType = currentQuestion.date_component || 'full';
+      console.log(`📅 Date field detected (${componentType}), attempting to parse from speech:`, transcript);
+
+      const parsedDate = parseDateComponent(transcript, componentType);
+
+      if (parsedDate) {
+        console.log(`✅ Successfully parsed ${componentType}:`, parsedDate);
+        // Send the formatted date as the message
+        handleSendMessage(parsedDate);
+        return;
+      } else {
+        console.warn(`⚠️ Failed to parse ${componentType}, sending original transcript`);
+        // Fall through to send original transcript
+      }
+    }
+
+    // Check if current question is a select question - prioritize matching against options
+    if (currentQuestion && currentQuestion.input_type === 'select' && Array.isArray(currentQuestion.options) && currentQuestion.options.length > 0) {
+      console.log('🎯 Select question detected, attempting to match transcript against options');
+      console.log('📋 Available options:', currentQuestion.options);
+
+      const normalizedTranscript = transcript.toLowerCase().trim();
+      let matchedOption = null;
+      let matchType = null;
+
+      // Try to match against each option
+      for (const option of currentQuestion.options) {
+        const optionLabel = (typeof option === 'string' ? option : option.label || '').toLowerCase();
+        const optionValue = (typeof option === 'string' ? option : option.value || '').toLowerCase();
+        const aliases = option.aliases || [];
+        const phonetics = option.phonetics || [];
+
+        // 1. Exact match on label or value
+        if (normalizedTranscript === optionLabel || normalizedTranscript === optionValue) {
+          matchedOption = option;
+          matchType = 'exact';
+          break;
+        }
+
+        // 2. Check aliases (semantic equivalents)
+        for (const alias of aliases) {
+          if (normalizedTranscript === alias.toLowerCase() || normalizedTranscript.includes(alias.toLowerCase())) {
+            matchedOption = option;
+            matchType = `alias: ${alias}`;
+            break;
+          }
+        }
+        if (matchedOption) break;
+
+        // 3. Check phonetics
+        for (const phonetic of phonetics) {
+          if (normalizedTranscript === phonetic.toLowerCase() || normalizedTranscript.includes(phonetic.toLowerCase())) {
+            matchedOption = option;
+            matchType = `phonetic: ${phonetic}`;
+            break;
+          }
+        }
+        if (matchedOption) break;
+
+        // 4. Fuzzy match - transcript contains option label or vice versa
+        if (normalizedTranscript.includes(optionLabel) || optionLabel.includes(normalizedTranscript)) {
+          // Only accept if substantial match (more than 3 chars or 50% of transcript)
+          if (optionLabel.length > 3 || optionLabel.length >= normalizedTranscript.length * 0.5) {
+            matchedOption = option;
+            matchType = 'fuzzy';
+            break;
+          }
+        }
+
+        // 5. Word overlap - check if key words from transcript match option
+        const transcriptWords = normalizedTranscript.split(/\s+/);
+        const optionWords = optionLabel.split(/\s+/);
+        const matchingWords = transcriptWords.filter(tw =>
+          optionWords.some(ow => ow.includes(tw) || tw.includes(ow))
+        );
+        // If more than half the words match, consider it a match
+        if (matchingWords.length >= Math.ceil(optionWords.length / 2) && matchingWords.length > 0) {
+          matchedOption = option;
+          matchType = `word-overlap: ${matchingWords.join(', ')}`;
+          break;
+        }
+      }
+
+      if (matchedOption) {
+        // Prefer label for display (human-readable), fall back to value
+        const matchedLabel = typeof matchedOption === 'string' ? matchedOption : (matchedOption.label || matchedOption.value);
+        console.log(`✅ Matched select option: "${matchedLabel}" (match type: ${matchType})`);
+        console.log(`   Original transcript: "${transcript}"`);
+        // Send the label (original select option text) so it displays correctly in chat
+        handleSendMessage(matchedLabel);
+        return;
+      } else {
+        console.warn(`⚠️ No select option match found for: "${transcript}"`);
+        console.log('   Available options:', currentQuestion.options.map(o => typeof o === 'string' ? o : o.label));
+        // Fall through to send original transcript
+      }
+    }
+
     // Send the transcript as a message
     handleSendMessage(transcript);
   };
@@ -1461,6 +1747,44 @@ const ChatMultimodalDialog = () => {
         return;
       }
 
+      // Check for enhanced TTS variants from carInsuranceOptions
+      try {
+        let enhancedTTS = null;
+        // Safe access to vodflagMapping
+        if (vodflagMapping && typeof vodflagMapping === 'object') {
+          const vodflag = vodflagMapping[data.slot_name] ? Object.keys(vodflagMapping).find(key => vodflagMapping[key] === data.slot_name) : null;
+
+          // Try to find by slot name directly if not found via vodflag mapping
+          const optionsKey = Object.keys(vodflagMapping).find(key => vodflagMapping[key] === data.slot_name);
+
+          if (optionsKey || vodflagMapping[data.slot_name]) {
+            // Iterate safely
+            for (const [vFlag, key] of Object.entries(vodflagMapping)) {
+              if (key === data.slot_name || key === data.question_id) {
+                const options = getOptionsByVodflag(vFlag);
+                if (options && options.length > 0 && options[0].tts) {
+                  enhancedTTS = options[0].tts;
+                  console.log('✨ Found enhanced TTS for', data.slot_name, enhancedTTS);
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        // If we found enhanced TTS, merge it into the data
+        if (enhancedTTS) {
+          data.tts = {
+            ...data.tts,
+            ...enhancedTTS,
+            text: enhancedTTS.variant1 || data.question_text // Use variant1 as primary text if available
+          };
+        }
+      } catch (ttsErr) {
+        console.error('⚠️ Error processing enhanced TTS:', ttsErr);
+        // Continue without enhanced TTS
+      }
+
       setCurrentQuestion(data);
       setCurrentVariantIndex(0);
 
@@ -1482,7 +1806,10 @@ const ChatMultimodalDialog = () => {
       if (ttsEnabled && data.question_text && lastSpokenQuestionIdRef.current !== data.question_id) {
         console.log('🔊 Speaking question:', data.question_id);
         lastSpokenQuestionIdRef.current = data.question_id;
-        setTimeout(() => speakText(data.question_text), 500);
+
+        // Use enhanced TTS text if available, otherwise fallback to question text
+        const textToSpeak = data.tts?.variant1 || data.tts?.text || data.question_text;
+        setTimeout(() => speakText(textToSpeak), 500);
       } else if (lastSpokenQuestionIdRef.current === data.question_id) {
         console.log('⏭ Skipping speech - already spoken this question:', data.question_id);
       }
@@ -1531,6 +1858,14 @@ const ChatMultimodalDialog = () => {
     variantIndexRef.current = 0;
     setRephraseCount(0); // Reset rephrase counter when user responds
     setTtsOnHold(false); // Resume TTS if it was on hold
+
+    // Optimistically update answers for cascading logic
+    if (currentQuestionRef.current) {
+      setAnswers(prev => ({
+        ...prev,
+        [currentQuestionRef.current.question_id]: messageText
+      }));
+    }
 
     // Add user message to chat
     const userMessage = {
