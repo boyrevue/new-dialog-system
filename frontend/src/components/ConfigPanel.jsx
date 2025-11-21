@@ -18,8 +18,10 @@ import {
   Save,
   RefreshCw,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  TestTube2
 } from 'lucide-react';
+import FormASRTester from './FormASRTester';
 
 const API_BASE_URL = '/api/config';
 
@@ -195,6 +197,17 @@ const ConfigPanel = () => {
             >
               <Settings className="w-4 h-4" />
               System
+            </button>
+            <button
+              onClick={() => setActiveTab('field-asr')}
+              className={`${
+                activeTab === 'field-asr'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+            >
+              <TestTube2 className="w-4 h-4" />
+              Field ASR Tester
             </button>
           </nav>
         </div>
@@ -438,6 +451,12 @@ const ConfigPanel = () => {
                 <p><strong>Questions:</strong> {questions.length} configured</p>
               </div>
             </Card>
+          )}
+
+          {activeTab === 'field-asr' && (
+            <div className="-m-6">
+              <FormASRTester />
+            </div>
           )}
         </div>
       </Card>
