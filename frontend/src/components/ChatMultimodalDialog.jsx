@@ -355,13 +355,13 @@ const ChatDialogView = ({
             </div>
             <DatePicker
               selected={(() => {
-                if (!inputValue) return null;
+                if (!inputValue || typeof inputValue !== 'string') return null;
                 try {
                   // Try to parse DD/MM/YYYY format
                   const parts = inputValue.split('/');
                   if (parts.length === 3) {
                     const [day, month, year] = parts;
-                    return new Date(year, month - 1, day);
+                    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
                   }
                   return new Date(inputValue);
                 } catch (e) {
@@ -369,7 +369,7 @@ const ChatDialogView = ({
                 }
               })()}
               onChange={(date) => {
-                if (date) {
+                if (date && date instanceof Date && !isNaN(date)) {
                   // Format date as DD/MM/YYYY for UK format
                   const formatted = date.toLocaleDateString('en-GB');
                   setInputValue(formatted);
@@ -390,7 +390,7 @@ const ChatDialogView = ({
         )}
 
         {/* Radio Buttons / Select - Shows for select questions */}
-        {currentQuestion && currentQuestion.input_type === 'select' && currentQuestion.options && (
+        {currentQuestion && currentQuestion.input_type === 'select' && Array.isArray(currentQuestion.options) && currentQuestion.options.length > 0 && (
           <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
             <div className="flex items-center gap-2 mb-3">
               <HelpCircle className="w-5 h-5 text-green-600" />
