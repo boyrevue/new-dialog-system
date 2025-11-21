@@ -7,8 +7,10 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, Button, Badge, Alert } from 'flowbite-react';
-import { Users, AlertTriangle, Settings, HelpCircle, Volume2, VolumeX, Play } from 'lucide-react';
+import { Users, AlertTriangle, Settings, HelpCircle, Volume2, VolumeX, Play, Calendar } from 'lucide-react';
 import VirtualKeyboard from './VirtualKeyboard';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const API_BASE_URL = '/api';
 
@@ -43,14 +45,14 @@ const ChatDialogView = ({
   const fileInputRef = useRef(null);
   const settingsMenuRef = useRef(null);
 
-    // Memoized registration to avoid repeated logs/registrations on re-render
-    const registerVirtualKeyboardProcessor = useCallback((processor) => {
-      if (!virtualKeyboardProcessorRef) return;
-      if (virtualKeyboardProcessorRef.current !== processor) {
-        virtualKeyboardProcessorRef.current = processor;
-        console.log('📱 Virtual keyboard processor registered');
-      }
-    }, [virtualKeyboardProcessorRef]);
+  // Memoized registration to avoid repeated logs/registrations on re-render
+  const registerVirtualKeyboardProcessor = useCallback((processor) => {
+    if (!virtualKeyboardProcessorRef) return;
+    if (virtualKeyboardProcessorRef.current !== processor) {
+      virtualKeyboardProcessorRef.current = processor;
+      console.log('📱 Virtual keyboard processor registered');
+    }
+  }, [virtualKeyboardProcessorRef]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -78,14 +80,14 @@ const ChatDialogView = ({
     if (isRecording && currentQuestion) {
       // Determine if this question needs virtual keyboard
       const needsKeyboard = currentQuestion.spelling_required === true ||
-                           currentQuestion.input_mode === 'text' ||
-                           currentQuestion.input_mode === 'alphanumeric' ||
-                           currentQuestion.input_mode === 'numeric' ||
-                           currentQuestion.question_type === 'text';
+        currentQuestion.input_mode === 'text' ||
+        currentQuestion.input_mode === 'alphanumeric' ||
+        currentQuestion.input_mode === 'numeric' ||
+        currentQuestion.question_type === 'text';
 
       if (needsKeyboard) {
         console.log('📱 Showing virtual keyboard for question:', currentQuestion.question_id,
-                    '(spelling_required:', currentQuestion.spelling_required, ')');
+          '(spelling_required:', currentQuestion.spelling_required, ')');
         setShowVirtualKeyboard(true);
       }
     } else {
@@ -93,12 +95,12 @@ const ChatDialogView = ({
     }
   }, [isRecording, currentQuestion]);
 
-    // Clear processor when the keyboard hides to prevent stale handlers
-    useEffect(() => {
-      if (!showVirtualKeyboard && virtualKeyboardProcessorRef) {
-        virtualKeyboardProcessorRef.current = null;
-      }
-    }, [showVirtualKeyboard, virtualKeyboardProcessorRef]);
+  // Clear processor when the keyboard hides to prevent stale handlers
+  useEffect(() => {
+    if (!showVirtualKeyboard && virtualKeyboardProcessorRef) {
+      virtualKeyboardProcessorRef.current = null;
+    }
+  }, [showVirtualKeyboard, virtualKeyboardProcessorRef]);
 
   const handleSend = () => {
     if (!inputValue.trim()) return;
@@ -138,9 +140,8 @@ const ChatDialogView = ({
       >
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${
-            isUser ? 'bg-blue-600' : isOperator ? 'bg-green-600' : 'bg-purple-600'
-          }`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${isUser ? 'bg-blue-600' : isOperator ? 'bg-green-600' : 'bg-purple-600'
+            }`}>
             {isUser ? 'U' : isOperator ? 'O' : 'S'}
           </div>
         </div>
@@ -165,13 +166,12 @@ const ChatDialogView = ({
           </div>
 
           <div
-            className={`rounded-2xl px-4 py-3 ${
-              isUser
+            className={`rounded-2xl px-4 py-3 ${isUser
                 ? 'bg-blue-600 text-white rounded-tr-sm'
                 : isOperator
-                ? 'bg-green-100 text-gray-900 rounded-tl-sm border border-green-300'
-                : 'bg-gray-100 text-gray-900 rounded-tl-sm'
-            }`}
+                  ? 'bg-green-100 text-gray-900 rounded-tl-sm border border-green-300'
+                  : 'bg-gray-100 text-gray-900 rounded-tl-sm'
+              }`}
           >
             {message.htmlContent ? (
               <div
@@ -345,15 +345,127 @@ const ChatDialogView = ({
 
       {/* Input Area */}
       <div className="border-t border-gray-200 bg-white px-6 py-4">
+        {/* Date Picker - Shows for date questions */}
+        {currentQuestion && (currentQuestion.input_mode === 'date' || currentQuestion.input_mode?.includes('Date')) && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="w-5 h-5 text-blue-600" />
+              <span className="text-sm font-semibold text-blue-900">Select Date</span>
+              <span className="text-xs text-blue-600 ml-auto">Or use voice input below</span>
+            </div>
+            <DatePicker
+              selected={(() => {
+                if (!inputValue) return null;
+                try {
+                  // Try to parse DD/MM/YYYY format
+                  const parts = inputValue.split('/');
+                  if (parts.length === 3) {
+                    const [day, month, year] = parts;
+                    return new Date(year, month - 1, day);
+                  }
+                  return new Date(inputValue);
+                } catch (e) {
+                  return null;
+                }
+              })()}
+              onChange={(date) => {
+                if (date) {
+                  // Format date as DD/MM/YYYY for UK format
+                  const formatted = date.toLocaleDateString('en-GB');
+                  setInputValue(formatted);
+                  console.log('📅 Date selected:', formatted);
+                }
+              }}
+              dateFormat="dd/MM/yyyy"
+              showYearDropdown
+              showMonthDropdown
+              dropdownMode="select"
+              placeholderText="Click to select a date"
+              className="w-full px-4 py-3 border border-blue-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              maxDate={new Date()}
+              yearDropdownItemNumber={100}
+              scrollableYearDropdown
+            />
+          </div>
+        )}
+
+        {/* Radio Buttons / Select - Shows for select questions */}
+        {currentQuestion && currentQuestion.input_type === 'select' && currentQuestion.options && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+            <div className="flex items-center gap-2 mb-3">
+              <HelpCircle className="w-5 h-5 text-green-600" />
+              <span className="text-sm font-semibold text-green-900">Choose an option</span>
+              <span className="text-xs text-green-600 ml-auto">Or use voice input below</span>
+            </div>
+
+            {/* Radio buttons for 4 or fewer options */}
+            {currentQuestion.options.length <= 4 ? (
+              <div className="space-y-2">
+                {currentQuestion.options.map((option, index) => (
+                  <label
+                    key={index}
+                    className="flex items-center gap-3 p-3 bg-white border-2 border-green-200 rounded-lg cursor-pointer hover:bg-green-50 hover:border-green-400 transition-all"
+                  >
+                    <input
+                      type="radio"
+                      name="question-option"
+                      value={typeof option === 'string' ? option : option.value}
+                      checked={inputValue === (typeof option === 'string' ? option : option.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setInputValue(value);
+                        console.log('📻 Radio selected:', value);
+                        // Auto-submit after selection
+                        setTimeout(() => {
+                          onSendMessage(value);
+                          setInputValue('');
+                        }, 300);
+                      }}
+                      className="w-5 h-5 text-green-600 focus:ring-green-500"
+                    />
+                    <span className="text-base font-medium text-gray-800">
+                      {typeof option === 'string' ? option : option.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              /* Select dropdown for more than 4 options */
+              <select
+                value={inputValue}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setInputValue(value);
+                  console.log('📋 Select option chosen:', value);
+                  // Auto-submit after selection (if not the placeholder)
+                  if (value) {
+                    setTimeout(() => {
+                      onSendMessage(value);
+                      setInputValue('');
+                    }, 300);
+                  }
+                }}
+                className="w-full px-4 py-3 border-2 border-green-300 rounded-lg text-base focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+              >
+                <option value="">-- Please select --</option>
+                {currentQuestion.options.map((option, index) => (
+                  <option key={index} value={typeof option === 'string' ? option : option.value}>
+                    {typeof option === 'string' ? option : option.label}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center gap-3">
           {/* TTS Toggle Button */}
           <button
             onClick={onToggleTTS}
-            className={`flex-shrink-0 p-3 rounded-xl transition-all ${
-              ttsEnabled
+            className={`flex-shrink-0 p-3 rounded-xl transition-all ${ttsEnabled
                 ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
                 : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-            }`}
+              }`}
             title={ttsEnabled ? 'TTS enabled - click to disable' : 'TTS disabled - click to enable'}
           >
             {ttsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
@@ -410,11 +522,10 @@ const ChatDialogView = ({
                   }
                 }
               }}
-              className={`px-3 py-4 transition-colors ${
-                isRecording
+              className={`px-3 py-4 transition-colors ${isRecording
                   ? 'text-red-600 hover:text-red-700 animate-pulse'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
               title={isRecording ? 'Stop recording' : 'Start voice input'}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -427,11 +538,10 @@ const ChatDialogView = ({
           <button
             onClick={handleSend}
             disabled={!inputValue.trim() || loading}
-            className={`flex-shrink-0 p-4 rounded-2xl transition-all ${
-              inputValue.trim() && !loading
+            className={`flex-shrink-0 p-4 rounded-2xl transition-all ${inputValue.trim() && !loading
                 ? 'bg-gray-800 text-white hover:bg-gray-700'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
+              }`}
             title="Send message"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -537,6 +647,8 @@ const ChatMultimodalDialog = () => {
   const virtualKeyboardProcessorRef = useRef(null);
   const lastProcessedTranscriptRef = useRef(null); // Track last processed transcript to avoid duplicates
   const isStartingSessionRef = useRef(false); // Prevent duplicate session starts in React Strict Mode
+  const sessionIdRef = useRef(sessionId); // Track current sessionId to avoid stale closure
+  const currentQuestionRef = useRef(currentQuestion); // Track current question to avoid stale closure
 
   // Load existing session or start new one
   useEffect(() => {
@@ -573,16 +685,68 @@ const ChatMultimodalDialog = () => {
   }, [sessionId]);
 
   // Keep ttsEnabledRef in sync with ttsEnabled state (avoid stale closure in intervals)
+  // Sync refs with state to avoid stale closures
   useEffect(() => {
-    ttsEnabledRef.current = ttsEnabled;
     console.log('📌 ttsEnabledRef updated:', ttsEnabled);
+    ttsEnabledRef.current = ttsEnabled;
   }, [ttsEnabled]);
 
-  // Keep isRecordingRef in sync with isRecording state (avoid stale closure in callbacks)
   useEffect(() => {
-    isRecordingRef.current = isRecording;
     console.log('📌 isRecordingRef updated:', isRecording);
+    isRecordingRef.current = isRecording;
   }, [isRecording]);
+
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
+
+  useEffect(() => {
+    currentQuestionRef.current = currentQuestion;
+  }, [currentQuestion]);
+
+  // Initialize WebSocket connection
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const connectWebSocket = () => {
+      try {
+        wsRef.current = new WebSocket(`ws://localhost:8001/ws/operator/${sessionId}`);
+
+        wsRef.current.onopen = () => {
+          console.log('WebSocket connected for operator messages.');
+        };
+
+        wsRef.current.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === 'operator_message') {
+            addOperatorMessage(data.message, data.operator_id);
+          } else if (data.type === 'attention_required') {
+            markSessionNeedsAttention();
+          }
+        };
+
+        wsRef.current.onerror = (error) => {
+          console.error('WebSocket error:', error);
+        };
+
+        wsRef.current.onclose = (event) => {
+          console.log('WebSocket disconnected:', event.code, event.reason);
+          // Attempt to reconnect after a delay
+          setTimeout(connectWebSocket, 3000);
+        };
+      } catch (error) {
+        console.error('WebSocket connection error:', error);
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [sessionId]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -646,7 +810,7 @@ const ChatMultimodalDialog = () => {
         console.error('Speech recognition error:', event.error);
         let errorMessage = 'Speech recognition error: ';
 
-        switch(event.error) {
+        switch (event.error) {
           case 'not-allowed':
           case 'permission-denied':
             errorMessage += 'Microphone permission denied. Please allow microphone access.';
@@ -712,9 +876,9 @@ const ChatMultimodalDialog = () => {
         defaultVoice = voices.find(v => {
           const name = v.name.toLowerCase();
           return name.includes('google') &&
-                 name.includes('uk') &&
-                 name.includes('female') &&
-                 v.lang === 'en-GB';
+            name.includes('uk') &&
+            name.includes('female') &&
+            v.lang === 'en-GB';
         });
         if (defaultVoice) console.log('✓ Found Google UK Female voice:', defaultVoice.name);
       }
@@ -812,9 +976,9 @@ const ChatMultimodalDialog = () => {
         defaultVoice = allVoices.find(v => {
           const name = v.name.toLowerCase();
           return name.includes('google') &&
-                 name.includes('uk') &&
-                 name.includes('female') &&
-                 v.lang === 'en-GB';
+            name.includes('uk') &&
+            name.includes('female') &&
+            v.lang === 'en-GB';
         });
       }
 
@@ -1339,16 +1503,21 @@ const ChatMultimodalDialog = () => {
 
   const handleSendMessage = async (messageText) => {
     console.log('📤 handleSendMessage called with:', messageText);
+
+    // Use refs to get current values (avoid stale closure)
+    const currentSessionId = sessionIdRef.current;
+    const currentQuestionData = currentQuestionRef.current;
+
     console.log('📊 Current state:', {
-      sessionId: sessionId || 'MISSING',
-      currentQuestion: currentQuestion?.question_id || 'MISSING',
+      sessionId: currentSessionId || 'MISSING',
+      currentQuestion: currentQuestionData?.question_id || 'MISSING',
       messageText
     });
 
-    if (!sessionId || !currentQuestion) {
+    if (!currentSessionId || !currentQuestionData) {
       console.error('❌ CRITICAL: Cannot submit answer - missing required data:', {
-        sessionId: sessionId || 'MISSING',
-        currentQuestion: currentQuestion || 'MISSING'
+        sessionId: currentSessionId || 'MISSING',
+        currentQuestion: currentQuestionData || 'MISSING'
       });
       addSystemMessage('❌ Error: Session or question not loaded. Please refresh the page.');
       return;
@@ -1376,8 +1545,8 @@ const ChatMultimodalDialog = () => {
     try {
       setLoading(true);
       console.log(`📡 POST ${API_BASE_URL}/answer/submit`, {
-        session_id: sessionId,
-        question_id: currentQuestion.question_id,
+        session_id: currentSessionId,
+        question_id: currentQuestionData.question_id,
         answer_text: messageText,
         answer_type: 'text',
         recognition_confidence: null
@@ -1387,8 +1556,8 @@ const ChatMultimodalDialog = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: sessionId,
-          question_id: currentQuestion.question_id,
+          session_id: currentSessionId,
+          question_id: currentQuestionData.question_id,
           answer_text: messageText,
           answer_type: 'text',
           recognition_confidence: null
@@ -1408,8 +1577,8 @@ const ChatMultimodalDialog = () => {
           content: data.confidence < 0.7
             ? '⚠️ I\'m not very confident about that answer. An operator may review it.'
             : data.confidence < 0.85
-            ? '✓ Answer recorded.'
-            : '✓ Great, got it!',
+              ? '✓ Answer recorded.'
+              : '✓ Great, got it!',
           timestamp: new Date(),
           confidence: data.confidence
         };
@@ -1418,7 +1587,7 @@ const ChatMultimodalDialog = () => {
 
       // Load next question
       console.log('🔄 Loading next question...');
-      await loadCurrentQuestion(sessionId);
+      await loadCurrentQuestion(currentSessionId);
     } catch (err) {
       console.error('❌ Error submitting answer:', err);
       setError('Failed to submit answer: ' + err.message);
@@ -1593,8 +1762,8 @@ const ChatMultimodalDialog = () => {
                     <Badge
                       color={
                         session.needsAttention ? 'failure' :
-                        activeSessionIndex === index ? 'success' :
-                        'info'
+                          activeSessionIndex === index ? 'success' :
+                            'info'
                       }
                       size="xs"
                       className="mt-1"
