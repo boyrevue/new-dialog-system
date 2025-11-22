@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Badge, Table, Alert, Tabs, Modal } from 'flowbite-react';
+import { Card, Button, Badge, Table, Alert, Tabs, Modal, ModalHeader, ModalBody, ModalFooter } from 'flowbite-react';
 import {
   CheckCircle2,
   Clock,
@@ -395,13 +395,13 @@ const FieldStatusPanel = ({ sessionId }) => {
 
       {/* Audit Trail Modal */}
       <Modal show={showAuditModal} onClose={() => setShowAuditModal(false)} size="2xl">
-        <Modal.Header>
+        <ModalHeader>
           <div className="flex items-center gap-2">
             <History className="w-5 h-5" />
             Audit Trail: {selectedField}
           </div>
-        </Modal.Header>
-        <Modal.Body>
+        </ModalHeader>
+        <ModalBody>
           <div className="space-y-4">
             {auditTrail.map((entry, index) => (
               <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
@@ -433,12 +433,12 @@ const FieldStatusPanel = ({ sessionId }) => {
               <p className="text-center text-gray-500">No audit trail entries</p>
             )}
           </div>
-        </Modal.Body>
-        <Modal.Footer>
+        </ModalBody>
+        <ModalFooter>
           <Button color="gray" onClick={() => setShowAuditModal(false)}>
             Close
           </Button>
-        </Modal.Footer>
+        </ModalFooter>
       </Modal>
     </div>
   );

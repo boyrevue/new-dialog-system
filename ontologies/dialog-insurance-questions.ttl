@@ -2340,27 +2340,29 @@
     mm:optionPhonetic "november oscar" .
 
 # Q: Number of Penalty Points
-:PenaltyPointsQuestion a mm:MultimodalQuestion ;
-    rdfs:label "Penalty Points" ;
-    :questionId "q_penalty_points" ;
-    :questionText "How many penalty points do you currently have on your licence?" ;
-    :slotName "penaltyPoints" ;
-    :required false ;
-    :order 52 ;
-    :inSection :InsuranceHistorySection ;
-    mm:hasTTSPrompt :PenaltyPointsTTS ;
-    mm:hasSelectOption :Points3, :Points6, :Points9, :Points12Plus ;
-    mm:documentFillable true .
+# NOTE: This question is defined in dialog-sections.ttl - do not duplicate here
+# Using :inSection :DrivingHistorySection for the canonical definition
+# :PenaltyPointsQuestion a mm:MultimodalQuestion ;
+#     rdfs:label "Penalty Points" ;
+#     :questionId "q_penalty_points" ;
+#     :questionText "How many penalty points do you currently have on your licence?" ;
+#     :slotName "penaltyPoints" ;
+#     :required false ;
+#     :order 52 ;
+#     :inSection :InsuranceHistorySection ;
+#     mm:hasTTSPrompt :PenaltyPointsTTS ;
+#     mm:hasSelectOption :Points3, :Points6, :Points9, :Points12Plus ;
+#     mm:documentFillable true .
 
-:PenaltyPointsTTS a mm:TTSPrompt ;
-    mm:ttsText "How many penalty points do you currently have on your driving licence?" ;
-    mm:ttsVariant1 "How many penalty points do you currently have on your driving licence?" ;
-    mm:ttsVariant2 "Number of penalty points?" ;
-    mm:ttsVariant3 "How many points?" ;
-    mm:ttsVariant4 "Tell me your points total." ;
-    mm:ttsVoice "en-GB-Neural2-A" ;
-    mm:ttsRate 1.0 ;
-    mm:ttsPitch 1.0 .
+# :PenaltyPointsTTS a mm:TTSPrompt ;
+#     mm:ttsText "How many penalty points do you currently have on your driving licence?" ;
+#     mm:ttsVariant1 "How many penalty points do you currently have on your driving licence?" ;
+#     mm:ttsVariant2 "Number of penalty points?" ;
+#     mm:ttsVariant3 "How many points?" ;
+#     mm:ttsVariant4 "Tell me your points total." ;
+#     mm:ttsVoice "en-GB-Neural2-A" ;
+#     mm:ttsRate 1.0 ;
+#     mm:ttsPitch 1.0 .
 
 :Points3 a mm:SelectOption ;
     mm:optionValue "3" ;

@@ -624,7 +624,7 @@ const VirtualKeyboard = ({
             <div
               key={rowIndex}
               className="flex justify-center gap-1"
-              style={{ paddingLeft: rowIndex === 1 ? '20px' : rowIndex === 2 ? '40px' : '0' }}
+              style={{ paddingLeft: rowIndex === 1 ? '20px' : rowIndex === 2 ? '20px' : '0' }}
             >
               {row.map((key) => {
                 const isPressed = pressedKey === key;
@@ -656,6 +656,19 @@ const VirtualKeyboard = ({
                   </button>
                 );
               })}
+              {/* Add Backspace key at the end of the third row */}
+              {rowIndex === 2 && (
+                <button
+                  onClick={handleBackspace}
+                  className="relative w-24 h-20 border-4 rounded-lg font-semibold transition-all bg-orange-100 hover:bg-orange-200 border-orange-300 hover:border-orange-400 text-orange-800 active:scale-95"
+                  title="Backspace - Delete last character"
+                >
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <Delete className="w-6 h-6" />
+                    <span className="text-xs font-semibold mt-1">Backspace</span>
+                  </div>
+                </button>
+              )}
             </div>
           ))
         )}

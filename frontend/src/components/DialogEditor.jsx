@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, Button, TextInput, Textarea, Label, Select, Badge, Alert, ToggleSwitch, Modal } from 'flowbite-react';
+import { Card, Button, TextInput, Textarea, Label, Select, Badge, Alert, ToggleSwitch, Modal, ModalHeader, ModalBody, ModalFooter } from 'flowbite-react';
 import {
   Save,
   RefreshCw,
@@ -2747,13 +2747,13 @@ Example 3: ..."
 
       {/* New Section Modal */}
       <Modal show={showNewSectionModal} onClose={() => setShowNewSectionModal(false)} size="lg">
-        <Modal.Header>
+        <ModalHeader>
           <div className="flex items-center gap-2">
             <FolderPlus className="w-5 h-5 text-blue-600" />
             Create New Section
           </div>
-        </Modal.Header>
-        <Modal.Body>
+        </ModalHeader>
+        <ModalBody>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -2827,8 +2827,8 @@ Example 3: ..."
               />
             </div>
           </div>
-        </Modal.Body>
-        <Modal.Footer>
+        </ModalBody>
+        <ModalFooter>
           <div className="flex justify-end gap-2 w-full">
             <Button color="gray" onClick={() => setShowNewSectionModal(false)}>
               Cancel
@@ -2838,18 +2838,18 @@ Example 3: ..."
               Create Section
             </Button>
           </div>
-        </Modal.Footer>
+        </ModalFooter>
       </Modal>
 
       {/* Edit Section Modal */}
       <Modal show={editingSection !== null} onClose={() => { setEditingSection(null); setEditingSectionData(null); }} size="xl">
-        <Modal.Header>
+        <ModalHeader>
           <div className="flex items-center gap-2">
             <Edit3 className="w-5 h-5 text-blue-600" />
             Edit Section: {editingSectionData?.section_title || ''}
           </div>
-        </Modal.Header>
-        <Modal.Body>
+        </ModalHeader>
+        <ModalBody>
           {editingSectionData && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -2979,8 +2979,8 @@ Example 3: ..."
               </div>
             </div>
           )}
-        </Modal.Body>
-        <Modal.Footer>
+        </ModalBody>
+        <ModalFooter>
           <div className="flex justify-between w-full">
             <Button color="failure" onClick={() => handleDeleteSection(editingSectionData?.section_id)}>
               <Trash2 className="w-4 h-4 mr-2" />
@@ -2996,7 +2996,7 @@ Example 3: ..."
               </Button>
             </div>
           </div>
-        </Modal.Footer>
+        </ModalFooter>
       </Modal>
     </div>
   );

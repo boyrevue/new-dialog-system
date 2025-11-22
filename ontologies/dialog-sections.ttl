@@ -4839,19 +4839,19 @@ mm:SelectOption a owl:Class ;
     mm:ttsVariant4 "Date of the offence?" ;
     mm:ttsVoice "en-GB-Neural2-A" .
 
-# Conditional Question: Penalty Points
-:PenaltyPointsQuestion a mm:MultimodalQuestion ;
-    rdfs:label "Penalty Points" ;
+# Conditional Question: Penalty Points for Specific Conviction
+:ConvictionPenaltyPointsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Conviction Penalty Points" ;
     :inSection :DrivingHistorySection ;
     :order 53 ;
-    :questionId "q_penalty_points" ;
+    :questionId "q_conviction_penalty_points" ;
     :questionText "How many penalty points did you receive?" ;
     :required true ;
-    :slotName "penaltyPoints" ;
+    :slotName "convictionPenaltyPoints" ;
     :showIf "drivingConvictions == YES" ;
-    mm:hasTTSPrompt :PenaltyPointsTTS .
+    mm:hasTTSPrompt :ConvictionPenaltyPointsTTS .
 
-:PenaltyPointsTTS a mm:TTSPrompt ;
+:ConvictionPenaltyPointsTTS a mm:TTSPrompt ;
     mm:ttsPitch 1.0 ;
     mm:ttsRate 1.0 ;
     mm:ttsText "How many penalty points did you receive for this offence?" ;
