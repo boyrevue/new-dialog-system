@@ -1,0 +1,355 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix field: <http://diggi.io/ontology/field#> .
+@prefix asr: <http://diggi.io/ontology/asr#> .
+@prefix tts: <http://diggi.io/ontology/tts#> .
+@prefix resp: <http://diggi.io/ontology/response#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+# Date/Time Field Ontology
+<http://diggi.io/ontology/field-datetime> a owl:Ontology ;
+    rdfs:label "Date/Time Field Ontology" ;
+    rdfs:comment "Reusable date and time field definitions with ASR grammars" ;
+    owl:versionInfo "1.0" .
+
+# ========================================
+# MONTH FIELD
+# ========================================
+
+field:MonthField a :Field ;
+    rdfs:label "Month" ;
+    :fieldType "select" ;
+    :validationPredicate "isMonth" ;
+    :required true ;
+    :hasASRGrammar field:MonthASRGrammar ;
+    :hasTTSPrompt field:MonthTTSPrompt .
+
+field:MonthASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar month;
+
+public <month> = <month_full> | <month_number>;
+
+<month_full> = january | february | march | april | may | june |
+               july | august | september | october | november | december;
+
+<month_number> = one | two | three | four | five | six |
+                 seven | eight | nine | ten | eleven | twelve |
+                 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+""" .
+
+field:MonthTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "Which month were you born in?" ;
+    tts:variant1 "What month is it?" ;
+    tts:variant2 "Please tell me the month" ;
+    tts:variant3 "What month were you born?" ;
+    tts:variant4 "Which month?" .
+
+# Month select options
+field:MonthJanuary a :SelectOption ;
+    :optionValue "01" ;
+    :optionLabel "January" ;
+    :optionAlias "Jan" ;
+    :optionOrder 1 .
+
+field:MonthFebruary a :SelectOption ;
+    :optionValue "02" ;
+    :optionLabel "February" ;
+    :optionAlias "Feb" ;
+    :optionOrder 2 .
+
+field:MonthMarch a :SelectOption ;
+    :optionValue "03" ;
+    :optionLabel "March" ;
+    :optionAlias "Mar" ;
+    :optionOrder 3 .
+
+field:MonthApril a :SelectOption ;
+    :optionValue "04" ;
+    :optionLabel "April" ;
+    :optionAlias "Apr" ;
+    :optionOrder 4 .
+
+field:MonthMay a :SelectOption ;
+    :optionValue "05" ;
+    :optionLabel "May" ;
+    :optionOrder 5 .
+
+field:MonthJune a :SelectOption ;
+    :optionValue "06" ;
+    :optionLabel "June" ;
+    :optionAlias "Jun" ;
+    :optionOrder 6 .
+
+field:MonthJuly a :SelectOption ;
+    :optionValue "07" ;
+    :optionLabel "July" ;
+    :optionAlias "Jul" ;
+    :optionOrder 7 .
+
+field:MonthAugust a :SelectOption ;
+    :optionValue "08" ;
+    :optionLabel "August" ;
+    :optionAlias "Aug" ;
+    :optionOrder 8 .
+
+field:MonthSeptember a :SelectOption ;
+    :optionValue "09" ;
+    :optionLabel "September" ;
+    :optionAlias "Sep, Sept" ;
+    :optionOrder 9 .
+
+field:MonthOctober a :SelectOption ;
+    :optionValue "10" ;
+    :optionLabel "October" ;
+    :optionAlias "Oct" ;
+    :optionOrder 10 .
+
+field:MonthNovember a :SelectOption ;
+    :optionValue "11" ;
+    :optionLabel "November" ;
+    :optionAlias "Nov" ;
+    :optionOrder 11 .
+
+field:MonthDecember a :SelectOption ;
+    :optionValue "12" ;
+    :optionLabel "December" ;
+    :optionAlias "Dec" ;
+    :optionOrder 12 .
+
+# Link field to options
+field:MonthField :hasOption field:MonthJanuary, field:MonthFebruary, field:MonthMarch,
+                             field:MonthApril, field:MonthMay, field:MonthJune,
+                             field:MonthJuly, field:MonthAugust, field:MonthSeptember,
+                             field:MonthOctober, field:MonthNovember, field:MonthDecember .
+
+# ========================================
+# YEAR FIELD
+# ========================================
+
+field:YearField a :Field ;
+    rdfs:label "Year" ;
+    :fieldType "text" ;
+    :validationPredicate "isYear" ;
+    :required true ;
+    :hasASRGrammar field:YearASRGrammar ;
+    :hasTTSPrompt field:YearTTSPrompt .
+
+field:YearASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar year;
+
+public <year> = <year_spoken> | <year_digits>;
+
+<year_spoken> = nineteen <decade> <digit> |
+                two thousand [and] <digit> |
+                twenty <decade>;
+
+<decade> = hundred | oh <digit> | ten | eleven | twelve | thirteen | fourteen | fifteen |
+           sixteen | seventeen | eighteen | nineteen | twenty | thirty | forty | fifty |
+           sixty | seventy | eighty | ninety;
+
+<digit> = oh | one | two | three | four | five | six | seven | eight | nine |
+          0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+<year_digits> = 1 9 <digit> <digit> |
+                2 0 <digit> <digit>;
+""" .
+
+field:YearTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What year were you born in?" ;
+    tts:variant1 "Which year?" ;
+    tts:variant2 "Please tell me the year" ;
+    tts:variant3 "What year was that?" ;
+    tts:variant4 "In which year?" .
+
+# ========================================
+# DAY FIELD
+# ========================================
+
+field:DayField a :Field ;
+    rdfs:label "Day" ;
+    :fieldType "text" ;
+    :validationPredicate "isDay" ;
+    :required true ;
+    :hasASRGrammar field:DayASRGrammar ;
+    :hasTTSPrompt field:DayTTSPrompt .
+
+field:DayASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar day;
+
+public <day> = <day_number> | <day_ordinal>;
+
+<day_number> = one | two | three | four | five | six | seven | eight | nine | ten |
+               eleven | twelve | thirteen | fourteen | fifteen | sixteen | seventeen |
+               eighteen | nineteen | twenty | twenty one | twenty two | twenty three |
+               twenty four | twenty five | twenty six | twenty seven | twenty eight |
+               twenty nine | thirty | thirty one |
+               1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 |
+               16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31;
+
+<day_ordinal> = first | second | third | fourth | fifth | sixth | seventh | eighth | ninth | tenth |
+                eleventh | twelfth | thirteenth | fourteenth | fifteenth | sixteenth | seventeenth |
+                eighteenth | nineteenth | twentieth | twenty first | twenty second | twenty third |
+                twenty fourth | twenty fifth | twenty sixth | twenty seventh | twenty eighth |
+                twenty ninth | thirtieth | thirty first;
+""" .
+
+field:DayTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What day of the month?" ;
+    tts:variant1 "Which day?" ;
+    tts:variant2 "Please tell me the day" ;
+    tts:variant3 "What day is it?" ;
+    tts:variant4 "On which day?" .
+
+# ========================================
+# DATE OF BIRTH FIELD
+# ========================================
+
+field:DateOfBirthField a :Field ;
+    rdfs:label "Date of Birth" ;
+    :fieldType "date" ;
+    :validationPredicate "isDate" ;
+    :required true ;
+    :hasASRGrammar field:DateOfBirthASRGrammar ;
+    :hasTTSPrompt field:DateOfBirthTTSPrompt .
+
+field:DateOfBirthASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar date_of_birth;
+
+public <dob> = [the] <day> [of] <month> <year> |
+               <month> <day> <year> |
+               <day> <month> <year>;
+
+<day> = <day_number> | <day_ordinal>;
+
+<day_number> = one | two | three | four | five | six | seven | eight | nine | ten |
+               eleven | twelve | thirteen | fourteen | fifteen | sixteen | seventeen |
+               eighteen | nineteen | twenty | twenty one | twenty two | twenty three |
+               twenty four | twenty five | twenty six | twenty seven | twenty eight |
+               twenty nine | thirty | thirty one;
+
+<day_ordinal> = first | second | third | fourth | fifth | sixth | seventh | eighth | ninth | tenth |
+                eleventh | twelfth | thirteenth | fourteenth | fifteenth | sixteenth | seventeenth |
+                eighteenth | nineteenth | twentieth | twenty first | twenty second | twenty third |
+                twenty fourth | twenty fifth | twenty sixth | twenty seventh | twenty eighth |
+                twenty ninth | thirtieth | thirty first;
+
+<month> = january | february | march | april | may | june |
+          july | august | september | october | november | december |
+          jan | feb | mar | apr | jun | jul | aug | sep | sept | oct | nov | dec;
+
+<year> = nineteen <decade> <digit> | two thousand [and] <digit> | twenty <decade>;
+
+<decade> = hundred | oh <digit> | ten | eleven | twelve | thirteen | fourteen | fifteen |
+           sixteen | seventeen | eighteen | nineteen | twenty | thirty | forty | fifty |
+           sixty | seventy | eighty | ninety;
+
+<digit> = oh | one | two | three | four | five | six | seven | eight | nine;
+""" .
+
+field:DateOfBirthTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What is your date of birth?" ;
+    tts:variant1 "When were you born?" ;
+    tts:variant2 "What's your date of birth?" ;
+    tts:variant3 "Please provide your date of birth" ;
+    tts:variant4 "What date were you born?" ;
+    tts:voice "en-GB-Neural2-A" ;
+    tts:rate 0.95 ;
+    tts:pitch 0.0 ;
+    tts:volume 1.0 .
+
+# Link to response patterns
+field:DateOfBirthField resp:hasApplicablePattern
+    resp:DirectAnswer,
+    resp:MyXIs,
+    resp:ItsX,
+    resp:ItIsX,
+    resp:ThatsX .
+
+# ========================================
+# TIME FIELD (for appointments, etc)
+# ========================================
+
+field:TimeField a :Field ;
+    rdfs:label "Time" ;
+    :fieldType "time" ;
+    :validationPredicate "isTime" ;
+    :required true ;
+    :hasASRGrammar field:TimeASRGrammar ;
+    :hasTTSPrompt field:TimeTTSPrompt .
+
+field:TimeASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar time;
+
+public <time> = <hour> [<minutes>] <meridiem> |
+                <hour> [colon] <minutes> |
+                [at] <hour_24> <minutes>;
+
+<hour> = one | two | three | four | five | six | seven | eight | nine | ten | eleven | twelve;
+
+<hour_24> = zero <digit> | one <digit> | two [zero | one | two | three];
+
+<minutes> = oh <digit> | <digit> <digit> | <minute_word>;
+
+<minute_word> = hundred | oh five | ten | fifteen | twenty | twenty five | thirty |
+                thirty five | forty | forty five | fifty | fifty five;
+
+<meridiem> = a m | p m | in the morning | in the afternoon | in the evening;
+
+<digit> = zero | one | two | three | four | five | six | seven | eight | nine;
+""" .
+
+field:TimeTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What time would you prefer?" ;
+    tts:variant1 "Which time suits you?" ;
+    tts:variant2 "What time works for you?" ;
+    tts:variant3 "Please tell me your preferred time" ;
+    tts:variant4 "At what time?" .
+
+# ========================================
+# AGE FIELD
+# ========================================
+
+field:AgeField a :Field ;
+    rdfs:label "Age" ;
+    :fieldType "number" ;
+    :validationPredicate "isAge" ;
+    :required true ;
+    :hasASRGrammar field:AgeASRGrammar ;
+    :hasTTSPrompt field:AgeTTSPrompt .
+
+field:AgeASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar age;
+
+public <age> = <teens> | <tens> | <number>;
+
+<teens> = thirteen | fourteen | fifteen | sixteen | seventeen | eighteen | nineteen;
+
+<tens> = twenty [<digit>] | thirty [<digit>] | forty [<digit>] | fifty [<digit>] |
+         sixty [<digit>] | seventy [<digit>] | eighty [<digit>] | ninety [<digit>];
+
+<number> = <digit> | <digit> <digit> | one hundred;
+
+<digit> = one | two | three | four | five | six | seven | eight | nine;
+""" .
+
+field:AgeTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "How old are you?" ;
+    tts:variant1 "What is your age?" ;
+    tts:variant2 "What's your age?" ;
+    tts:variant3 "Please tell me your age" ;
+    tts:variant4 "May I have your age?" .

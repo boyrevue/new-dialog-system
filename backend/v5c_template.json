@@ -55,16 +55,16 @@
       "fieldId": "date_first_uk_registration",
       "label": "B.1. Date of first UK registration",
       "rectCard": {
-        "x": 156,
-        "y": 112,
-        "width": 82,
-        "height": 18
+        "x": 570,
+        "y": 88,
+        "width": 157,
+        "height": 16
       },
       "normalizedCard": {
-        "x": 0.1822429906542056,
-        "y": 0.2074074074074074,
-        "width": 0.09579439252336448,
-        "height": 0.03333333333333333
+        "x": 0.6658878504672897,
+        "y": 0.16296296296296298,
+        "width": 0.18341121495327103,
+        "height": 0.02962962962962963
       }
     },
     {
@@ -132,22 +132,6 @@
       }
     },
     {
-      "fieldId": "vin",
-      "label": "E. VIN/Chassis/Frame number",
-      "rectCard": {
-        "x": 568,
-        "y": 89,
-        "width": 145,
-        "height": 23
-      },
-      "normalizedCard": {
-        "x": 0.6635514018691588,
-        "y": 0.1648148148148148,
-        "width": 0.169392523364486,
-        "height": 0.04259259259259259
-      }
-    },
-    {
       "fieldId": "fuel_type",
       "label": "P.3. Type of fuel",
       "rectCard": {
@@ -194,6 +178,23 @@
         "width": 0.1588785046728972,
         "height": 0.03518518518518519
       }
+    },
+    {
+      "fieldId": "vin",
+      "label": "E. VIN/Chassis/Frame number",
+      "rectCard": {
+        "x": 572,
+        "y": 89,
+        "width": 187,
+        "height": 19
+      },
+      "normalizedCard": {
+        "x": 0.6682242990654206,
+        "y": 0.1648148148148148,
+        "width": 0.21845794392523366,
+        "height": 0.03518518518518519
+      }
     }
-  ]
+  ],
+  "normalizedCorners": []
 }

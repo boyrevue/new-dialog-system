@@ -20,6 +20,8 @@ from pathlib import Path
 from dialog_manager import DialogManager
 from document_ocr import extract_from_document
 from perspective_transform import perspective_transform_image
+from field_state_manager import FieldStateManager
+from date_parser import parse_date_natural, validate_date
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -49,6 +51,7 @@ ontology_paths = [
     "../ontologies/dialog.ttl",
     "../ontologies/dialog-multimodal.ttl",
     "../ontologies/dialog-insurance-questions.ttl",
+    "../ontologies/dialog-insurance-select-options.ttl",  # Select options for UK insurance questions
     "../ontologies/dialog-sections.ttl",
     "../ontologies/dialog-vocabularies.ttl",
     "../ontologies/dialog-documents.ttl",
@@ -60,6 +63,9 @@ dialog_manager = DialogManager(ontology_paths)
 
 # In-memory session store (use Redis in production)
 sessions = {}
+
+# In-memory field state manager store (one per session)
+field_state_managers = {}
 
 # In-memory store for low-confidence audio recordings awaiting operator review
 low_confidence_queue = []
@@ -110,14 +116,32 @@ def get_or_create_session(session_id: str) -> DialogSession:
         if datetime.now() - session.last_accessed > SESSION_TTL:
             logger.info(f"Session {session_id} expired, creating new session")
             del sessions[session_id]
+            # Also clean up field state manager
+            if session_id in field_state_managers:
+                del field_state_managers[session_id]
         else:
             session.last_accessed = datetime.now()
             return session
-    
+
     # Create new session
     session = DialogSession(session_id=session_id)
     sessions[session_id] = session
-    logger.info(f"Created new session: {session_id}")
+
+    # Initialize field state manager for this session
+    field_state_manager = FieldStateManager(session_id)
+    field_state_managers[session_id] = field_state_manager
+
+    # Initialize fields from dialog flow
+    dialog_flow = dialog_manager.get_dialog_flow('InsuranceQuoteDialog')
+    for node in dialog_flow:
+        if 'question_id' in node:
+            field_state_manager.initialize_field(
+                field_id=node['question_id'],
+                question_id=node['question_id'],
+                slot_name=node.get('slot_name', node['question_id'])
+            )
+
+    logger.info(f"Created new session: {session_id} with {len(field_state_manager.fields)} fields initialized")
     return session
 
 
@@ -130,6 +154,9 @@ def cleanup_expired_sessions():
     ]
     for sid in expired:
         del sessions[sid]
+        # Also clean up field state manager
+        if sid in field_state_managers:
+            del field_state_managers[sid]
         logger.info(f"Cleaned up expired session: {sid}")
 
 
@@ -231,6 +258,9 @@ async def get_current_question(session_id: str):
     """Get the current question for a session."""
     session = get_or_create_session(session_id)
 
+    # Get field state manager for this session
+    field_state_manager = field_state_managers.get(session_id)
+
     # Load dialog flow
     flow = dialog_manager.get_dialog_flow("InsuranceQuoteDialog")
 
@@ -241,6 +271,13 @@ async def get_current_question(session_id: str):
         # Check if current node is a question
         if "question_id" in current_node:
             question_id = current_node["question_id"]
+
+            # Check field state manager first (if available)
+            if field_state_manager and field_state_manager.should_skip_field(question_id):
+                field = field_state_manager.get_field(question_id)
+                logger.info(f"Skipping field {question_id} based on state: {field.state if field else 'unknown'}")
+                session.current_node_index += 1
+                continue
 
             # Skip this question if it's already been answered (e.g., by OCR extraction)
             if question_id in session.answers:
@@ -256,6 +293,24 @@ async def get_current_question(session_id: str):
             document_info = dialog_manager.get_document_fillable(question_id)
             form_definition = dialog_manager.get_form_definition(question_id)
 
+            # Get field state information (if available)
+            field_state_info = {}
+            if field_state_manager:
+                field = field_state_manager.get_field(question_id)
+                if field:
+                    field_state_info = {
+                        "state": field.state,
+                        "source": field.source,
+                        "confidence": field.meta.confidence
+                    }
+
+            # Extract input_type from input_mode for frontend widget selection
+            input_type = input_mode.get("input_type") if input_mode else None
+
+            # Auto-detect select type if question has options
+            if features["select_options"] and len(features["select_options"]) > 0:
+                input_type = "select"
+
             return {
                 "question_id": question_id,
                 "question_text": current_node["question_text"],
@@ -263,16 +318,19 @@ async def get_current_question(session_id: str):
                 "required": current_node["required"],
                 "spelling_required": current_node.get("spelling_required", False),
                 "input_mode": input_mode,
+                "input_type": input_type,  # For frontend widget selection (date, select, etc.)
                 "section": section_info,
                 "tts": features["tts"],
                 "visual_components": features["visual_components"],
-                "select_options": features["select_options"],
+                "options": features["select_options"],
+                "cascading": features.get("cascading", {}),
                 "faqs": features["faqs"],
                 "confidence_threshold": threshold,
                 "priority": priority,
                 "document_fillable": document_info["fillable"],
                 "document_name": document_info["document_name"],
-                "form": form_definition
+                "form": form_definition,
+                "field_state": field_state_info  # Include field state for frontend visibility
             }
 
         # If not a question, skip to next node
@@ -286,18 +344,56 @@ async def get_current_question(session_id: str):
 async def submit_answer(answer: AnswerRequest):
     """Submit an answer and calculate confidence."""
     session = get_or_create_session(answer.session_id)
-    
-    # Store answer
-    session.answers[answer.question_id] = answer.answer_text
-    
+
+    # Get the question's input mode to determine if date parsing is needed
+    input_mode = dialog_manager.get_input_mode(answer.question_id)
+    answer_text = answer.answer_text
+
+    # Parse natural language dates if input_mode is 'date' or contains 'Date' in the URI
+    input_mode_str = None
+    if input_mode:
+        if isinstance(input_mode, dict):
+            # Extract the URI or label from the dict
+            input_mode_str = input_mode.get('uri', '') or input_mode.get('label', '')
+        else:
+            input_mode_str = str(input_mode)
+
+    if input_mode_str and 'date' in input_mode_str.lower() and answer_text:
+        logger.info(f"📅 Attempting to parse date input: '{answer_text}' (input_mode: {input_mode_str})")
+        parsed_date = parse_date_natural(answer_text)
+
+        if parsed_date:
+            # Validate the parsed date
+            is_valid, error = validate_date(parsed_date)
+            if is_valid:
+                logger.info(f"✅ Date parsed successfully: '{answer_text}' → '{parsed_date}'")
+                answer_text = parsed_date
+            else:
+                logger.warning(f"⚠️ Parsed date failed validation: {error}")
+        else:
+            logger.warning(f"⚠️ Could not parse date input: '{answer_text}'")
+
+    # Store answer (potentially with parsed date)
+    session.answers[answer.question_id] = answer_text
+
     # Calculate confidence (simplified - would integrate with speech recognition)
     if answer.answer_type == "speech" and answer.recognition_confidence:
         confidence = answer.recognition_confidence
     else:
         # For text input, assume high confidence
         confidence = 0.95
-    
+
     session.confidence_scores[answer.question_id] = confidence
+
+    # Update field state manager
+    if answer.session_id in field_state_managers:
+        field_state_manager = field_state_managers[answer.session_id]
+        field_state_manager.mark_answered(
+            field_id=answer.question_id,
+            value=answer.answer_text,
+            confidence=confidence
+        )
+        logger.info(f"Field {answer.question_id} marked as answered in field state manager")
     
     # Get threshold from TTL
     threshold, priority = dialog_manager.get_confidence_threshold(answer.question_id)
@@ -558,11 +654,44 @@ async def upload_and_extract_document(
             session = sessions[session_id]
             ocr_confidence = extraction_result.get('confidence', 0.9)
 
+            # Get field state manager for this session
+            field_state_manager = field_state_managers.get(session_id)
+
+            # Notify field state manager that document was uploaded
+            if field_state_manager:
+                import uuid
+                document_id = str(uuid.uuid4())
+                mapped_field_ids = list(slot_mappings.keys())
+                field_state_manager.on_document_uploaded(document_id, mapped_field_ids)
+                logger.info(f"Field state manager notified of document upload: {document_id}")
+
             for question_id, value in slot_mappings.items():
+                # Get field-specific confidence from validations or use default
+                field_confidence = field_confidences.get(question_id, ocr_confidence)
+
                 # Store in session answers with high confidence (OCR extracted)
                 session.answers[question_id] = value
-                session.confidence_scores[question_id] = ocr_confidence
-                logger.info(f"Auto-filled question {question_id} with OCR value: {value} (confidence: {ocr_confidence})")
+                session.confidence_scores[question_id] = field_confidence
+                logger.info(f"Auto-filled question {question_id} with OCR value: {value} (confidence: {field_confidence})")
+
+                # Update field state manager with extraction result
+                if field_state_manager:
+                    # Determine if field should be accepted based on validation
+                    validation = validations.get(question_id, {})
+                    is_valid = validation.get('is_valid', True)
+                    status = "accepted" if is_valid and field_confidence >= 0.75 else "rejected"
+
+                    field_state_manager.on_document_field_result(
+                        field_id=question_id,
+                        value=value,
+                        confidence=field_confidence,
+                        status=status,
+                        document_id=document_id if field_state_manager else None,
+                        ocr_raw_text=value  # Store OCR text for audit
+                    )
+
+                    if status == "rejected":
+                        logger.warning(f"Field {question_id} marked for re-ask: validation={is_valid}, confidence={field_confidence}")
 
             # Mark session as updated
             session.last_accessed = datetime.now()
@@ -955,6 +1084,142 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
 
 
 # Background task to cleanup expired sessions
+# Field State Management API Endpoints (Back Office)
+@app.get("/api/session/{session_id}/fields")
+async def get_session_fields(session_id: str):
+    """Get all fields and their states for a session."""
+    if session_id not in field_state_managers:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    field_state_manager = field_state_managers[session_id]
+    all_fields = field_state_manager.get_all_fields()
+
+    return {
+        "session_id": session_id,
+        "fields": {
+            field_id: field.to_dict()
+            for field_id, field in all_fields.items()
+        },
+        "total_fields": len(all_fields),
+        "completed_fields": sum(1 for f in all_fields.values() if f.state == "COMPLETED"),
+        "pending_fields": sum(1 for f in all_fields.values() if f.state in ["ASK_PENDING", "REASK_PENDING"])
+    }
+
+
+@app.get("/api/session/{session_id}/field/{field_id}")
+async def get_field_details(session_id: str, field_id: str):
+    """Get detailed information about a specific field."""
+    if session_id not in field_state_managers:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    field_state_manager = field_state_managers[session_id]
+    field = field_state_manager.get_field(field_id)
+
+    if not field:
+        raise HTTPException(status_code=404, detail=f"Field {field_id} not found")
+
+    return field.to_dict()
+
+
+@app.get("/api/session/{session_id}/field/{field_id}/audit")
+async def get_field_audit_trail(session_id: str, field_id: str):
+    """Get complete audit trail for a specific field."""
+    if session_id not in field_state_managers:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    field_state_manager = field_state_managers[session_id]
+    field = field_state_manager.get_field(field_id)
+
+    if not field:
+        raise HTTPException(status_code=404, detail=f"Field {field_id} not found")
+
+    return {
+        "field_id": field_id,
+        "question_id": field.question_id,
+        "current_state": field.state,
+        "audit_trail": [entry.to_dict() for entry in field.audit_trail]
+    }
+
+
+@app.post("/api/field/release-for-reask")
+async def release_field_for_reask(
+    session_id: str,
+    field_id: str,
+    reason: Optional[str] = None
+):
+    """Release a specific field for re-asking (back office control)."""
+    if session_id not in field_state_managers:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    field_state_manager = field_state_managers[session_id]
+
+    success = field_state_manager.release_field_for_reask(field_id, reason)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=f"Failed to release field {field_id}")
+
+    logger.info(f"Back office released field {field_id} for re-ask in session {session_id}")
+
+    return {
+        "success": True,
+        "field_id": field_id,
+        "new_state": "REASK_PENDING",
+        "reason": reason
+    }
+
+
+@app.post("/api/field/lock")
+async def lock_field(
+    session_id: str,
+    field_id: str,
+    reason: Optional[str] = None
+):
+    """Lock a field to prevent further changes (back office control)."""
+    if session_id not in field_state_managers:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    field_state_manager = field_state_managers[session_id]
+
+    success = field_state_manager.lock_field(field_id, reason)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=f"Failed to lock field {field_id}")
+
+    logger.info(f"Back office locked field {field_id} in session {session_id}")
+
+    return {
+        "success": True,
+        "field_id": field_id,
+        "new_state": "LOCKED",
+        "reason": reason
+    }
+
+
+@app.post("/api/field/unlock")
+async def unlock_field(session_id: str, field_id: str):
+    """Unlock a previously locked field (back office control)."""
+    if session_id not in field_state_managers:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    field_state_manager = field_state_managers[session_id]
+
+    success = field_state_manager.unlock_field(field_id)
+
+    if not success:
+        raise HTTPException(status_code=400, detail=f"Failed to unlock field {field_id}")
+
+    field = field_state_manager.get_field(field_id)
+    new_state = field.state if field else "unknown"
+
+    logger.info(f"Back office unlocked field {field_id} in session {session_id}")
+
+    return {
+        "success": True,
+        "field_id": field_id,
+        "new_state": new_state
+    }
+
+
 @app.on_event("startup")
 async def startup_event():
     """Startup tasks."""

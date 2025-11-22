@@ -37,25 +37,100 @@ import {
   CheckSquare,
   Circle,
   ChevronDown,
+  ChevronRight,
   List as ListIcon,
   AlignLeft,
-  Link,
+  Link as LinkIcon,
   Image,
   File,
   MapPin,
   DollarSign,
   Percent,
   GitBranch,
+  GitMerge,
   Layers,
   Move,
+  Settings,
   Info,
   Sparkles,
-  Code
+  Code,
+  Copy,
+  TestTube2,
+  GripVertical,
+  FolderPlus,
+  Tag,
+  Loader2
 } from 'lucide-react';
 import WorkflowEditor from './WorkflowEditor';
 import ASRGrammarPalette from './ASRGrammarPalette';
+import FormASRTester from './FormASRTester';
 
 const API_BASE_URL = '/api/config';
+
+// Voice ASR Tab - Unified view combining Forms, Workflow, and ASR Testing
+const VoiceASRTab = ({ droppedFields, renderFormsEditor }) => {
+  const [voiceSubTab, setVoiceSubTab] = useState('forms');
+
+  return (
+    <div className="pt-4 space-y-4">
+      {/* Sub-tab navigation */}
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+        <button
+          onClick={() => setVoiceSubTab('forms')}
+          className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-2 ${
+            voiceSubTab === 'forms'
+              ? 'bg-white text-purple-700 shadow-sm'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          <LayoutGrid className="w-4 h-4" />
+          Form Builder
+        </button>
+        <button
+          onClick={() => setVoiceSubTab('workflow')}
+          className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-2 ${
+            voiceSubTab === 'workflow'
+              ? 'bg-white text-purple-700 shadow-sm'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          <GitBranch className="w-4 h-4" />
+          Workflow
+        </button>
+        <button
+          onClick={() => setVoiceSubTab('asr')}
+          className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-2 ${
+            voiceSubTab === 'asr'
+              ? 'bg-white text-purple-700 shadow-sm'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          <Mic className="w-4 h-4" />
+          ASR Testing
+        </button>
+      </div>
+
+      {/* Sub-tab content */}
+      {voiceSubTab === 'forms' && (
+        <div>
+          {renderFormsEditor()}
+        </div>
+      )}
+
+      {voiceSubTab === 'workflow' && (
+        <div style={{ height: '800px' }}>
+          <WorkflowEditor droppedFields={droppedFields} />
+        </div>
+      )}
+
+      {voiceSubTab === 'asr' && (
+        <div className="-mx-6 -mb-6 overflow-y-auto" style={{ height: 'calc(100vh - 280px)' }}>
+          <FormASRTester />
+        </div>
+      )}
+    </div>
+  );
+};
 
 const DialogEditor = () => {
   const [questions, setQuestions] = useState([]);
@@ -65,7 +140,7 @@ const DialogEditor = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [activeTab, setActiveTab] = useState('details'); // 'details', 'forms', or 'workflow'
+  const [activeTab, setActiveTab] = useState('details'); // 'details' or 'voice-asr'
 
   // TTS Variants
   const [ttsVariants, setTtsVariants] = useState(['', '', '', '']);
@@ -73,6 +148,28 @@ const DialogEditor = () => {
   // Form Builder - Dropped Fields
   const [droppedFields, setDroppedFields] = useState([]);
   const [draggedField, setDraggedField] = useState(null);
+
+  // Section Management State (integrated from SectionManager)
+  const [sections, setSections] = useState([]);
+  const [questionsBySection, setQuestionsBySection] = useState({});
+  const [draggedQuestion, setDraggedQuestion] = useState(null);
+  const [dragOverSection, setDragOverSection] = useState(null);
+  const [expandedSections, setExpandedSections] = useState({});
+  const [showNewSectionModal, setShowNewSectionModal] = useState(false);
+  const [editingSection, setEditingSection] = useState(null);
+  const [editingSectionData, setEditingSectionData] = useState(null);
+  const [generatedAliases, setGeneratedAliases] = useState([]);
+  const [selectedAliases, setSelectedAliases] = useState({});
+  const [generatingAliases, setGeneratingAliases] = useState(false);
+  const [newSection, setNewSection] = useState({
+    sectionId: '',
+    sectionTitle: '',
+    sectionDescription: '',
+    sectionOrder: 1,
+    sectionType: 'standard',
+    semanticAliases: '',
+    skosLabels: ''
+  });
 
   // Field Settings Modal
   const [selectedFieldForSettings, setSelectedFieldForSettings] = useState(null);
@@ -85,7 +182,11 @@ const DialogEditor = () => {
   const [wordMappings, setWordMappings] = useState([{ spokenWord: '', format: '' }]);
 
   // Select List Options
-  const [selectOptions, setSelectOptions] = useState([{ label: '', value: '', ontologyUri: '' }]);
+  const [selectOptions, setSelectOptions] = useState([]);
+  const [cascadingConfig, setCascadingConfig] = useState({
+    isDependent: false,
+    parentQuestionId: ""
+  });
 
   // Configuration Editor State
   const [configTab, setConfigTab] = useState('json'); // 'json' or 'ttl'
@@ -115,6 +216,15 @@ const DialogEditor = () => {
       const response = await fetch(`${API_BASE_URL}/questions`);
       const data = await response.json();
       setQuestions(data.questions || []);
+      setSections(data.sections || []);
+      setQuestionsBySection(data.questions_by_section || {});
+
+      // Auto-expand all sections on first load
+      if (data.sections && Object.keys(expandedSections).length === 0) {
+        const expanded = {};
+        data.sections.forEach(s => { expanded[s.section_id] = true; });
+        setExpandedSections(expanded);
+      }
     } catch (err) {
       setError('Failed to load questions: ' + err.message);
     } finally {
@@ -124,7 +234,7 @@ const DialogEditor = () => {
 
   const handleSelectQuestion = async (question) => {
     setSelectedQuestion(question);
-    setEditedQuestion({...question});
+    setEditedQuestion({ ...question });
 
     // Load TTS variants if available
     if (question.tts && question.tts.variants) {
@@ -160,6 +270,27 @@ const DialogEditor = () => {
       console.error('Error loading form fields:', err);
       setDroppedFields([]);
     }
+
+    // Auto-load select options from TTL ontology for context-aware editing
+    try {
+      const selectResponse = await fetch(`${API_BASE_URL}/question/${question.question_id}/select-options`);
+      if (selectResponse.ok) {
+        const selectData = await selectResponse.json();
+        if (selectData.select_options && selectData.select_options.length > 0) {
+          console.log('📋 Loaded', selectData.select_options.length, 'select options from TTL for question', question.question_id);
+          setSelectOptions(selectData.select_options);
+        } else {
+          console.log('📭 No select options found in TTL for question', question.question_id);
+          setSelectOptions([{ label: '', value: '', ontologyUri: '' }]);
+        }
+      } else {
+        console.log('⚠️ Could not load select options from TTL');
+        setSelectOptions([{ label: '', value: '', ontologyUri: '' }]);
+      }
+    } catch (err) {
+      console.error('Error loading select options from TTL:', err);
+      setSelectOptions([{ label: '', value: '', ontologyUri: '' }]);
+    }
   };
 
   const generateVariant = (text, variantIndex) => {
@@ -170,6 +301,215 @@ const DialogEditor = () => {
       3: text.replace(/What is/g, 'I need').replace(/\?$/, '.')
     };
     return variants[variantIndex] || text;
+  };
+
+  // Section Management Functions (integrated from SectionManager)
+  const handleQuestionDragStart = (e, question) => {
+    setDraggedQuestion(question);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target);
+  };
+
+  const handleSectionDragOver = (e, sectionId) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverSection(sectionId);
+  };
+
+  const handleSectionDragLeave = () => {
+    setDragOverSection(null);
+  };
+
+  const handleQuestionDrop = async (e, targetSectionId) => {
+    e.preventDefault();
+    setDragOverSection(null);
+
+    if (!draggedQuestion) return;
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/question/${draggedQuestion.question_id}/section`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          section_id: targetSectionId,
+          update_owl: true
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to update section');
+
+      setSuccess(`Moved "${draggedQuestion.question_text}" to section. OWL relationships updated.`);
+      await loadQuestions();
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError('Failed to move question: ' + err.message);
+    } finally {
+      setLoading(false);
+      setDraggedQuestion(null);
+    }
+  };
+
+  const toggleSectionExpansion = (sectionId) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
+
+  const handleCreateSection = async () => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/section/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          section_id: newSection.sectionId,
+          section_title: newSection.sectionTitle,
+          section_description: newSection.sectionDescription,
+          section_order: newSection.sectionOrder,
+          section_type: newSection.sectionType || 'standard',
+          semantic_aliases: newSection.semanticAliases.split(',').map(s => s.trim()).filter(Boolean),
+          skos_labels: newSection.skosLabels.split(',').map(s => s.trim()).filter(Boolean)
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to create section');
+
+      setSuccess('Section created successfully with OWL/SKOS relationships');
+      setShowNewSectionModal(false);
+      setNewSection({
+        sectionId: '',
+        sectionTitle: '',
+        sectionDescription: '',
+        sectionOrder: 1,
+        sectionType: 'standard',
+        semanticAliases: '',
+        skosLabels: ''
+      });
+
+      await loadQuestions();
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError('Failed to create section: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditSection = (section) => {
+    setEditingSection(section);
+    setEditingSectionData({
+      section_title: section.section_title || '',
+      section_description: section.section_description || '',
+      section_order: section.section_order || 1,
+      semantic_aliases: section.semantic_aliases || []
+    });
+    setGeneratedAliases([]);
+    const selected = {};
+    (section.semantic_aliases || []).forEach(alias => {
+      selected[alias] = true;
+    });
+    setSelectedAliases(selected);
+  };
+
+  const handleSaveEditedSection = async () => {
+    if (!editingSection || !editingSectionData) return;
+
+    try {
+      setLoading(true);
+      const finalAliases = Object.keys(selectedAliases).filter(alias => selectedAliases[alias]);
+
+      const response = await fetch(`${API_BASE_URL}/section/${editingSection.section_id}/update`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          section_title: editingSectionData.section_title,
+          section_description: editingSectionData.section_description,
+          section_order: editingSectionData.section_order,
+          semantic_aliases: finalAliases
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to update section');
+
+      setSuccess('Section updated successfully with ' + finalAliases.length + ' aliases');
+      setEditingSection(null);
+      setEditingSectionData(null);
+      setGeneratedAliases([]);
+      setSelectedAliases({});
+      await loadQuestions();
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError('Failed to update section: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSection = async (sectionId) => {
+    if (!confirm('Are you sure you want to delete this section? Questions will be unassigned.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/section/${sectionId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Failed to delete section');
+
+      setSuccess('Section deleted successfully');
+      await loadQuestions();
+      setTimeout(() => setSuccess(null), 2000);
+    } catch (err) {
+      setError('Failed to delete section: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateAliases = async () => {
+    if (!editingSectionData) return;
+
+    try {
+      setGeneratingAliases(true);
+      setError(null);
+
+      const response = await fetch(`${API_BASE_URL}/section/generate-aliases`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          section_title: editingSectionData.section_title,
+          section_description: editingSectionData.section_description
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to generate aliases');
+      }
+
+      const data = await response.json();
+      setGeneratedAliases(data.aliases || []);
+      setSuccess(`Generated ${data.count} semantic aliases using AI`);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError('Failed to generate aliases: ' + err.message);
+    } finally {
+      setGeneratingAliases(false);
+    }
+  };
+
+  const toggleAlias = (alias) => {
+    setSelectedAliases(prev => ({
+      ...prev,
+      [alias]: !prev[alias]
+    }));
   };
 
   const handleSaveQuestion = async () => {
@@ -297,153 +637,204 @@ const DialogEditor = () => {
   };
 
   const renderFlowVisualization = () => {
-    // Group questions by section
-    const groupedQuestions = questions.reduce((acc, question) => {
-      const sectionTitle = question.section?.section_title || 'Unsectioned Questions';
-      if (!acc[sectionTitle]) {
-        acc[sectionTitle] = {
-          section: question.section,
-          questions: []
-        };
-      }
-      acc[sectionTitle].questions.push(question);
-      return acc;
-    }, {});
-
-    // Sort sections by order
-    const sortedSections = Object.entries(groupedQuestions).sort((a, b) => {
-      const orderA = a[1].section?.section_order || 999;
-      const orderB = b[1].section?.section_order || 999;
-      return orderA - orderB;
-    });
+    // Use sections from state (populated from API) or fall back to grouping
+    const sortedSections = sections.length > 0
+      ? sections.sort((a, b) => (a.section_order || 0) - (b.section_order || 0))
+      : [];
 
     let questionIndex = 0;
 
     return (
-      <div className="space-y-6">
-        {sortedSections.map(([sectionTitle, { section, questions: sectionQuestions }]) => (
-          <div key={sectionTitle} className="space-y-2">
-            {/* Section Heading */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-3 rounded-lg shadow-md">
-              <h4 className="text-lg font-bold">{sectionTitle}</h4>
-              {section?.section_description && (
-                <p className="text-sm text-blue-100 mt-1">{section.section_description}</p>
-              )}
-            </div>
+      <div className="space-y-4">
+        {/* New Section Button */}
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            color="blue"
+            onClick={() => setShowNewSectionModal(true)}
+          >
+            <FolderPlus className="w-4 h-4 mr-2" />
+            New Section
+          </Button>
+        </div>
 
-            {/* Questions in this section */}
-            {sectionQuestions.map((question) => {
-              const currentIndex = questionIndex++;
-              const isSelected = selectedQuestion?.question_id === question.question_id;
-              const isEditing = editedQuestion?.question_id === question.question_id;
-
-              return (
-                <div
-                  key={question.question_id}
-                  onClick={() => handleSelectQuestion(question)}
-                  className={`ml-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                    isEditing
-                      ? 'border-blue-500 bg-blue-50'
-                      : isSelected
-                      ? 'border-blue-300 bg-blue-25'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm">
-                          {currentIndex + 1}. {question.question_text}
-                        </span>
-                        {isEditing && (
-                          <Badge color="blue" size="xs">Editing</Badge>
-                        )}
-                        {question.required && (
-                          <Badge color="failure" size="xs">Required</Badge>
-                        )}
-                        {question.spelling_required && (
-                          <Badge color="purple" size="xs">Spelling</Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mt-2 text-xs text-gray-600">
-                        <span className="font-medium">Slot:</span> {question.slot_name}
-                        {question.tts && (
-                          <Badge color="info" size="xs">
-                            <Volume2 className="w-3 h-3 inline mr-1" />
-                            TTS
-                          </Badge>
-                        )}
-                        {question.faqs && question.faqs.length > 0 && (
-                          <Badge color="gray" size="xs">
-                            {question.faqs.length} FAQs
-                          </Badge>
-                        )}
-                      </div>
-                      {question.confidence_threshold && (
-                        <Badge
-                          color={question.confidence_threshold < 0.7 ? 'failure' : question.confidence_threshold < 0.85 ? 'warning' : 'success'}
-                          size="xs"
-                          className="mt-2"
-                        >
-                          Confidence: {(question.confidence_threshold * 100).toFixed(0)}%
-                        </Badge>
-                      )}
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-gray-400" />
-                  </div>
-                </div>
-              );
-            })}
+        {sortedSections.length === 0 ? (
+          <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <FolderPlus className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">No sections created yet</p>
+            <p className="text-gray-400 text-sm mt-1">Create your first section to organize questions</p>
           </div>
-        ))}
+        ) : (
+          sortedSections.map((section) => {
+            const sectionQuestions = questionsBySection[section.section_id] || [];
+            const isExpanded = expandedSections[section.section_id] !== false;
+            const isDragOver = dragOverSection === section.section_id;
+
+            return (
+              <div
+                key={section.section_id}
+                className={`bg-white border-2 rounded-lg transition-all ${isDragOver
+                  ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50'
+                  : 'border-gray-200'
+                  }`}
+                onDragOver={(e) => handleSectionDragOver(e, section.section_id)}
+                onDragLeave={handleSectionDragLeave}
+                onDrop={(e) => handleQuestionDrop(e, section.section_id)}
+              >
+                {/* Section Header */}
+                <div className="px-4 py-3 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="flex items-center gap-3 cursor-pointer flex-1"
+                      onClick={() => toggleSectionExpansion(section.section_id)}
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="w-5 h-5 text-blue-600" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-blue-600" />
+                      )}
+                      <Badge color="info" size="sm">Order: {section.section_order}</Badge>
+                      <h4 className="text-lg font-bold text-gray-900">{section.section_title}</h4>
+                      <Badge color="gray" size="sm">{sectionQuestions.length} questions</Badge>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleEditSection(section); }}
+                        className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                        title="Edit section"
+                      >
+                        <Edit className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteSection(section.section_id); }}
+                        className="p-1.5 hover:bg-red-100 rounded transition-colors"
+                        title="Delete section"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </button>
+                    </div>
+                  </div>
+                  {section.section_description && (
+                    <p className="text-sm text-gray-600 mt-2 ml-8">{section.section_description}</p>
+                  )}
+                  {section.semantic_aliases && section.semantic_aliases.length > 0 && (
+                    <div className="flex gap-1 mt-2 ml-8">
+                      <Tag className="w-3 h-3 text-purple-500" />
+                      <span className="text-xs text-purple-600">{section.semantic_aliases.length} aliases</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Questions in this section - only show when expanded */}
+                {isExpanded && (
+                  <div className="p-4 space-y-2">
+                    {sectionQuestions.length === 0 ? (
+                      <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                        <Move className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">Drop questions here</p>
+                      </div>
+                    ) : (
+                      sectionQuestions
+                        .sort((a, b) => (a.order || 0) - (b.order || 0))
+                        .map((question) => {
+                          const currentIndex = questionIndex++;
+                          const isSelected = selectedQuestion?.question_id === question.question_id;
+                          const isEditing = editedQuestion?.question_id === question.question_id;
+
+                          return (
+                            <div
+                              key={question.question_id}
+                              draggable
+                              onDragStart={(e) => handleQuestionDragStart(e, question)}
+                              onClick={() => handleSelectQuestion(question)}
+                              className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all group ${isEditing
+                                ? 'border-gray-900 bg-gray-100'
+                                : isSelected
+                                  ? 'border-gray-500 bg-gray-50'
+                                  : 'border-gray-200 hover:border-blue-400 hover:shadow-md'
+                                }`}
+                            >
+                              <GripVertical className="w-5 h-5 text-gray-400 group-hover:text-blue-500 cursor-move" />
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <Badge color="gray" size="xs">{currentIndex + 1}</Badge>
+                                  <span className="font-semibold text-sm text-gray-900">
+                                    {question.question_text}
+                                  </span>
+                                  {isEditing && <Badge color="blue" size="xs">Editing</Badge>}
+                                  {question.required && <Badge color="failure" size="xs">Required</Badge>}
+                                  {question.spelling_required && <Badge color="purple" size="xs">Spelling</Badge>}
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge color="info" size="xs">{question.question_id}</Badge>
+                                  <span className="text-xs text-gray-500">Slot: {question.slot_name}</span>
+                                  {question.tts && (
+                                    <Badge color="info" size="xs">
+                                      <Volume2 className="w-3 h-3 inline mr-1" />
+                                      TTS
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              <ArrowRight className="w-5 h-5 text-gray-400" />
+                            </div>
+                          );
+                        })
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     );
   };
 
   const renderFormsEditor = () => {
     const formFields = [
-      { id: 'text', label: 'Text Input', icon: Type, iconName: 'Type', color: 'bg-blue-500', desc: 'Single line text' },
-      { id: 'textarea', label: 'Text Area', icon: AlignLeft, iconName: 'AlignLeft', color: 'bg-blue-600', desc: 'Multi-line text' },
-      { id: 'number', label: 'Number', icon: Hash, iconName: 'Hash', color: 'bg-green-500', desc: 'Numeric input' },
-      { id: 'email', label: 'Email', icon: Mail, iconName: 'Mail', color: 'bg-purple-500', desc: 'Email address' },
-      { id: 'phone', label: 'Phone', icon: Phone, iconName: 'Phone', color: 'bg-purple-600', desc: 'Phone number' },
-      { id: 'date', label: 'Date', icon: Calendar, iconName: 'Calendar', color: 'bg-indigo-500', desc: 'Date picker' },
-      { id: 'time', label: 'Time', icon: Clock, iconName: 'Clock', color: 'bg-indigo-600', desc: 'Time picker' },
-      { id: 'toggle', label: 'Toggle', icon: ToggleLeft, iconName: 'ToggleLeft', color: 'bg-amber-500', desc: 'On/off switch' },
-      { id: 'checkbox', label: 'Checkbox', icon: CheckSquare, iconName: 'CheckSquare', color: 'bg-amber-600', desc: 'Multiple choice' },
-      { id: 'radio', label: 'Radio', icon: Circle, iconName: 'Circle', color: 'bg-orange-500', desc: 'Single choice' },
-      { id: 'select', label: 'Dropdown', icon: ChevronDown, iconName: 'ChevronDown', color: 'bg-cyan-500', desc: 'Select menu' },
-      { id: 'multiselect', label: 'Multi-Select', icon: ListIcon, iconName: 'ListIcon', color: 'bg-cyan-600', desc: 'Multiple options' },
-      { id: 'url', label: 'URL', icon: Link, iconName: 'Link', color: 'bg-rose-500', desc: 'Web address' },
-      { id: 'file', label: 'File Upload', icon: File, iconName: 'File', color: 'bg-rose-600', desc: 'File picker' },
-      { id: 'image', label: 'Image', icon: Image, iconName: 'Image', color: 'bg-pink-500', desc: 'Image upload' },
-      { id: 'address', label: 'Address', icon: MapPin, iconName: 'MapPin', color: 'bg-teal-500', desc: 'Location input' },
-      { id: 'currency', label: 'Currency', icon: DollarSign, iconName: 'DollarSign', color: 'bg-emerald-500', desc: 'Money amount' },
-      { id: 'percentage', label: 'Percentage', icon: Percent, iconName: 'Percent', color: 'bg-emerald-600', desc: 'Percent value' },
+      { id: 'text', label: 'Text Input', icon: Type, iconName: 'Type', color: 'bg-gray-600', desc: 'Single line text' },
+      { id: 'textarea', label: 'Text Area', icon: AlignLeft, iconName: 'AlignLeft', color: 'bg-gray-700', desc: 'Multi-line text' },
+      { id: 'number', label: 'Number', icon: Hash, iconName: 'Hash', color: 'bg-gray-600', desc: 'Numeric input' },
+      { id: 'email', label: 'Email', icon: Mail, iconName: 'Mail', color: 'bg-gray-700', desc: 'Email address' },
+      { id: 'phone', label: 'Phone', icon: Phone, iconName: 'Phone', color: 'bg-gray-600', desc: 'Phone number' },
+      { id: 'date', label: 'Date', icon: Calendar, iconName: 'Calendar', color: 'bg-gray-700', desc: 'Date picker' },
+      { id: 'time', label: 'Time', icon: Clock, iconName: 'Clock', color: 'bg-gray-600', desc: 'Time picker' },
+      { id: 'toggle', label: 'Toggle', icon: ToggleLeft, iconName: 'ToggleLeft', color: 'bg-gray-700', desc: 'On/off switch' },
+      { id: 'checkbox', label: 'Checkbox', icon: CheckSquare, iconName: 'CheckSquare', color: 'bg-gray-600', desc: 'Multiple choice' },
+      { id: 'radio', label: 'Radio', icon: Circle, iconName: 'Circle', color: 'bg-gray-700', desc: 'Single choice' },
+      { id: 'select', label: 'Dropdown', icon: ChevronDown, iconName: 'ChevronDown', color: 'bg-gray-600', desc: 'Select menu' },
+      { id: 'multiselect', label: 'Multi-Select', icon: ListIcon, iconName: 'ListIcon', color: 'bg-gray-700', desc: 'Multiple options' },
+      { id: 'url', label: 'URL', icon: LinkIcon, iconName: 'Link', color: 'bg-gray-600', desc: 'Web address' },
+      { id: 'file', label: 'File Upload', icon: File, iconName: 'File', color: 'bg-gray-700', desc: 'File picker' },
+      { id: 'image', label: 'Image', icon: Image, iconName: 'Image', color: 'bg-gray-600', desc: 'Image upload' },
+      { id: 'address', label: 'Address', icon: MapPin, iconName: 'MapPin', color: 'bg-gray-700', desc: 'Location input' },
+      { id: 'currency', label: 'Currency', icon: DollarSign, iconName: 'DollarSign', color: 'bg-gray-600', desc: 'Money amount' },
+      { id: 'percentage', label: 'Percentage', icon: Percent, iconName: 'Percent', color: 'bg-gray-700', desc: 'Percent value' },
     ];
 
     // Icon map for rendering dropped fields
     const iconMap = {
       Type, AlignLeft, Hash, Mail, Phone, Calendar, Clock, ToggleLeft,
-      CheckSquare, Circle, ChevronDown, ListIcon, Link, File, Image,
+      CheckSquare, Circle, ChevronDown, ListIcon, LinkIcon, File, Image,
       MapPin, DollarSign, Percent
     };
 
     return (
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
-          <div className="flex items-center justify-between">
+        <div className="bg-white border-2 border-gray-300 rounded-lg p-6">
+          <div className="flex items-center justify-between text-gray-900">
             <div>
               <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
                 <LayoutGrid className="w-8 h-8" />
                 Drag & Drop Form Builder
               </h3>
-              <p className="text-blue-100">
+              <p className="text-gray-600">
                 Create dynamic forms with field groups, validations, and conditional logic
               </p>
             </div>
-            <Button className="bg-white text-blue-600 hover:bg-blue-50">
+            <Button className="bg-white text-gray-900 hover:bg-gray-50">
               <Plus className="w-4 h-4 mr-2" />
               Create New Form
             </Button>
@@ -454,9 +845,9 @@ const DialogEditor = () => {
           {/* Left Panel - Field Palettes */}
           <div className="col-span-3 space-y-4">
             {/* Standard Field Palette */}
-            <Card className="sticky top-4">
+            <Card className="sticky top-4 bg-white border-gray-200">
               <h4 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800">
-                <Layers className="w-5 h-5 text-blue-600" />
+                <Layers className="w-5 h-5 text-gray-700" />
                 Field Palette
               </h4>
               <div className="space-y-2 max-h-[400px] overflow-y-auto">
@@ -465,14 +856,19 @@ const DialogEditor = () => {
                   return (
                     <div
                       key={field.id}
-                      className="group relative p-3 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-move bg-white"
-                      draggable
+                      className="group relative p-3 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-move bg-white select-none"
+                      draggable={true}
                       onDragStart={(e) => {
+                        console.log('🎯 Drag started:', field.label);
                         e.dataTransfer.setData('field', JSON.stringify(field));
+                        e.dataTransfer.setData('text/plain', field.label); // Fallback for some browsers
                         e.dataTransfer.effectAllowed = 'copy';
                         setDraggedField(field);
                       }}
-                      onDragEnd={() => setDraggedField(null)}
+                      onDragEnd={() => {
+                        console.log('🎯 Drag ended');
+                        setDraggedField(null);
+                      }}
                       title={`${field.label} - ${field.desc}`}
                     >
                       {/* Icon Only */}
@@ -483,11 +879,11 @@ const DialogEditor = () => {
                       </div>
 
                       {/* Tooltip on Hover */}
-                      <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                      <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
                         <div className="font-semibold">{field.label}</div>
                         <div className="text-gray-300 text-xs mt-0.5">{field.desc}</div>
                         {/* Arrow */}
-                        <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+                        <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-800"></div>
                       </div>
                     </div>
                   );
@@ -501,34 +897,37 @@ const DialogEditor = () => {
             </div>
           </div>
 
-          {/* Center Panel - Form Canvas (Node-RED Style) */}
+          {/* Center Panel - Form Canvas */}
           <div className="col-span-6">
-            <div className="rounded-lg overflow-hidden shadow-lg border border-gray-700">
-              {/* Header with dark background */}
-              <div className="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-gray-700">
-                <h4 className="font-bold text-lg text-gray-200">Form Canvas</h4>
+            <div className="rounded-lg overflow-hidden shadow-lg border border-gray-300">
+              {/* Header with white background */}
+              <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-300">
+                <h4 className="font-bold text-lg text-gray-900">Form Canvas</h4>
               </div>
 
-              {/* Canvas Area with Grid Pattern */}
+              {/* Canvas Area with Light Grid Pattern */}
               <div
-                className="min-h-[600px] p-6 relative overflow-hidden"
+                className="min-h-[600px] p-6 relative overflow-hidden bg-white"
                 style={{
-                  background: 'linear-gradient(to bottom, #1a1a1a 0%, #2d2d2d 100%)',
                   backgroundImage: `
-                    radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
+                    radial-gradient(circle, rgba(0, 0, 0, 0.05) 1px, transparent 1px)
                   `,
                   backgroundSize: '20px 20px',
                   backgroundPosition: '0 0'
                 }}
                 onDragOver={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   e.dataTransfer.dropEffect = 'copy';
                 }}
                 onDrop={(e) => {
+                  console.log('📦 Drop event received on canvas');
                   e.preventDefault();
+                  e.stopPropagation();
 
                   // Check if it's a standard field
                   const fieldData = e.dataTransfer.getData('field');
+                  console.log('📦 Field data from drop:', fieldData ? 'Found' : 'Not found');
                   if (fieldData) {
                     const field = JSON.parse(fieldData);
                     const newField = {
@@ -537,6 +936,7 @@ const DialogEditor = () => {
                       label: field.label,
                       required: false
                     };
+                    console.log('✅ Adding field to canvas:', newField.label);
                     setDroppedFields([...droppedFields, newField]);
                     return;
                   }
@@ -575,9 +975,9 @@ const DialogEditor = () => {
               >
                 {droppedFields.length === 0 ? (
                   <div className="text-center py-20">
-                    <LayoutGrid className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg font-medium mb-2">Drop fields here</p>
-                    <p className="text-gray-500 text-sm">Drag fields from the palette to build your form</p>
+                    <LayoutGrid className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-700 text-lg font-medium mb-2">Drop fields here</p>
+                    <p className="text-gray-600 text-sm">Drag fields from the palette to build your form</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -586,27 +986,16 @@ const DialogEditor = () => {
                       return (
                         <div
                           key={field.id}
-                          className="flex items-center gap-3 p-4 rounded-md bg-[#3a3a3a] border border-[#555] shadow-lg hover:border-[#777] transition-colors"
+                          className="flex items-center gap-3 p-4 rounded-md bg-white border-2 border-gray-300 shadow-md hover:border-gray-400 transition-colors"
                         >
                           <div className={`${field.color} p-2 rounded-lg flex-shrink-0`}>
                             <Icon className="w-5 h-5 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm text-gray-100">{field.label}</div>
-                            <div className="text-xs text-gray-400">{field.id}</div>
+                            <div className="font-semibold text-sm text-gray-900">{field.label}</div>
+                            <div className="text-xs text-gray-600">{field.id}</div>
                           </div>
                           <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => {
-                                setSelectedFieldForSettings(field);
-                                setSelectedFieldIndex(index);
-                                setShowFieldHelp(true);
-                              }}
-                              className="p-2 hover:bg-blue-900/30 rounded transition-colors"
-                              title="Field help & FAQ"
-                            >
-                              <Info className="w-4 h-4 text-blue-400 hover:text-blue-300" />
-                            </button>
                             <button
                               onClick={() => {
                                 setSelectedFieldForSettings(field);
@@ -614,19 +1003,19 @@ const DialogEditor = () => {
                                 setCurrentFieldType(field.type || 'text');
                                 setShowFieldSettings(true);
                               }}
-                              className="p-2 hover:bg-gray-700/50 rounded transition-colors"
+                              className="p-2 hover:bg-gray-100 rounded transition-colors"
                               title="Field settings"
                             >
-                              <Settings className="w-4 h-4 text-gray-400 hover:text-gray-300" />
+                              <Settings className="w-4 h-4 text-gray-700 hover:text-gray-900" />
                             </button>
                             <button
                               onClick={() => {
                                 setDroppedFields(droppedFields.filter((_, i) => i !== index));
                               }}
-                              className="p-2 hover:bg-red-900/30 rounded transition-colors"
+                              className="p-2 hover:bg-red-100 rounded transition-colors"
                               title="Remove field"
                             >
-                              <Trash2 className="w-4 h-4 text-red-400 hover:text-red-300" />
+                              <Trash2 className="w-4 h-4 text-red-600 hover:text-red-700" />
                             </button>
                           </div>
                         </div>
@@ -642,60 +1031,60 @@ const DialogEditor = () => {
           <div className="col-span-3">
             <div className="space-y-4 sticky top-4">
               {/* Workflow Editor */}
-              <Card className="group relative bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200 hover:shadow-lg transition-shadow">
-                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-purple-900">
-                  <GitBranch className="w-5 h-5 text-purple-600" />
+              <Card className="group relative bg-white border-gray-200 hover:shadow-lg transition-shadow">
+                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-gray-900">
+                  <GitBranch className="w-5 h-5 text-gray-700" />
                   Workflow Editor
                 </h4>
-                <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700">
+                <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                   <Plus className="w-3 h-3 mr-1" />
                   Add Condition
                 </Button>
                 {/* Tooltip */}
-                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
                   Define conditional logic and field dependencies
-                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-800"></div>
                 </div>
               </Card>
 
               {/* Field Groups */}
-              <Card className="group relative bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 hover:shadow-lg transition-shadow">
-                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-blue-900">
-                  <Layers className="w-5 h-5 text-blue-600" />
+              <Card className="group relative bg-white border-gray-200 hover:shadow-lg transition-shadow">
+                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-gray-900">
+                  <Layers className="w-5 h-5 text-gray-700" />
                   Field Groups
                 </h4>
-                <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
+                <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                   <Plus className="w-3 h-3 mr-1" />
                   New Group
                 </Button>
                 {/* Tooltip */}
-                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
                   Create repeatable groups (e.g., additional drivers)
-                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-800"></div>
                 </div>
               </Card>
 
               {/* Validation Rules */}
-              <Card className="group relative bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-lg transition-shadow">
-                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-green-900">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+              <Card className="group relative bg-white border-gray-200 hover:shadow-lg transition-shadow">
+                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-gray-900">
+                  <CheckCircle className="w-5 h-5 text-gray-700" />
                   Validation Rules
                 </h4>
-                <Button size="sm" className="w-full bg-green-600 hover:bg-green-700">
+                <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                   <Plus className="w-3 h-3 mr-1" />
                   Add Rule
                 </Button>
                 {/* Tooltip */}
-                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
                   SHACL-based validation for form fields
-                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-800"></div>
                 </div>
               </Card>
 
               {/* Hierarchical Selects */}
-              <Card className="group relative bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 hover:shadow-lg transition-shadow">
-                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-amber-900">
-                  <GitBranch className="w-5 h-5 text-amber-600" />
+              <Card className="group relative bg-white border-gray-200 hover:shadow-lg transition-shadow">
+                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-gray-900">
+                  <GitBranch className="w-5 h-5 text-gray-700" />
                   Hierarchical Selects
                 </h4>
                 <Button size="sm" className="w-full bg-amber-600 hover:bg-amber-700">
@@ -703,9 +1092,9 @@ const DialogEditor = () => {
                   Configure
                 </Button>
                 {/* Tooltip */}
-                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                <div className="absolute left-full ml-2 top-0 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
                   Multi-level cascading dropdowns
-                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-800"></div>
                 </div>
               </Card>
             </div>
@@ -731,36 +1120,23 @@ const DialogEditor = () => {
           <nav className="flex space-x-4" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('details')}
-              className={`py-2 px-4 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${
-                activeTab === 'details'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`py-2 px-4 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'details'
+                ? 'border-gray-900 text-gray-900'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
             >
-              <List className="w-4 h-4" />
+              <ListIcon className="w-4 h-4" />
               Question Details
             </button>
             <button
-              onClick={() => setActiveTab('forms')}
-              className={`py-2 px-4 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${
-                activeTab === 'forms'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              onClick={() => setActiveTab('voice-asr')}
+              className={`py-2 px-4 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'voice-asr'
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
             >
-              <LayoutGrid className="w-4 h-4" />
-              Forms Editor
-            </button>
-            <button
-              onClick={() => setActiveTab('workflow')}
-              className={`py-2 px-4 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${
-                activeTab === 'workflow'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <GitBranch className="w-4 h-4" />
-              Workflow Editor
+              <Mic className="w-4 h-4" />
+              Voice ASR
             </button>
           </nav>
         </div>
@@ -901,7 +1277,7 @@ const DialogEditor = () => {
                           <>
                             <button
                               onClick={() => duplicateVariant(index)}
-                              className="text-blue-600 hover:text-blue-800 transition-colors"
+                              className="text-gray-700 hover:text-gray-900 transition-colors"
                               title="Duplicate this variant"
                             >
                               <Copy className="w-4 h-4" />
@@ -973,16 +1349,11 @@ const DialogEditor = () => {
           </div>
         )}
 
-        {activeTab === 'forms' && (
-          <div className="pt-4">
-            {renderFormsEditor()}
-          </div>
-        )}
-
-        {activeTab === 'workflow' && (
-          <div className="pt-4" style={{ height: '800px' }}>
-            <WorkflowEditor droppedFields={droppedFields} />
-          </div>
+        {activeTab === 'voice-asr' && (
+          <VoiceASRTab
+            droppedFields={droppedFields}
+            renderFormsEditor={renderFormsEditor}
+          />
         )}
 
         {/* Action Buttons */}
@@ -1017,15 +1388,15 @@ const DialogEditor = () => {
         {showPreview && (
           <div className="border-t pt-6">
             <h4 className="font-semibold text-gray-900 mb-3">Preview</h4>
-            <Card>
+            <Card className="bg-white border-gray-200">
               <div className="space-y-3">
                 <div>
                   <p className="text-lg font-medium text-gray-900">{editedQuestion.question_text}</p>
                   <p className="text-sm text-gray-600 mt-1">Slot: {editedQuestion.slot_name}</p>
                 </div>
                 {editedQuestion.tts && (
-                  <div className="bg-blue-50 p-3 rounded">
-                    <p className="text-sm font-semibold text-blue-900 mb-1">TTS will say:</p>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <p className="text-sm font-semibold text-gray-900 mb-1">TTS will say:</p>
                     <p className="text-sm text-gray-700">"{editedQuestion.tts.text}"</p>
                   </div>
                 )}
@@ -1084,16 +1455,16 @@ const DialogEditor = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-white border-gray-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Questions</p>
-              <p className="text-2xl font-bold text-blue-600">{questions.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{questions.length}</p>
             </div>
-            <FileText className="w-8 h-8 text-blue-600" />
+            <FileText className="w-8 h-8 text-gray-700" />
           </div>
         </Card>
-        <Card>
+        <Card className="bg-white border-gray-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Required Questions</p>
@@ -1104,26 +1475,26 @@ const DialogEditor = () => {
             <CheckCircle2 className="w-8 h-8 text-red-600" />
           </div>
         </Card>
-        <Card>
+        <Card className="bg-white border-gray-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">With TTS</p>
-              <p className="text-2xl font-bold text-purple-600">
+              <p className="text-2xl font-bold text-gray-900">
                 {questions.filter(q => q.tts).length}
               </p>
             </div>
-            <Volume2 className="w-8 h-8 text-purple-600" />
+            <Volume2 className="w-8 h-8 text-gray-700" />
           </div>
         </Card>
-        <Card>
+        <Card className="bg-white border-gray-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Spelling Required</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-gray-900">
                 {questions.filter(q => q.spelling_required).length}
               </p>
             </div>
-            <Mic className="w-8 h-8 text-green-600" />
+            <Mic className="w-8 h-8 text-gray-700" />
           </div>
         </Card>
       </div>
@@ -1131,7 +1502,7 @@ const DialogEditor = () => {
       {/* Main Editor Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Flow Visualization */}
-        <Card>
+        <Card className="bg-white border-gray-200">
           <h3 className="text-xl font-bold text-gray-900 mb-4">Dialog Flow</h3>
           {loading ? (
             <div className="text-center text-gray-500 py-12">Loading...</div>
@@ -1143,7 +1514,7 @@ const DialogEditor = () => {
         </Card>
 
         {/* Question Editor */}
-        <Card>
+        <Card className="bg-white border-gray-200">
           <h3 className="text-xl font-bold text-gray-900 mb-4">Question Editor</h3>
           <div className="max-h-[700px] overflow-y-auto pr-2">
             {renderQuestionEditor()}
@@ -1189,8 +1560,8 @@ const DialogEditor = () => {
                     </ul>
                   </div>
 
-                  <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <p className="text-xs text-yellow-900">
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs text-gray-700">
                       <strong>Note:</strong> All help content is editable in the Field Settings panel.
                       These are placeholder instructions that will be customized per field.
                     </p>
@@ -1230,9 +1601,9 @@ const DialogEditor = () => {
           {selectedFieldForSettings && (
             <div className="space-y-6">
               {/* Basic Metadata Section */}
-              <Card>
+              <Card className="bg-white border-gray-200">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-600" />
+                  <FileText className="w-5 h-5 text-gray-700" />
                   Basic Metadata
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -1269,8 +1640,85 @@ const DialogEditor = () => {
                       <option value="select">Select/Dropdown</option>
                       <option value="checkbox">Checkbox</option>
                       <option value="radio">Radio</option>
+                      <option value="uk_driving_licence">UK Driving Licence</option>
                     </Select>
                   </div>
+
+                  {/* Date Component Type Selector - Shows only for date fields */}
+                  {currentFieldType === 'date' && (
+                    <div>
+                      <Label htmlFor="date-component">Date Component Type</Label>
+                      <Select
+                        id="date-component"
+                        defaultValue={selectedFieldForSettings.date_component || 'full'}
+                      >
+                        <option value="full">Full Date (DD/MM/YYYY)</option>
+                        <option value="month_year">Month & Year (MM/YYYY)</option>
+                        <option value="day">Day Only (DD)</option>
+                        <option value="month">Month Only (MM)</option>
+                        <option value="year">Year Only (YYYY)</option>
+                      </Select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Choose which date components to collect. Each type has optimized ASR grammar.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Email Settings */}
+                  {currentFieldType === 'email' && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <Label htmlFor="custom-tlds">Custom TLD Shortcuts (comma separated)</Label>
+                      <TextInput
+                        id="custom-tlds"
+                        defaultValue={(selectedFieldForSettings.custom_tlds || []).join(', ')}
+                        placeholder=".com, .co.uk, .net, .org"
+                      />
+                      <p className="text-xs text-blue-600 mt-1">
+                        These will appear as quick-select buttons on the voice keyboard.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* UK Driving Licence Settings */}
+                  {currentFieldType === 'uk_driving_licence' && (
+                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg space-y-3">
+                      <h4 className="text-sm font-semibold text-purple-900">Licence Input Configuration</h4>
+
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="auto-fill-dob" className="cursor-pointer">Auto-fill from DOB?</Label>
+                        <ToggleSwitch
+                          id="auto-fill-dob"
+                          checked={selectedFieldForSettings.auto_fill_dob !== false}
+                          onChange={(checked) => {
+                            setSelectedFieldForSettings(prev => ({ ...prev, auto_fill_dob: checked }));
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="auto-fill-name" className="cursor-pointer">Auto-fill from Name?</Label>
+                        <ToggleSwitch
+                          id="auto-fill-name"
+                          checked={selectedFieldForSettings.auto_fill_name !== false}
+                          onChange={(checked) => {
+                            setSelectedFieldForSettings(prev => ({ ...prev, auto_fill_name: checked }));
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="allow-upload" className="cursor-pointer">Allow Document Upload?</Label>
+                        <ToggleSwitch
+                          id="allow-upload"
+                          checked={selectedFieldForSettings.allow_document_upload !== false}
+                          onChange={(checked) => {
+                            setSelectedFieldForSettings(prev => ({ ...prev, allow_document_upload: checked }));
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <Label htmlFor="field-placeholder">Placeholder</Label>
                     <TextInput
@@ -1290,10 +1738,10 @@ const DialogEditor = () => {
               </Card>
 
               {/* Validation Rules Section - Zod Powered */}
-              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+              <Card className="bg-white border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <CheckCircle className="w-5 h-5 text-gray-700" />
                     Validation Rules (Zod-Powered)
                   </h3>
                   <Badge color="success">Recommended: Zod</Badge>
@@ -1310,50 +1758,52 @@ const DialogEditor = () => {
                   <div>
                     <Label>Validation Library Predicates</Label>
                     <div className="grid grid-cols-2 gap-2 mt-2">
-                      {['isString', 'isAlphanumeric', 'isAlpha', 'isNumeric', 'isDigit', 'isNumber', 'isInteger', 'isFloat', 'isDate', 'isPastDate', 'isFutureDate', 'isMonth', 'isDayOfMonth', 'isLeapYear', 'isPostcode', 'isEmail', 'isPhone', 'isUKPostcode', 'isUKDrivingLicence', 'isUKDrivingLicenceCategory', 'isUKDrivingOffenceCode', 'isUKCarRegistration', 'isSelect'].map((pred) => {
+                      {['isString', 'isAlphanumeric', 'isAlpha', 'isNumeric', 'isDigit', 'isNumber', 'isInteger', 'isFloat', 'isDate', 'isPastDate', 'isFutureDate', 'isMonth', 'isMonthOfYear', 'isDayOfMonth', 'isYear', 'isLeapYear', 'isPostcode', 'isEmail', 'isPhone', 'isUKPostcode', 'isUKDrivingLicence', 'isUKDrivingLicenceCategory', 'isUKDrivingOffenceCode', 'isUKCarRegistration', 'isSelect'].map((pred) => {
                         const isChecked = selectedFieldForSettings.validation?.validators?.includes(pred) || false;
                         return (
-                          <label key={pred} className="flex items-center gap-2 p-2 bg-white rounded border border-green-200 hover:bg-green-50 cursor-pointer">
+                          <label key={pred} className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200 hover:bg-gray-50 cursor-pointer">
                             <input type="checkbox" className="rounded" defaultChecked={isChecked} />
                             <span className="text-sm font-mono text-gray-700">{pred}</span>
                           </label>
                         );
                       })}
                     </div>
-                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                       <p className="text-xs text-gray-700 font-semibold mb-2">String Validators:</p>
                       <ul className="text-xs text-gray-600 space-y-1">
-                        <li><span className="font-mono text-green-700">isString</span>: Validates if value is a string</li>
-                        <li><span className="font-mono text-green-700">isAlphanumeric</span>: Validates string contains only letters and numbers (no spaces or special characters)</li>
-                        <li><span className="font-mono text-green-700">isAlpha</span>: Validates string contains only alphabetic characters (letters only, no numbers or special characters)</li>
-                        <li><span className="font-mono text-green-700">isNumeric</span>: Validates string contains only numeric characters (digits 0-9, spaces, and hyphens allowed)</li>
+                        <li><span className="font-mono text-gray-700">isString</span>: Validates if value is a string</li>
+                        <li><span className="font-mono text-gray-700">isAlphanumeric</span>: Validates string contains only letters and numbers (no spaces or special characters)</li>
+                        <li><span className="font-mono text-gray-700">isAlpha</span>: Validates string contains only alphabetic characters (letters only, no numbers or special characters)</li>
+                        <li><span className="font-mono text-gray-700">isNumeric</span>: Validates string contains only numeric characters (digits 0-9, spaces, and hyphens allowed)</li>
                       </ul>
                     </div>
-                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                       <p className="text-xs text-gray-700 font-semibold mb-2">Date/Time Validators:</p>
                       <ul className="text-xs text-gray-600 space-y-1">
-                        <li><span className="font-mono text-blue-700">isMonth</span>: Validates month number (1-12)</li>
-                        <li><span className="font-mono text-blue-700">isDayOfMonth</span>: Validates day based on month and leap year (e.g., Feb 29 only in leap years)</li>
-                        <li><span className="font-mono text-blue-700">isLeapYear</span>: Validates if a year is a leap year (divisible by 4, except century years must be divisible by 400)</li>
+                        <li><span className="font-mono text-gray-700">isMonth</span>: Validates month number (1-12)</li>
+                        <li><span className="font-mono text-gray-700">isMonthOfYear</span>: Validates month in MM or MM/YYYY format</li>
+                        <li><span className="font-mono text-gray-700">isDayOfMonth</span>: Validates day (1-31) based on month and leap year</li>
+                        <li><span className="font-mono text-gray-700">isYear</span>: Validates year (1900-2099)</li>
+                        <li><span className="font-mono text-gray-700">isLeapYear</span>: Validates if a year is a leap year</li>
                       </ul>
                     </div>
-                    <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                       <p className="text-xs text-gray-700 font-semibold mb-2">UK-Specific Validators:</p>
                       <ul className="text-xs text-gray-600 space-y-1">
-                        <li><span className="font-mono text-purple-700">isUKPostcode</span>: Validates UK postcode format (e.g., SW1A 1AA, M1 1AE, CR2 6XH)</li>
-                        <li><span className="font-mono text-purple-700">isUKDrivingLicence</span>: Validates UK driving licence number (16-character format)</li>
-                        <li><span className="font-mono text-purple-700">isUKDrivingLicenceCategory</span>: Validates licence categories (A, A1, A2, AM, B, BE, C, C1, C1E, CE, D, D1, D1E, DE, f, g, h, k, l, n, p, q)</li>
-                        <li><span className="font-mono text-purple-700">isUKDrivingOffenceCode</span>: Validates UK driving offence codes (e.g., SP30, CD10, DR10, IN10, MS50, TT99)</li>
-                        <li><span className="font-mono text-purple-700">isUKCarRegistration</span>: Validates UK vehicle registration (e.g., AB12 CDE, AB12CDE)</li>
+                        <li><span className="font-mono text-gray-700">isUKPostcode</span>: Validates UK postcode format (e.g., SW1A 1AA, M1 1AE, CR2 6XH)</li>
+                        <li><span className="font-mono text-gray-700">isUKDrivingLicence</span>: Validates UK driving licence number (16-character format)</li>
+                        <li><span className="font-mono text-gray-700">isUKDrivingLicenceCategory</span>: Validates licence categories (A, A1, A2, AM, B, BE, C, C1, C1E, CE, D, D1, D1E, DE, f, g, h, k, l, n, p, q)</li>
+                        <li><span className="font-mono text-gray-700">isUKDrivingOffenceCode</span>: Validates UK driving offence codes (e.g., SP30, CD10, DR10, IN10, MS50, TT99)</li>
+                        <li><span className="font-mono text-gray-700">isUKCarRegistration</span>: Validates UK vehicle registration (e.g., AB12 CDE, AB12CDE)</li>
                       </ul>
                     </div>
                     <div className="mt-2 p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
                       <p className="text-xs text-gray-700 font-semibold mb-2">Select Option Validators:</p>
                       <ul className="text-xs text-gray-600 space-y-1">
-                        <li><span className="font-mono text-cyan-700">isSelect</span>: Validates value against TTL ontology select options with 6-phase matching (exact, label, alias, phonetic exact, fuzzy phonetic, partial). Supports semantic alternatives like "Benzine" → "Petrol"</li>
+                        <li><span className="font-mono text-gray-700">isSelect</span>: Validates value against TTL ontology select options with 6-phase matching (exact, label, alias, phonetic exact, fuzzy phonetic, partial). Supports semantic alternatives like "Benzine" → "Petrol"</li>
                       </ul>
                       <details className="mt-2">
-                        <summary className="text-xs font-semibold text-purple-800 cursor-pointer hover:text-purple-900">View UK Driving Offence Codes</summary>
+                        <summary className="text-xs font-semibold text-gray-700 cursor-pointer hover:text-gray-900">View UK Driving Offence Codes</summary>
                         <div className="mt-2 p-2 bg-white rounded text-xs space-y-1">
                           <p><strong>Accident Offences (AC):</strong> AC10-AC30 (Fail to stop, report, give info)</p>
                           <p><strong>Disqualified Driver (BA):</strong> BA10-BA60 (Driving whilst disqualified)</p>
@@ -1370,6 +1820,18 @@ const DialogEditor = () => {
                           <p><strong>Traffic Direction (TS):</strong> TS10-TS70 (Traffic sign/light offences)</p>
                           <p><strong>Theft (UT):</strong> UT50 (Aggravated vehicle taking)</p>
                           <p><strong>Totting Up (TT):</strong> TT99 (Disqualified under totting up)</p>
+                        </div>
+                      </details>
+                      <details className="mt-2">
+                        <summary className="text-xs font-semibold text-gray-700 cursor-pointer hover:text-gray-900">View Marital Status Options</summary>
+                        <div className="mt-2 p-2 bg-white rounded text-xs space-y-1">
+                          <p><strong>Single:</strong> single, unmarried, bachelor, bachelorette, not married</p>
+                          <p><strong>Married:</strong> married, wed, wedded, hitched</p>
+                          <p><strong>Civil Partnership:</strong> civil partnership, civil partner, CP, registered partnership</p>
+                          <p><strong>Divorced:</strong> divorced, ex-married, formerly married</p>
+                          <p><strong>Separated:</strong> separated, living apart, estranged</p>
+                          <p><strong>Widowed:</strong> widowed, widow, widower</p>
+                          <p><strong>Cohabiting:</strong> cohabiting, living together, common law, partner</p>
                         </div>
                       </details>
                     </div>
@@ -1435,9 +1897,9 @@ const DialogEditor = () => {
               </Card>
 
               {/* TTS Grammar & Configuration Section */}
-              <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+              <Card className="bg-white border-gray-200">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Volume2 className="w-5 h-5 text-purple-600" />
+                  <Volume2 className="w-5 h-5 text-gray-700" />
                   TTS Grammar & Configuration
                 </h3>
 
@@ -1470,9 +1932,9 @@ const DialogEditor = () => {
               </Card>
 
               {/* ASR Configuration Section */}
-              <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-200">
+              <Card className="bg-white border-gray-200">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Mic className="w-5 h-5 text-indigo-600" />
+                  <Mic className="w-5 h-5 text-gray-700" />
                   ASR Configuration
                 </h3>
 
@@ -1495,25 +1957,25 @@ const DialogEditor = () => {
 
                 <div className="space-y-4">
                   {/* Prominent AI Generate Button */}
-                  <div className="bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 border-4 border-purple-500 rounded-xl p-6 shadow-2xl">
+                  <div className="bg-white border-2 border-gray-300 rounded-xl p-6 shadow-lg">
                     <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 p-4 bg-yellow-400 rounded-xl shadow-lg animate-pulse">
-                        <Sparkles className="w-10 h-10 text-purple-900" />
+                      <div className="flex-shrink-0 p-4 bg-gray-200 rounded-xl shadow-md">
+                        <Sparkles className="w-8 h-8 text-gray-900" />
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-bold text-2xl text-white mb-3 flex items-center gap-2">
+                        <h4 className="font-bold text-2xl text-gray-900 mb-3 flex items-center gap-2">
                           <span className="animate-pulse">✨</span>
                           AI-Powered Grammar Generator
                         </h4>
-                        <p className="text-base text-purple-100 mb-4 leading-relaxed">
-                          <strong className="text-yellow-300">Automatically generate ASR grammar patterns</strong> from your TTS question variants.
-                          Includes response patterns like <code className="bg-purple-700 px-2 py-1 rounded text-yellow-200">"my first name is"</code>,
-                          <code className="bg-purple-700 px-2 py-1 rounded text-yellow-200 ml-1">"my name is"</code>,
-                          <code className="bg-purple-700 px-2 py-1 rounded text-yellow-200 ml-1">"I'm Vincent"</code>.
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          <strong className="text-gray-900">Automatically generate ASR grammar patterns</strong> from your TTS question variants.
+                          Includes response patterns like <code className="bg-gray-200 px-2 py-1 rounded text-gray-900">"my first name is"</code>,
+                          <code className="bg-gray-200 px-2 py-1 rounded text-gray-900 ml-1">"my name is"</code>,
+                          <code className="bg-gray-200 px-2 py-1 rounded text-gray-900 ml-1">"I'm Vincent"</code>.
                         </p>
                         <Button
                           size="xl"
-                          className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-purple-900 font-bold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
                           onClick={async () => {
                             setLoading(true);
                             try {
@@ -1593,9 +2055,9 @@ accept | decline
 {month} {day} {year}"
                       className="font-mono text-sm bg-gray-50 border-2 border-indigo-200"
                     />
-                    <div className="flex items-start gap-2 mt-2 p-2 bg-blue-50 rounded border border-blue-200">
-                      <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-xs text-blue-800">
+                    <div className="flex items-start gap-2 mt-2 p-2 bg-gray-50 rounded border border-gray-200">
+                      <Info className="w-4 h-4 text-gray-700 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-gray-700">
                         Supports JSGF, GRXML, ABNF, and regex formats. Generated grammars include response patterns,
                         NATO phonetic alphabet, and parameter variations.
                       </p>
@@ -1604,14 +2066,14 @@ accept | decline
 
                   {/* Generated Response Patterns Checklist */}
                   {generatedPatterns.length > 0 && (
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6">
+                    <div className="bg-white border-2 border-gray-300 rounded-xl p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <h4 className="text-lg font-bold text-green-900 flex items-center gap-2">
+                          <h4 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                             <CheckCircle className="w-5 h-5" />
                             Generated Response Patterns ({generatedPatterns.filter(p => p.selected).length}/{generatedPatterns.length} selected)
                           </h4>
-                          <p className="text-sm text-green-700 mt-1">
+                          <p className="text-sm text-gray-700 mt-1">
                             Review and select which patterns to include in your ASR grammar
                           </p>
                         </div>
@@ -1637,11 +2099,10 @@ accept | decline
                         {generatedPatterns.map((item) => (
                           <label
                             key={item.id}
-                            className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                              item.selected
-                                ? 'bg-green-100 border-green-400 shadow-sm'
-                                : 'bg-gray-50 border-gray-200 hover:border-green-300'
-                            }`}
+                            className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${item.selected
+                              ? 'bg-gray-200 border-gray-500 shadow-sm'
+                              : 'bg-gray-50 border-gray-200 hover:border-green-300'
+                              }`}
                           >
                             <input
                               type="checkbox"
@@ -1652,9 +2113,9 @@ accept | decline
                                 );
                                 setGeneratedPatterns(updated);
                               }}
-                              className="w-4 h-4 text-green-600 rounded"
+                              className="w-4 h-4 text-gray-700 rounded"
                             />
-                            <code className={`text-sm flex-1 ${item.selected ? 'text-green-900 font-medium' : 'text-gray-600'}`}>
+                            <code className={`text-sm flex-1 ${item.selected ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>
                               {item.pattern}
                             </code>
                           </label>
@@ -1690,139 +2151,172 @@ accept | decline
 
               {/* Select List Data Management - Only show for select/dropdown fields */}
               {currentFieldType === 'select' && (
-              <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <List className="w-5 h-5 text-blue-600" />
-                  Select List Options
-                </h3>
+                <Card className="bg-white border-gray-200">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <ListIcon className="w-5 h-5 text-gray-700" />
+                    Select List Options
+                  </h3>
 
-                <Alert color="info" className="mb-4">
-                  <p className="text-sm">
-                    Configure dropdown/select options. Load from TTL ontology or define manually.
-                  </p>
-                </Alert>
+                  <Alert color="info" className="mb-4">
+                    <p className="text-sm">
+                      Configure dropdown/select options. Load from TTL ontology or define manually.
+                    </p>
+                  </Alert>
 
-                {/* Load from TTL Ontology */}
-                <div className="mb-4 p-3 bg-white rounded-lg border border-blue-300">
-                  <Label htmlFor="ontology-question">Load Options from TTL Ontology</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Select
-                      id="ontology-question"
-                      className="flex-1"
-                      onChange={(e) => {
-                        // Load options from the selected question
-                        const questionId = e.target.value;
-                        if (questionId) {
-                          // Fetch options for this question from the API
-                          fetch(`${API_BASE_URL}/select-list/${questionId}`)
-                            .then(res => res.json())
-                            .then(data => {
-                              if (data.options) {
-                                const loadedOptions = data.options.map(opt => ({
-                                  label: opt.label || opt.optionLabel,
-                                  value: opt.value || opt.optionValue,
-                                  ontologyUri: opt.uri || opt.option_uri
-                                }));
-                                setSelectOptions(loadedOptions);
-                                setSuccess(`Loaded ${loadedOptions.length} options from ${questionId}`);
-                                setTimeout(() => setSuccess(null), 3000);
-                              }
-                            })
-                            .catch(err => {
-                              setError(`Failed to load options: ${err.message}`);
-                            });
-                        }
-                      }}
-                    >
-                      <option value="">-- Select a question with options --</option>
-                      <option value="q_vehicle_make">Vehicle Manufacturer (Toyota, BMW, Mercedes...)</option>
-                      <option value="q_vehicle_fuel_type">Vehicle Fuel Type (Petrol, Diesel, Electric...)</option>
-                      <option value="q_vehicle_type">Vehicle Type</option>
-                      <option value="q_cover_type">Cover Type</option>
-                      <option value="q_driving_licence_type">Licence Type</option>
-                    </Select>
-                    <Button
-                      size="sm"
-                      color="blue"
-                      onClick={() => {
-                        setSuccess('Select a question from the dropdown to load its options');
-                        setTimeout(() => setSuccess(null), 2000);
-                      }}
-                    >
-                      <Sparkles className="w-4 h-4 mr-1" />
-                      Load from TTL
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-600 mt-2">
-                    Select a question to automatically load its options from the TTL ontology with aliases and phonetics
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  {selectOptions.map((option, index) => (
-                    <div key={index} className="flex gap-2">
-                      <TextInput
-                        placeholder="Display Label"
+                  {/* Load from TTL Ontology */}
+                  <div className="mb-4 p-3 bg-white rounded-lg border border-blue-300">
+                    <Label htmlFor="ontology-question">Load Options from TTL Ontology</Label>
+                    <div className="flex gap-2 mt-2">
+                      <Select
+                        id="ontology-question"
                         className="flex-1"
-                        value={option.label}
                         onChange={(e) => {
-                          const newOptions = [...selectOptions];
-                          newOptions[index].label = e.target.value;
-                          setSelectOptions(newOptions);
-                        }}
-                      />
-                      <TextInput
-                        placeholder="Internal Value"
-                        className="flex-1 font-mono"
-                        value={option.value}
-                        onChange={(e) => {
-                          const newOptions = [...selectOptions];
-                          newOptions[index].value = e.target.value;
-                          setSelectOptions(newOptions);
-                        }}
-                      />
-                      <TextInput
-                        placeholder="Ontology URI (optional)"
-                        className="flex-1 font-mono text-xs"
-                        value={option.ontologyUri}
-                        onChange={(e) => {
-                          const newOptions = [...selectOptions];
-                          newOptions[index].ontologyUri = e.target.value;
-                          setSelectOptions(newOptions);
-                        }}
-                      />
-                      <Button
-                        size="sm"
-                        color="light"
-                        onClick={() => {
-                          if (selectOptions.length > 1) {
-                            setSelectOptions(selectOptions.filter((_, i) => i !== index));
+                          // Load options from the selected question
+                          const questionId = e.target.value;
+                          if (questionId) {
+                            // Fetch options for this question from the API
+                            fetch(`${API_BASE_URL}/select-list/${questionId}`)
+                              .then(res => res.json())
+                              .then(data => {
+                                if (data.options) {
+                                  const loadedOptions = data.options.map(opt => ({
+                                    label: opt.label || opt.optionLabel,
+                                    value: opt.value || opt.optionValue,
+                                    ontologyUri: opt.uri || opt.option_uri
+                                  }));
+                                  setSelectOptions(loadedOptions);
+                                  setSuccess(`Loaded ${loadedOptions.length} options from ${questionId}`);
+                                  setTimeout(() => setSuccess(null), 3000);
+                                }
+                              })
+                              .catch(err => {
+                                setError(`Failed to load options: ${err.message}`);
+                              });
                           }
                         }}
-                        disabled={selectOptions.length === 1}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <option value="">-- Select a question with options --</option>
+                        <option value="q_vehicle_make">Vehicle Manufacturer (Toyota, BMW, Mercedes...)</option>
+                        <option value="q_vehicle_fuel_type">Vehicle Fuel Type (Petrol, Diesel, Electric...)</option>
+                        <option value="q_vehicle_type">Vehicle Type</option>
+                        <option value="q_cover_type">Cover Type</option>
+                        <option value="q_driving_licence_type">Licence Type</option>
+                      </Select>
+                      <Button
+                        size="sm"
+                        color="blue"
+                        onClick={() => {
+                          setSuccess('Select a question from the dropdown to load its options');
+                          setTimeout(() => setSuccess(null), 2000);
+                        }}
+                      >
+                        <Sparkles className="w-4 h-4 mr-1" />
+                        Load from TTL
                       </Button>
                     </div>
-                  ))}
-                  <Button
-                    size="sm"
-                    color="blue"
-                    onClick={() => {
-                      setSelectOptions([...selectOptions, { label: '', value: '', ontologyUri: '' }]);
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Add Option Manually
-                  </Button>
-                </div>
-              </Card>
+                    <p className="text-xs text-gray-600 mt-2">
+                      Select a question to automatically load its options from the TTL ontology with aliases and phonetics
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {selectOptions.map((option, index) => (
+                      <div key={index} className="flex gap-2">
+                        <TextInput
+                          placeholder="Display Label"
+                          className="flex-1"
+                          value={option.label}
+                          onChange={(e) => {
+                            const newOptions = [...selectOptions];
+                            newOptions[index].label = e.target.value;
+                            setSelectOptions(newOptions);
+                          }}
+                        />
+                        <TextInput
+                          placeholder="Internal Value"
+                          className="flex-1 font-mono"
+                          value={option.value}
+                          onChange={(e) => {
+                            const newOptions = [...selectOptions];
+                            newOptions[index].value = e.target.value;
+                            setSelectOptions(newOptions);
+                          }}
+                        />
+                        <TextInput
+                          placeholder="Ontology URI (optional)"
+                          className="flex-1 font-mono text-xs"
+                          value={option.ontologyUri}
+                          onChange={(e) => {
+                            const newOptions = [...selectOptions];
+                            newOptions[index].ontologyUri = e.target.value;
+                            setSelectOptions(newOptions);
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          color="light"
+                          onClick={() => {
+                            if (selectOptions.length > 1) {
+                              setSelectOptions(selectOptions.filter((_, i) => i !== index));
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      size="sm"
+                      color="light"
+                      className="w-full mt-2 border-dashed border-gray-300 text-gray-500 hover:text-gray-700"
+                      onClick={() => setSelectOptions([...selectOptions, { label: '', value: '', ontologyUri: '' }])}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add Option
+                    </Button>
+                  </div>
+
+                  {/* Cascading Configuration */}
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <h4 className="text-md font-semibold mb-3 flex items-center gap-2">
+                      <GitMerge className="w-4 h-4 text-gray-700" />
+                      Cascading Logic
+                    </h4>
+                    <div className="space-y-4">
+                      <ToggleSwitch
+                        label="Is Dependent Question?"
+                        checked={cascadingConfig.isDependent}
+                        onChange={(e) => setCascadingConfig({ ...cascadingConfig, isDependent: e.target.checked })}
+                      />
+
+                      {cascadingConfig.isDependent && (
+                        <div>
+                          <Label htmlFor="parent-question">Parent Question ID</Label>
+                          <Select
+                            id="parent-question"
+                            value={cascadingConfig.parentQuestionId}
+                            onChange={(e) => setCascadingConfig({ ...cascadingConfig, parentQuestionId: e.target.value })}
+                          >
+                            <option value="">-- Select Parent Question --</option>
+                            {/* Ideally this list should be dynamic, but for now we hardcode common parents or use text input if needed */}
+                            <option value="q_vehicle_make">Vehicle Make (q_vehicle_make)</option>
+                            <option value="q_claim_type">Claim Type (q_claim_type)</option>
+                            <option value="q_conviction_type">Conviction Type (q_conviction_type)</option>
+                          </Select>
+                          <p className="text-xs text-gray-500 mt-1">
+                            The options for this question will be filtered based on the answer to the parent question.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
               )}
 
               {/* Mapping & Transformation Rules */}
-              <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+              <Card className="bg-white border-gray-200">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <ArrowRight className="w-5 h-5 text-amber-600" />
+                  <ArrowRight className="w-5 h-5 text-gray-700" />
                   Mapping & Transformation Rules
                 </h3>
 
@@ -1902,9 +2396,9 @@ accept | decline
               </Card>
 
               {/* FAQ/Help Content Editor */}
-              <Card className="bg-gradient-to-br from-cyan-50 to-sky-50 border-cyan-200">
+              <Card className="bg-white border-gray-200">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Info className="w-5 h-5 text-cyan-600" />
+                  <Info className="w-5 h-5 text-gray-700" />
                   Field Help & FAQ Content
                 </h3>
 
@@ -1960,21 +2454,19 @@ Example 3: ..."
                 <div className="flex gap-2 mb-4 border-b border-gray-300">
                   <button
                     onClick={() => setConfigTab('json')}
-                    className={`px-4 py-2 font-medium transition-colors ${
-                      configTab === 'json'
-                        ? 'text-blue-600 border-b-2 border-blue-600'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`px-4 py-2 font-medium transition-colors ${configTab === 'json'
+                      ? 'text-gray-900 border-b-2 border-gray-900'
+                      : 'text-gray-600 hover:text-gray-900'
+                      }`}
                   >
                     JSON Schema
                   </button>
                   <button
                     onClick={() => setConfigTab('ttl')}
-                    className={`px-4 py-2 font-medium transition-colors ${
-                      configTab === 'ttl'
-                        ? 'text-purple-600 border-b-2 border-purple-600'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`px-4 py-2 font-medium transition-colors ${configTab === 'ttl'
+                      ? 'text-gray-900 border-b-2 border-gray-900'
+                      : 'text-gray-600 hover:text-gray-900'
+                      }`}
                   >
                     TTL (Turtle)
                   </button>
@@ -1985,7 +2477,7 @@ Example 3: ..."
                   <div>
                     <Textarea
                       rows={12}
-                      className="font-mono text-xs bg-gray-900 text-green-400"
+                      className="font-mono text-xs bg-gray-100 text-gray-900"
                       value={jsonConfig || JSON.stringify({
                         fieldId: selectedFieldForSettings.id,
                         label: selectedFieldForSettings.label,
@@ -2028,6 +2520,7 @@ Example 3: ..."
                           languageModel: null
                         },
                         selectOptions: selectOptions,
+                        cascading: cascadingConfig,
                         mapping: {
                           transformationType: "none",
                           wordToFormatRules: wordMappings.map(m => ({
@@ -2058,7 +2551,7 @@ Example 3: ..."
                   <div>
                     <Textarea
                       rows={12}
-                      className="font-mono text-xs bg-gray-900 text-cyan-400"
+                      className="font-mono text-xs bg-gray-100 text-gray-900"
                       value={ttlConfig || `@prefix : <http://diggi.io/ontology/dialog#> .
 @prefix mm: <http://diggi.io/ontology/multimodal#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -2074,6 +2567,10 @@ Example 3: ..."
     mm:helpText "" ;
     mm:defaultValue "" ;
     mm:uiHint "full-width" ;
+    
+    # Cascading Select Configuration
+    mm:isDependent ${cascadingConfig?.isDependent || false} ;
+    mm:parentQuestion "${cascadingConfig?.parentQuestionId || ''}" ;
 
     # Validation
     mm:validationRule "" ;
@@ -2201,18 +2698,31 @@ Example 3: ..."
 
                   updatedFields[selectedFieldIndex] = {
                     ...updatedFields[selectedFieldIndex],
-                    label,
                     id: key,
+                    label: label,
                     type: fieldType,
-                    placeholder,
-                    required,
+                    placeholder: placeholder,
+                    required: required,
                     validation: {
-                      minLength,
-                      maxLength,
-                      validators
-                    }
+                      ...updatedFields[selectedFieldIndex].validation,
+                      validators: validators,
+                      minLength: minLength,
+                      maxLength: maxLength
+                    },
+                    // Persist select options and cascading config
+                    selectOptions: selectOptions,
+                    cascading: cascadingConfig,
+                    // Persist date component type
+                    date_component: selectedFieldForSettings.date_component,
+                    // Persist Email settings
+                    custom_tlds: selectedFieldForSettings.type === 'email'
+                      ? (document.getElementById('custom-tlds')?.value || '').split(',').map(s => s.trim()).filter(Boolean)
+                      : undefined,
+                    // Persist UK Licence settings
+                    auto_fill_dob: selectedFieldForSettings.auto_fill_dob,
+                    auto_fill_name: selectedFieldForSettings.auto_fill_name,
+                    allow_document_upload: selectedFieldForSettings.allow_document_upload
                   };
-
                   console.log('🔍 Updated field:', updatedFields[selectedFieldIndex]);
                   setDroppedFields(updatedFields);
                   console.log('✅ Field settings saved:', updatedFields[selectedFieldIndex]);
@@ -2231,6 +2741,260 @@ Example 3: ..."
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* New Section Modal */}
+      <Modal show={showNewSectionModal} onClose={() => setShowNewSectionModal(false)} size="lg">
+        <Modal.Header>
+          <div className="flex items-center gap-2">
+            <FolderPlus className="w-5 h-5 text-blue-600" />
+            Create New Section
+          </div>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="new-section-id">Section ID</Label>
+                <TextInput
+                  id="new-section-id"
+                  value={newSection.sectionId}
+                  onChange={(e) => setNewSection({ ...newSection, sectionId: e.target.value })}
+                  placeholder="e.g., personal_details"
+                />
+              </div>
+              <div>
+                <Label htmlFor="new-section-order">Order</Label>
+                <TextInput
+                  id="new-section-order"
+                  type="number"
+                  value={newSection.sectionOrder}
+                  onChange={(e) => setNewSection({ ...newSection, sectionOrder: parseInt(e.target.value) || 1 })}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="new-section-title">Title</Label>
+              <TextInput
+                id="new-section-title"
+                value={newSection.sectionTitle}
+                onChange={(e) => setNewSection({ ...newSection, sectionTitle: e.target.value })}
+                placeholder="e.g., Personal Details"
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-section-description">Description</Label>
+              <Textarea
+                id="new-section-description"
+                value={newSection.sectionDescription}
+                onChange={(e) => setNewSection({ ...newSection, sectionDescription: e.target.value })}
+                placeholder="Describe what this section covers..."
+                rows={2}
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-section-type">Section Type</Label>
+              <Select
+                id="new-section-type"
+                value={newSection.sectionType}
+                onChange={(e) => setNewSection({ ...newSection, sectionType: e.target.value })}
+              >
+                <option value="standard">Standard</option>
+                <option value="conditional">Conditional</option>
+                <option value="repeatable">Repeatable</option>
+                <option value="summary">Summary</option>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="new-section-aliases">Semantic Aliases (comma-separated)</Label>
+              <Textarea
+                id="new-section-aliases"
+                value={newSection.semanticAliases}
+                onChange={(e) => setNewSection({ ...newSection, semanticAliases: e.target.value })}
+                placeholder="e.g., personal info, user details, about me"
+                rows={2}
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-section-skos">SKOS Labels</Label>
+              <TextInput
+                id="new-section-skos"
+                value={newSection.skosLabels}
+                onChange={(e) => setNewSection({ ...newSection, skosLabels: e.target.value })}
+                placeholder="e.g., skos:prefLabel, skos:altLabel"
+              />
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <div className="flex justify-end gap-2 w-full">
+            <Button color="gray" onClick={() => setShowNewSectionModal(false)}>
+              Cancel
+            </Button>
+            <Button color="blue" onClick={handleCreateSection}>
+              <FolderPlus className="w-4 h-4 mr-2" />
+              Create Section
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Edit Section Modal */}
+      <Modal show={editingSection !== null} onClose={() => { setEditingSection(null); setEditingSectionData(null); }} size="xl">
+        <Modal.Header>
+          <div className="flex items-center gap-2">
+            <Edit3 className="w-5 h-5 text-blue-600" />
+            Edit Section: {editingSectionData?.section_title || ''}
+          </div>
+        </Modal.Header>
+        <Modal.Body>
+          {editingSectionData && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-section-id">Section ID</Label>
+                  <TextInput
+                    id="edit-section-id"
+                    value={editingSectionData.section_id}
+                    disabled
+                    className="bg-gray-100"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Section ID cannot be changed</p>
+                </div>
+                <div>
+                  <Label htmlFor="edit-section-order">Order</Label>
+                  <TextInput
+                    id="edit-section-order"
+                    type="number"
+                    value={editingSectionData.section_order || 1}
+                    onChange={(e) => setEditingSectionData({ ...editingSectionData, section_order: parseInt(e.target.value) || 1 })}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="edit-section-title">Title</Label>
+                <TextInput
+                  id="edit-section-title"
+                  value={editingSectionData.section_title}
+                  onChange={(e) => setEditingSectionData({ ...editingSectionData, section_title: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-section-description">Description</Label>
+                <Textarea
+                  id="edit-section-description"
+                  value={editingSectionData.section_description || ''}
+                  onChange={(e) => setEditingSectionData({ ...editingSectionData, section_description: e.target.value })}
+                  rows={2}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-section-type">Section Type</Label>
+                <Select
+                  id="edit-section-type"
+                  value={editingSectionData.section_type || 'standard'}
+                  onChange={(e) => setEditingSectionData({ ...editingSectionData, section_type: e.target.value })}
+                >
+                  <option value="standard">Standard</option>
+                  <option value="conditional">Conditional</option>
+                  <option value="repeatable">Repeatable</option>
+                  <option value="summary">Summary</option>
+                </Select>
+              </div>
+
+              {/* Semantic Aliases with AI Generation */}
+              <div className="border rounded-lg p-4 bg-gray-50">
+                <div className="flex items-center justify-between mb-3">
+                  <Label className="text-base font-semibold">Semantic Aliases</Label>
+                  <Button
+                    size="xs"
+                    color="purple"
+                    onClick={() => handleGenerateAliases(editingSectionData.section_title, editingSectionData.section_description)}
+                    disabled={generatingAliases}
+                  >
+                    {generatingAliases ? (
+                      <>
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Tag className="w-3 h-3 mr-1" />
+                        Generate with AI
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Generated Aliases Selection */}
+                {generatedAliases.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-600 mb-2">Select aliases to include:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {generatedAliases.map((alias, idx) => (
+                        <Badge
+                          key={idx}
+                          color={selectedAliases[alias] ? 'success' : 'gray'}
+                          className="cursor-pointer hover:opacity-80"
+                          onClick={() => toggleAlias(alias)}
+                        >
+                          {selectedAliases[alias] ? '✓' : '+'} {alias}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Textarea
+                  id="edit-section-aliases"
+                  value={editingSectionData.semantic_aliases || ''}
+                  onChange={(e) => setEditingSectionData({ ...editingSectionData, semantic_aliases: e.target.value })}
+                  placeholder="Enter comma-separated aliases or generate with AI"
+                  rows={2}
+                />
+              </div>
+
+              {/* SKOS Labels */}
+              <div>
+                <Label htmlFor="edit-section-skos">SKOS Labels</Label>
+                <TextInput
+                  id="edit-section-skos"
+                  value={editingSectionData.skos_labels || ''}
+                  onChange={(e) => setEditingSectionData({ ...editingSectionData, skos_labels: e.target.value })}
+                  placeholder="e.g., skos:prefLabel, skos:altLabel"
+                />
+              </div>
+
+              {/* OWL Relationship Info */}
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <h4 className="font-semibold text-blue-900 mb-2">OWL/SKOS Relationships</h4>
+                <div className="text-sm text-blue-800 space-y-1">
+                  <p><strong>rdf:type:</strong> dialog:Section</p>
+                  <p><strong>skos:prefLabel:</strong> {editingSectionData.section_title}</p>
+                  <p><strong>dialog:hasOrder:</strong> {editingSectionData.section_order || 1}</p>
+                  <p><strong>Questions in section:</strong> {questionsBySection[editingSectionData.section_id]?.length || 0}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <div className="flex justify-between w-full">
+            <Button color="failure" onClick={() => handleDeleteSection(editingSectionData?.section_id)}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Section
+            </Button>
+            <div className="flex gap-2">
+              <Button color="gray" onClick={() => { setEditingSection(null); setEditingSectionData(null); }}>
+                Cancel
+              </Button>
+              <Button color="blue" onClick={handleSaveEditedSection}>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </Modal.Footer>
       </Modal>
     </div>
   );

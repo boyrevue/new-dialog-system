@@ -1,6 +1,7 @@
 @prefix : <http://diggi.io/ontology/dialog#> .
 @prefix mm: <http://diggi.io/ontology/multimodal#> .
 @prefix vocab: <http://diggi.io/ontology/vocabularies#> .
+@prefix doc: <http://diggi.io/ontology/documents#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
@@ -464,7 +465,9 @@ mm:PhoneticVoice a mm:TTSPrompt ;
     :hasInputMode vocab:VehicleRegInputMode ;
     mm:hasTTSPrompt :VehicleRegTTS ;
     mm:hasVisualComponent :VehicleRegVisual ;
-    mm:hasFAQ :VehicleRegFAQ1 .
+    mm:hasFAQ :VehicleRegFAQ1 ;
+    :extractableFrom doc:V5C ;
+    mm:documentFillable true .
 
 :VehicleRegTTS a mm:TTSPrompt ;
     mm:ttsText "Please provide your vehicle registration number. You can spell it out using the phonetic alphabet if needed." ;

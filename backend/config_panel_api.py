@@ -462,6 +462,54 @@ async def get_question_metadata(question_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/config/question/{question_id}/select-options")
+async def get_question_select_options(question_id: str):
+    """Get select options from TTL ontology for a specific question.
+
+    Used by Dialog Editor to auto-load context-aware select options
+    when a question is selected for editing.
+    """
+    from dialog_manager import DialogManager
+
+    ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
+    dialog_manager = DialogManager(ontology_paths)
+
+    try:
+        options = dialog_manager.get_select_options_for_question(question_id)
+        return {
+            "question_id": question_id,
+            "select_options": options,
+            "count": len(options)
+        }
+    except Exception as e:
+        logger.error(f"Error fetching select options for {question_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/question/{question_id}/options")
+async def get_question_options(question_id: str, parent_value: Optional[str] = None):
+    """
+    Get options for a question, optionally filtered by parent value.
+    Used by the SmartSelectWithSearch component for cascading selects.
+    """
+    from dialog_manager import DialogManager
+
+    ontology_paths = [str(ONTOLOGY_DIR / f) for f in ONTOLOGY_FILES.values()]
+    dialog_manager = DialogManager(ontology_paths)
+
+    try:
+        # Pass parent_value to the dialog manager method
+        options = dialog_manager.get_select_options_for_question(question_id, parent_value=parent_value)
+        return {
+            "question_id": question_id,
+            "options": options,
+            "count": len(options)
+        }
+    except Exception as e:
+        logger.error(f"Error fetching options for {question_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 class TTSConfig(BaseModel):
     """TTS configuration for a question."""
     text: Optional[str] = None
@@ -2279,6 +2327,87 @@ async def delete_asr_grammar(field_id: str):
         raise
     except Exception as e:
         logger.error(f"❌ Error deleting ASR grammar: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Directory for JSGF grammar files
+JSGF_GRAMMAR_DIR = BASE_DIR / "jsgf_grammars"
+JSGF_GRAMMAR_DIR.mkdir(exist_ok=True)
+
+
+@app.post("/api/config/save-jsgf-grammar")
+async def save_jsgf_grammar(request: dict):
+    """
+    Save JSGF grammar file for a field
+
+    Request body:
+    - field_id: Unique field identifier
+    - field_label: Human-readable field name
+    - jsgf_content: JSGF grammar content string
+    """
+    try:
+        field_id = request.get('field_id')
+        field_label = request.get('field_label', 'Unknown')
+        jsgf_content = request.get('jsgf_content')
+
+        if not field_id:
+            raise HTTPException(status_code=400, detail="field_id is required")
+
+        if not jsgf_content:
+            raise HTTPException(status_code=400, detail="jsgf_content is required")
+
+        # Create filename from field label (sanitized)
+        safe_label = field_label.lower().replace(' ', '_').replace('/', '_')
+        jsgf_filename = f"{safe_label}_{field_id}.jsgf"
+        jsgf_file = JSGF_GRAMMAR_DIR / jsgf_filename
+
+        # Save JSGF file
+        with open(jsgf_file, 'w') as f:
+            f.write(jsgf_content)
+
+        logger.info(f"💾 Saved JSGF grammar for field: {field_label}")
+        logger.info(f"   File: {jsgf_file}")
+
+        return {
+            "success": True,
+            "field_id": field_id,
+            "field_label": field_label,
+            "file_path": str(jsgf_file),
+            "saved_at": datetime.now().isoformat()
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error saving JSGF grammar: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config/jsgf-grammars")
+async def list_jsgf_grammars():
+    """
+    List all saved JSGF grammar files
+    """
+    try:
+        grammars = []
+        for jsgf_file in JSGF_GRAMMAR_DIR.glob("*.jsgf"):
+            grammars.append({
+                "filename": jsgf_file.name,
+                "path": str(jsgf_file),
+                "size": jsgf_file.stat().st_size,
+                "modified": datetime.fromtimestamp(jsgf_file.stat().st_mtime).isoformat()
+            })
+
+        grammars.sort(key=lambda x: x['modified'], reverse=True)
+
+        return {
+            "grammars": grammars,
+            "count": len(grammars),
+            "directory": str(JSGF_GRAMMAR_DIR)
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Error listing JSGF grammars: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

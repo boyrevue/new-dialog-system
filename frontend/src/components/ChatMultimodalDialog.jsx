@@ -214,12 +214,12 @@ const ChatDialogView = ({
                   />
                 </div>
               ) : (
-                <div className="mt-3 space-y-2">
+                <div className="mt-2 space-y-1">
                   {message.options.map((option, index) => (
                     <button
                       key={index}
                       onClick={() => onSendMessage(option.value || option.label)}
-                      className="w-full text-left px-3 py-2 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 text-sm transition-colors"
+                      className="w-full text-left px-2 py-1 rounded bg-white hover:bg-gray-50 border border-gray-200 text-sm transition-colors"
                     >
                       {option.label}
                     </button>
@@ -500,13 +500,13 @@ const ChatDialogView = ({
               <span className="text-xs text-green-600 ml-auto">Or use voice input below</span>
             </div>
 
-            {/* Radio buttons for 4 or fewer options */}
-            {currentQuestion.options.length <= 4 ? (
-              <div className="space-y-2">
+            {/* Radio buttons for 5 or fewer options */}
+            {currentQuestion.options.length <= 5 ? (
+              <div className="space-y-1">
                 {currentQuestion.options.map((option, index) => (
                   <label
                     key={index}
-                    className="flex items-center gap-3 p-3 bg-white border-2 border-green-200 rounded-lg cursor-pointer hover:bg-green-50 hover:border-green-400 transition-all"
+                    className="flex items-center gap-2 px-2 py-1.5 bg-white border border-green-200 rounded cursor-pointer hover:bg-green-50 hover:border-green-400 transition-all"
                   >
                     <input
                       type="radio"
@@ -523,9 +523,9 @@ const ChatDialogView = ({
                           setInputValue('');
                         }, 300);
                       }}
-                      className="w-5 h-5 text-green-600 focus:ring-green-500"
+                      className="w-4 h-4 text-green-600 focus:ring-green-500"
                     />
-                    <span className="text-base font-medium text-gray-800">
+                    <span className="text-sm text-gray-800">
                       {typeof option === 'string' ? option : option.label}
                     </span>
                   </label>

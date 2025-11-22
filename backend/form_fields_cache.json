@@ -1,0 +1,113 @@
+{
+  "q_first_name": {
+    "fields": [
+      {
+        "id": "text-1763525572763",
+        "label": "Text Input",
+        "icon": {},
+        "iconName": "Type",
+        "color": "bg-blue-500",
+        "desc": "Single line text",
+        "required": false,
+        "type": "text",
+        "placeholder": "PH",
+        "validation": {
+          "minLength": 0,
+          "maxLength": 999,
+          "validators": [
+            "isString"
+          ]
+        }
+      }
+    ],
+    "updated_at": "2025-11-19 12:13:44.077568"
+  },
+  "q_date_of_birth": {
+    "fields": [
+      {
+        "id": "date-1763696623764",
+        "label": "Date",
+        "icon": {},
+        "iconName": "Calendar",
+        "color": "bg-indigo-500",
+        "desc": "Date picker",
+        "required": false,
+        "type": "date",
+        "placeholder": "",
+        "validation": {
+          "minLength": 0,
+          "maxLength": 255,
+          "validators": [
+            "isDate"
+          ]
+        }
+      }
+    ],
+    "updated_at": "2025-11-21 11:48:37.974058"
+  },
+  "q_email": {
+    "fields": [
+      {
+        "id": "email-1763699391964",
+        "label": "Email",
+        "icon": {},
+        "iconName": "Mail",
+        "color": "bg-purple-500",
+        "desc": "Email address",
+        "required": false
+      }
+    ],
+    "updated_at": "2025-11-21 12:30:01.207833"
+  },
+  "q_gender": {
+    "fields": [
+      {
+        "id": "multiselect-1763699481619",
+        "label": "Multi-Select",
+        "icon": {},
+        "iconName": "ListIcon",
+        "color": "bg-cyan-600",
+        "desc": "Multiple options",
+        "required": false
+      }
+    ],
+    "updated_at": "2025-11-21 12:31:27.637461"
+  },
+  "q_marital_status": {
+    "fields": [
+      {
+        "id": "multiselect-1763725477947",
+        "label": "Multi-Select",
+        "icon": {},
+        "iconName": "ListIcon",
+        "color": "bg-gray-700",
+        "desc": "Multiple options",
+        "required": false
+      }
+    ],
+    "updated_at": "2025-11-21 19:44:41.972573"
+  },
+  "q_driving_licence": {
+    "fields": [
+      {
+        "id": "text-1763743100895",
+        "label": "Text Input",
+        "icon": {},
+        "iconName": "Type",
+        "color": "bg-gray-600",
+        "desc": "Single line text",
+        "required": false
+      },
+      {
+        "id": "text-1763793694932",
+        "label": "Text Input",
+        "icon": {},
+        "iconName": "Type",
+        "color": "bg-gray-600",
+        "desc": "Single line text",
+        "required": false
+      }
+    ],
+    "updated_at": "2025-11-22 14:41:38.660506"
+  }
+}

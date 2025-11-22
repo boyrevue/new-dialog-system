@@ -125,15 +125,21 @@ class DialogManager:
         """
         Load dialog flow from ontology.
         Returns ordered list of dialog nodes including questions in sections.
+        Questions are sorted by section order first, then by question order within section.
+        Supports both :sectionOrder and :order properties for sections (fallback).
         """
         query = prepareQuery("""
-            SELECT ?node ?nodeType ?questionId ?questionText ?slotName ?required ?spellingRequired ?order
+            SELECT ?node ?nodeType ?questionId ?questionText ?slotName ?required ?spellingRequired ?order ?sectionOrder ?section
             WHERE {
                 {
-                    # Direct nodes attached to dialog
+                    # Direct nodes attached to dialog (welcome messages, etc.)
+                    # These have sectionOrder 0 to appear first
                     ?dialog a dialog:Dialog ;
                             dialog:hasNode ?node .
                     ?node dialog:order ?order .
+                    FILTER NOT EXISTS { ?node dialog:inSection ?anySection }
+                    BIND(0 AS ?sectionOrder)
+                    BIND("" AS ?section)
 
                     OPTIONAL {
                         ?node a ?nodeType .
@@ -150,9 +156,14 @@ class DialogManager:
                 }
                 UNION
                 {
-                    # Questions that belong to sections
+                    # Questions that belong to sections - order by section order, then question order
+                    # Supports both :sectionOrder (preferred) and :order (fallback) for section ordering
                     ?dialog a dialog:Dialog ;
                             dialog:hasNode ?section .
+                    ?section a dialog:Section .
+                    OPTIONAL { ?section dialog:sectionOrder ?secOrder . }
+                    OPTIONAL { ?section dialog:order ?secFallbackOrder . }
+                    BIND(COALESCE(?secOrder, ?secFallbackOrder, 999) AS ?sectionOrder)
                     ?node dialog:inSection ?section ;
                           dialog:order ?order .
 
@@ -170,19 +181,20 @@ class DialogManager:
                     }
                 }
             }
-            ORDER BY ?order
+            ORDER BY ?sectionOrder ?order
         """, initNs={"dialog": DIALOG, "mm": MM})
-        
+
         results = self.graph.query(query)
-        
+
         nodes = []
         for row in results:
             node_data = {
                 "node_uri": str(row.node),
                 "order": int(row.order) if row.order else 0,
+                "section_order": int(row.sectionOrder) if row.sectionOrder else 0,
                 "node_type": str(row.nodeType) if row.nodeType else "Node"
             }
-            
+
             if row.questionId:
                 node_data.update({
                     "question_id": str(row.questionId),
@@ -191,10 +203,11 @@ class DialogManager:
                     "required": bool(row.required),
                     "spelling_required": bool(row.spellingRequired) if row.spellingRequired else False
                 })
-            
+
             nodes.append(node_data)
-        
-        return sorted(nodes, key=lambda x: x["order"])
+
+        # Sort by section order first, then by question order within section
+        return sorted(nodes, key=lambda x: (x["section_order"], x["order"]))
     
     def get_multimodal_features(self, question_id: str) -> Dict:
         """
@@ -205,7 +218,7 @@ class DialogManager:
             SELECT ?question ?ttsPrompt ?ttsText ?ttsVoice ?ttsRate ?ttsPitch ?ttsConfig
                    ?ttsVariant1 ?ttsVariant2 ?ttsVariant3 ?ttsVariant4
                    ?visual ?componentType ?imageUrl ?componentData
-                   ?option ?optionValue ?optionLabel ?optionDesc
+                   ?option ?optionValue ?optionLabel ?optionDesc ?optionAlias ?optionPhonetic ?optionOrder
                    ?faq ?faqQuestion ?faqAnswer ?faqCategory
             WHERE {
                 ?question dialog:questionId ?qid .
@@ -232,12 +245,25 @@ class DialogManager:
                 }
                 
                 OPTIONAL {
-                    ?question mm:hasOption ?option .
-                    ?option mm:optionValue ?optionValue ;
-                            mm:optionLabel ?optionLabel .
-                    OPTIONAL { ?option mm:optionDescription ?optionDesc . }
-                    OPTIONAL { ?option mm:optionAlias ?optionAlias . }
-                    OPTIONAL { ?option mm:optionPhonetic ?optionPhonetic . }
+                    {
+                        ?question mm:hasOption ?option .
+                        ?option mm:optionValue ?optionValue ;
+                                mm:optionLabel ?optionLabel .
+                        OPTIONAL { ?option mm:optionDescription ?optionDesc . }
+                        OPTIONAL { ?option mm:optionAlias ?optionAlias . }
+                        OPTIONAL { ?option mm:optionPhonetic ?optionPhonetic . }
+                        OPTIONAL { ?option mm:optionOrder ?optionOrder . }
+                    }
+                    UNION
+                    {
+                        ?option dialog:belongsToQuestion ?question .
+                        ?option dialog:optionValue ?optionValue ;
+                                dialog:optionLabel ?optionLabel .
+                        OPTIONAL { ?option dialog:optionDescription ?optionDesc . }
+                        OPTIONAL { ?option dialog:optionAlias ?optionAlias . }
+                        OPTIONAL { ?option dialog:optionPhonetic ?optionPhonetic . }
+                        OPTIONAL { ?option dialog:optionOrder ?optionOrder . }
+                    }
                 }
                 
                 OPTIONAL {
@@ -255,7 +281,11 @@ class DialogManager:
             "tts": None,
             "visual_components": [],
             "select_options": [],
-            "faqs": []
+            "faqs": [],
+            "cascading": {
+                "is_dependent": False,
+                "parent_question_id": None
+            }
         }
         
         for row in results:
@@ -306,7 +336,8 @@ class DialogManager:
                         "value": str(row.optionValue),
                         "label": str(row.optionLabel),
                         "aliases": [],
-                        "phonetics": []
+                        "phonetics": [],
+                        "order": int(row.optionOrder) if hasattr(row, 'optionOrder') and row.optionOrder else 999
                     }
                     if row.optionDesc:
                         existing_option["description"] = str(row.optionDesc)
@@ -335,11 +366,174 @@ class DialogManager:
                 if faq not in features["faqs"]:
                     features["faqs"].append(faq)
 
-        # Clean up internal _id field from select options
+        # Sort select options by order, then clean up internal fields
+        features["select_options"].sort(key=lambda x: x.get("order", 999))
         for option in features["select_options"]:
             option.pop("_id", None)
+            option.pop("order", None)  # Remove order field after sorting
+
+        # Fallback: If there are select options but no input_type, set it to "select"
+        if features.get("select_options") and not features.get("input_type"):
+            features["input_type"] = "select"
+            logger.debug(f"Auto-detected input_type=select for {question_id} based on {len(features['select_options'])} select options")
 
         return features
+
+    def get_select_options_for_question(self, question_id: str, parent_value: Optional[str] = None) -> List[Dict]:
+        """
+        Get select options for a question from the ontology.
+        Supports two formats:
+        1. mm:selectOptions - RDF list like ("Male" "Female" "Other")
+        2. mm:hasOption - Individual option objects with properties
+        Returns list of options with label and value.
+        """
+        from rdflib.collection import Collection
+        from rdflib import RDF
+
+        # First, find ALL question nodes by question_id (may be defined in multiple ontology files)
+        question_nodes = list(self.graph.subjects(DIALOG.questionId, Literal(question_id)))
+
+        if not question_nodes:
+            logger.warning(f"Question not found for id: {question_id}")
+            return []
+
+        logger.debug(f"Found {len(question_nodes)} question nodes for {question_id}: {[str(n) for n in question_nodes]}")
+
+        options = []
+
+        # Format 1: Try mm:selectOptions (RDF list format) - check all question nodes
+        options_list_node = None
+        for question_node in question_nodes:
+            for obj in self.graph.objects(question_node, MM.selectOptions):
+                options_list_node = obj
+                break
+            if options_list_node:
+                break
+
+        if options_list_node:
+            try:
+                options_collection = Collection(self.graph, options_list_node)
+                for item in options_collection:
+                    option_value = str(item)
+                    options.append({
+                        "label": option_value,
+                        "value": option_value.lower().replace(" ", "_"),
+                        "ontologyUri": ""
+                    })
+                logger.info(f"Found {len(options)} select options (RDF list) for {question_id}: {[o['label'] for o in options]}")
+                return options
+            except Exception as e:
+                logger.error(f"Error parsing selectOptions for {question_id}: {e}")
+
+        # Format 2: Try mm:hasOption OR mm:hasSelectOption (individual option objects)
+        # Some questions use mm:hasOption, others use mm:hasSelectOption
+        # Check ALL question nodes for options
+        option_nodes = []
+        for question_node in question_nodes:
+            option_nodes.extend(list(self.graph.objects(question_node, MM.hasOption)))
+            option_nodes.extend(list(self.graph.objects(question_node, MM.hasSelectOption)))
+
+        # Format 3: ALSO try dialog:belongsToQuestion (reverse relationship - option points to question)
+        # Always check this format in addition to Format 2, to catch options from all sources
+        for question_node in question_nodes:
+            option_nodes.extend(list(self.graph.subjects(DIALOG.belongsToQuestion, question_node)))
+
+        # Deduplicate by ontology URI to avoid duplicate options
+        seen_uris = set()
+        unique_option_nodes = []
+        for node in option_nodes:
+            uri = str(node)
+            if uri not in seen_uris:
+                seen_uris.add(uri)
+                unique_option_nodes.append(node)
+        option_nodes = unique_option_nodes
+
+        for option_node in option_nodes:
+            option = {"label": "", "value": "", "ontologyUri": str(option_node), "order": 999}
+
+            # Get option label (try mm: first, then dialog:)
+            for label in self.graph.objects(option_node, MM.optionLabel):
+                option["label"] = str(label)
+                break
+            if not option["label"]:
+                for label in self.graph.objects(option_node, DIALOG.optionLabel):
+                    option["label"] = str(label)
+                    break
+
+            # Get option value (try mm: first, then dialog:)
+            for value in self.graph.objects(option_node, MM.optionValue):
+                option["value"] = str(value)
+                break
+            if not option["value"]:
+                for value in self.graph.objects(option_node, DIALOG.optionValue):
+                    option["value"] = str(value)
+                    break
+
+            # Get option description (optional, try mm: first, then dialog:)
+            for desc in self.graph.objects(option_node, MM.optionDescription):
+                option["description"] = str(desc)
+                break
+            if "description" not in option:
+                for desc in self.graph.objects(option_node, DIALOG.optionDescription):
+                    option["description"] = str(desc)
+                    break
+
+            # Get option aliases (optional, try mm: first, then dialog:)
+            aliases = []
+            for alias in self.graph.objects(option_node, MM.optionAlias):
+                aliases.append(str(alias))
+            if not aliases:
+                for alias in self.graph.objects(option_node, DIALOG.optionAlias):
+                    aliases.append(str(alias))
+            if aliases:
+                option["aliases"] = aliases
+
+            # Get option phonetics (optional, try mm: first, then dialog:)
+            phonetics = []
+            for phonetic in self.graph.objects(option_node, MM.optionPhonetic):
+                phonetics.append(str(phonetic))
+            if not phonetics:
+                for phonetic in self.graph.objects(option_node, DIALOG.optionPhonetic):
+                    phonetics.append(str(phonetic))
+            if phonetics:
+                option["phonetics"] = phonetics
+
+            # Get option order (optional, try mm: first, then dialog:)
+            for order in self.graph.objects(option_node, MM.optionOrder):
+                option["order"] = int(order)
+                break
+            if option["order"] == 999:
+                for order in self.graph.objects(option_node, DIALOG.optionOrder):
+                    option["order"] = int(order)
+                    break
+
+            # Get dependency value (optional)
+            for dep in self.graph.objects(option_node, MM.dependsOnValue):
+                option["parent_value"] = str(dep)
+                break
+
+            if option["label"] or option["value"]:
+                options.append(option)
+
+        if options:
+            # Filter by parent value if provided
+            if parent_value:
+                original_count = len(options)
+                options = [o for o in options if o.get("parent_value") == parent_value]
+                logger.info(f"Filtered options for {question_id} by parent={parent_value}: {original_count} -> {len(options)}")
+
+            # Sort by order
+            options.sort(key=lambda x: x.get("order", 999))
+
+            # Clean up internal order field
+            for opt in options:
+                opt.pop("order", None)
+
+            logger.info(f"Found {len(options)} select options for {question_id}: {[o['label'] for o in options]}")
+        else:
+            logger.debug(f"No select options found for question: {question_id}")
+
+        return options
 
     def get_input_mode(self, question_id: str) -> Optional[Dict]:
         """
@@ -366,7 +560,25 @@ class DialogManager:
 
         if results and results[0].inputMode:
             row = results[0]
+            # Extract input type from URI (e.g., "vocab:DateInputMode" -> "date")
+            input_mode_uri = str(row.inputMode)
+            input_type = None
+            if 'DateInputMode' in input_mode_uri:
+                input_type = 'date'
+            elif 'SelectInputMode' in input_mode_uri:
+                input_type = 'select'
+            elif 'NameInputMode' in input_mode_uri:
+                input_type = 'name'
+            elif 'EmailInputMode' in input_mode_uri:
+                input_type = 'email'
+            elif 'VehicleRegInputMode' in input_mode_uri:
+                input_type = 'vehicle_reg'
+            elif 'DrivingLicenceInputMode' in input_mode_uri:
+                input_type = 'uk_driving_licence'
+
             return {
+                "uri": input_mode_uri,
+                "input_type": input_type,
                 "supports_letter_by_letter": bool(row.supportsSpelling) if row.supportsSpelling else False,
                 "termination_keyword": str(row.terminationKeyword) if row.terminationKeyword else "end",
                 "timeout_seconds": int(row.timeout) if row.timeout else 5,

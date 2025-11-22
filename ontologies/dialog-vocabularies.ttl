@@ -349,3 +349,1833 @@ vocab:AddressInputMode a vocab:InputMode ;
     rdfs:label "Address Input Mode" ;
     vocab:supportsLetterByLetterSpelling false ;
     rdfs:comment "Input configuration for address lines - free text input" .
+
+# ==============================================================================
+# UK Driving Licence Categories
+# ==============================================================================
+vocab:UKDrivingLicenceCategories a skos:ConceptScheme ;
+    skos:prefLabel "UK Driving Licence Categories"@en ;
+    skos:definition "Vehicle categories that can appear on a UK driving licence"@en .
+
+# Motorcycle Categories
+vocab:LicenceCatAM a skos:Concept ;
+    skos:prefLabel "AM"@en ;
+    skos:altLabel "Moped"@en ;
+    skos:definition "Light moped with speed up to 45km/h, 50cc max for petrol engines"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "AM" .
+
+vocab:LicenceCatA1 a skos:Concept ;
+    skos:prefLabel "A1"@en ;
+    skos:altLabel "Small motorcycle"@en, "125cc"@en ;
+    skos:definition "Light motorcycle up to 125cc, max power 11kW, power/weight ratio not exceeding 0.1kW/kg"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "A1" .
+
+vocab:LicenceCatA2 a skos:Concept ;
+    skos:prefLabel "A2"@en ;
+    skos:altLabel "Medium motorcycle"@en ;
+    skos:definition "Standard motorcycle with power up to 35kW, power/weight ratio not exceeding 0.2kW/kg"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "A2" .
+
+vocab:LicenceCatA a skos:Concept ;
+    skos:prefLabel "A"@en ;
+    skos:altLabel "Full motorcycle licence"@en, "Unrestricted motorcycle"@en ;
+    skos:definition "Any motorcycle with or without a sidecar, and motor tricycles with power over 15kW"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "A" .
+
+# Car Categories
+vocab:LicenceCatB a skos:Concept ;
+    skos:prefLabel "B"@en ;
+    skos:altLabel "Car"@en, "Standard car licence"@en ;
+    skos:definition "Vehicles up to 3,500kg MAM with up to 8 passenger seats, with trailer up to 750kg"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "B" .
+
+vocab:LicenceCatBE a skos:Concept ;
+    skos:prefLabel "BE"@en ;
+    skos:altLabel "Car with trailer"@en, "Car and trailer"@en ;
+    skos:definition "Car (category B) with trailer over 750kg where combined MAM exceeds 3,500kg"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "BE" .
+
+# Lorry Categories
+vocab:LicenceCatC1 a skos:Concept ;
+    skos:prefLabel "C1"@en ;
+    skos:altLabel "Medium lorry"@en, "7.5 tonne"@en ;
+    skos:definition "Medium-sized vehicles between 3,500kg and 7,500kg MAM, with trailer up to 750kg"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "C1" .
+
+vocab:LicenceCatC1E a skos:Concept ;
+    skos:prefLabel "C1E"@en ;
+    skos:altLabel "Medium lorry with trailer"@en ;
+    skos:definition "Medium-sized vehicle (C1) with trailer over 750kg, combined MAM up to 12,000kg"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "C1E" .
+
+vocab:LicenceCatC a skos:Concept ;
+    skos:prefLabel "C"@en ;
+    skos:altLabel "Large lorry"@en, "HGV"@en, "Heavy goods vehicle"@en ;
+    skos:definition "Large goods vehicles over 3,500kg MAM with trailer up to 750kg"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "C" .
+
+vocab:LicenceCatCE a skos:Concept ;
+    skos:prefLabel "CE"@en ;
+    skos:altLabel "Articulated lorry"@en, "Artic"@en, "Class 1 HGV"@en ;
+    skos:definition "Large goods vehicle (category C) with trailer over 750kg (articulated lorries)"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "CE" .
+
+# Bus/Coach Categories
+vocab:LicenceCatD1 a skos:Concept ;
+    skos:prefLabel "D1"@en ;
+    skos:altLabel "Minibus"@en, "Small bus"@en ;
+    skos:definition "Minibus with 9-16 passenger seats and maximum length 8 metres, with trailer up to 750kg"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "D1" .
+
+vocab:LicenceCatD1E a skos:Concept ;
+    skos:prefLabel "D1E"@en ;
+    skos:altLabel "Minibus with trailer"@en ;
+    skos:definition "Minibus (D1) with trailer over 750kg, combined MAM up to 12,000kg"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "D1E" .
+
+vocab:LicenceCatD a skos:Concept ;
+    skos:prefLabel "D"@en ;
+    skos:altLabel "Bus"@en, "Coach"@en, "PCV"@en ;
+    skos:definition "Bus or coach with more than 8 passenger seats, with trailer up to 750kg"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "D" .
+
+vocab:LicenceCatDE a skos:Concept ;
+    skos:prefLabel "DE"@en ;
+    skos:altLabel "Bus with trailer"@en, "Coach with trailer"@en ;
+    skos:definition "Bus or coach (category D) with trailer over 750kg"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "DE" .
+
+# Special Categories (lowercase in UK system)
+vocab:LicenceCatF a skos:Concept ;
+    skos:prefLabel "f"@en ;
+    skos:altLabel "Agricultural tractor"@en, "Farm tractor"@en ;
+    skos:definition "Agricultural tractors"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "f" .
+
+vocab:LicenceCatG a skos:Concept ;
+    skos:prefLabel "g"@en ;
+    skos:altLabel "Road roller"@en ;
+    skos:definition "Road rollers"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "g" .
+
+vocab:LicenceCatH a skos:Concept ;
+    skos:prefLabel "h"@en ;
+    skos:altLabel "Tracked vehicle"@en ;
+    skos:definition "Tracked vehicles"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "h" .
+
+vocab:LicenceCatK a skos:Concept ;
+    skos:prefLabel "k"@en ;
+    skos:altLabel "Mowing machine"@en, "Pedestrian vehicle"@en ;
+    skos:definition "Mowing machines or pedestrian-controlled vehicles"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "k" .
+
+vocab:LicenceCatL a skos:Concept ;
+    skos:prefLabel "l"@en ;
+    skos:altLabel "Electric vehicle"@en ;
+    skos:definition "Electrically propelled vehicles"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "l" .
+
+vocab:LicenceCatN a skos:Concept ;
+    skos:prefLabel "n"@en ;
+    skos:altLabel "Nil tax vehicle"@en ;
+    skos:definition "Vehicles exempt from duty"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "n" .
+
+vocab:LicenceCatP a skos:Concept ;
+    skos:prefLabel "p"@en ;
+    skos:altLabel "Moped pre-2001"@en ;
+    skos:definition "Mopeds with engine up to 50cc (pre-2001 regulations)"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "p" .
+
+vocab:LicenceCatQ a skos:Concept ;
+    skos:prefLabel "q"@en ;
+    skos:altLabel "Motor tricycle"@en, "Quad"@en ;
+    skos:definition "Motor tricycles and quadricycles (two-seater, unladen weight not more than 550kg)"@en ;
+    skos:inScheme vocab:UKDrivingLicenceCategories ;
+    skos:notation "q" .
+
+# ==============================================================================
+# UK Driving Offence Codes
+# ==============================================================================
+vocab:UKDrivingOffenceCodes a skos:ConceptScheme ;
+    skos:prefLabel "UK Driving Offence Codes"@en ;
+    skos:definition "DVLA endorsement codes for driving offences in the UK"@en .
+
+# Accident Offences (AC)
+vocab:OffenceAC10 a skos:Concept ;
+    skos:prefLabel "AC10"@en ;
+    skos:definition "Failing to stop after an accident"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "AC10" .
+
+vocab:OffenceAC20 a skos:Concept ;
+    skos:prefLabel "AC20"@en ;
+    skos:definition "Failing to give particulars or report an accident within 24 hours"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "AC20" .
+
+vocab:OffenceAC30 a skos:Concept ;
+    skos:prefLabel "AC30"@en ;
+    skos:definition "Undefined accident offence"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "AC30" .
+
+# Disqualified Driver (BA)
+vocab:OffenceBA10 a skos:Concept ;
+    skos:prefLabel "BA10"@en ;
+    skos:definition "Driving while disqualified by order of court"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "BA10" .
+
+vocab:OffenceBA30 a skos:Concept ;
+    skos:prefLabel "BA30"@en ;
+    skos:definition "Attempting to drive while disqualified by order of court"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "BA30" .
+
+vocab:OffenceBA40 a skos:Concept ;
+    skos:prefLabel "BA40"@en ;
+    skos:definition "Causing death by driving while disqualified"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "BA40" .
+
+vocab:OffenceBA60 a skos:Concept ;
+    skos:prefLabel "BA60"@en ;
+    skos:definition "Causing serious injury by driving while disqualified"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "BA60" .
+
+# Careless Driving (CD)
+vocab:OffenceCD10 a skos:Concept ;
+    skos:prefLabel "CD10"@en ;
+    skos:definition "Driving without due care and attention"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CD10" .
+
+vocab:OffenceCD20 a skos:Concept ;
+    skos:prefLabel "CD20"@en ;
+    skos:definition "Driving without reasonable consideration for other road users"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CD20" .
+
+vocab:OffenceCD30 a skos:Concept ;
+    skos:prefLabel "CD30"@en ;
+    skos:definition "Driving without due care and attention or without reasonable consideration"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CD30" .
+
+vocab:OffenceCD40 a skos:Concept ;
+    skos:prefLabel "CD40"@en ;
+    skos:definition "Causing death through careless driving when unfit through drink"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CD40" .
+
+vocab:OffenceCD50 a skos:Concept ;
+    skos:prefLabel "CD50"@en ;
+    skos:definition "Causing death by careless driving when unfit through drugs"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CD50" .
+
+vocab:OffenceCD60 a skos:Concept ;
+    skos:prefLabel "CD60"@en ;
+    skos:definition "Causing death by careless driving with alcohol level above the limit"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CD60" .
+
+vocab:OffenceCD70 a skos:Concept ;
+    skos:prefLabel "CD70"@en ;
+    skos:definition "Causing death by careless driving then failing to supply a specimen for analysis"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CD70" .
+
+vocab:OffenceCD80 a skos:Concept ;
+    skos:prefLabel "CD80"@en ;
+    skos:definition "Causing death by careless or inconsiderate driving"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CD80" .
+
+vocab:OffenceCD90 a skos:Concept ;
+    skos:prefLabel "CD90"@en ;
+    skos:definition "Causing death by driving: unlicensed, disqualified or uninsured drivers"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CD90" .
+
+# Construction & Use (CU)
+vocab:OffenceCU10 a skos:Concept ;
+    skos:prefLabel "CU10"@en ;
+    skos:definition "Using a vehicle with defective brakes"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CU10" .
+
+vocab:OffenceCU20 a skos:Concept ;
+    skos:prefLabel "CU20"@en ;
+    skos:definition "Causing or likely to cause danger by reason of use of unsuitable vehicle or using a vehicle with parts or accessories in a dangerous condition"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CU20" .
+
+vocab:OffenceCU30 a skos:Concept ;
+    skos:prefLabel "CU30"@en ;
+    skos:definition "Using a vehicle with defective tyre(s)"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CU30" .
+
+vocab:OffenceCU40 a skos:Concept ;
+    skos:prefLabel "CU40"@en ;
+    skos:definition "Using a vehicle with defective steering"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CU40" .
+
+vocab:OffenceCU50 a skos:Concept ;
+    skos:prefLabel "CU50"@en ;
+    skos:definition "Causing or likely to cause danger by reason of load or passengers"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CU50" .
+
+vocab:OffenceCU80 a skos:Concept ;
+    skos:prefLabel "CU80"@en ;
+    skos:definition "Using a mobile phone while driving a motor vehicle"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "CU80" .
+
+# Dangerous Driving (DD)
+vocab:OffenceDD10 a skos:Concept ;
+    skos:prefLabel "DD10"@en ;
+    skos:definition "Causing serious injury by dangerous driving"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DD10" .
+
+vocab:OffenceDD40 a skos:Concept ;
+    skos:prefLabel "DD40"@en ;
+    skos:definition "Dangerous driving"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DD40" .
+
+vocab:OffenceDD60 a skos:Concept ;
+    skos:prefLabel "DD60"@en ;
+    skos:definition "Manslaughter or culpable homicide while driving a vehicle"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DD60" .
+
+vocab:OffenceDD80 a skos:Concept ;
+    skos:prefLabel "DD80"@en ;
+    skos:definition "Causing death by dangerous driving"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DD80" .
+
+vocab:OffenceDD90 a skos:Concept ;
+    skos:prefLabel "DD90"@en ;
+    skos:definition "Furious driving"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DD90" .
+
+# Drink or Drugs (DR)
+vocab:OffenceDR10 a skos:Concept ;
+    skos:prefLabel "DR10"@en ;
+    skos:altLabel "Drink driving"@en, "DUI"@en ;
+    skos:definition "Driving or attempting to drive with alcohol level above limit"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DR10" .
+
+vocab:OffenceDR20 a skos:Concept ;
+    skos:prefLabel "DR20"@en ;
+    skos:definition "Driving or attempting to drive while unfit through drink"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DR20" .
+
+vocab:OffenceDR30 a skos:Concept ;
+    skos:prefLabel "DR30"@en ;
+    skos:definition "Driving or attempting to drive then failing to supply a specimen for analysis"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DR30" .
+
+vocab:OffenceDR31 a skos:Concept ;
+    skos:prefLabel "DR31"@en ;
+    skos:definition "Driving or attempting to drive when unfit through drugs"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DR31" .
+
+vocab:OffenceDR40 a skos:Concept ;
+    skos:prefLabel "DR40"@en ;
+    skos:definition "In charge of a vehicle while alcohol level above limit"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DR40" .
+
+vocab:OffenceDR50 a skos:Concept ;
+    skos:prefLabel "DR50"@en ;
+    skos:definition "In charge of a vehicle while unfit through drink"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DR50" .
+
+vocab:OffenceDR60 a skos:Concept ;
+    skos:prefLabel "DR60"@en ;
+    skos:definition "Failure to provide a specimen for analysis in circumstances other than driving or attempting to drive"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DR60" .
+
+vocab:OffenceDR61 a skos:Concept ;
+    skos:prefLabel "DR61"@en ;
+    skos:definition "Refusing to provide a specimen of breath for a breath test"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DR61" .
+
+vocab:OffenceDR70 a skos:Concept ;
+    skos:prefLabel "DR70"@en ;
+    skos:definition "Failing to provide a specimen for breath test"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DR70" .
+
+vocab:OffenceDR80 a skos:Concept ;
+    skos:prefLabel "DR80"@en ;
+    skos:definition "Driving or attempting to drive when unfit through drugs"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DR80" .
+
+vocab:OffenceDR90 a skos:Concept ;
+    skos:prefLabel "DR90"@en ;
+    skos:definition "In charge of a vehicle when unfit through drugs"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "DR90" .
+
+# Insurance Offences (IN)
+vocab:OffenceIN10 a skos:Concept ;
+    skos:prefLabel "IN10"@en ;
+    skos:altLabel "No insurance"@en, "Driving uninsured"@en ;
+    skos:definition "Using a vehicle uninsured against third party risks"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "IN10" .
+
+# Licence Offences (LC)
+vocab:OffenceLC20 a skos:Concept ;
+    skos:prefLabel "LC20"@en ;
+    skos:definition "Driving otherwise than in accordance with a licence"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "LC20" .
+
+vocab:OffenceLC30 a skos:Concept ;
+    skos:prefLabel "LC30"@en ;
+    skos:definition "Driving after making a false declaration about fitness when applying for a licence"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "LC30" .
+
+vocab:OffenceLC40 a skos:Concept ;
+    skos:prefLabel "LC40"@en ;
+    skos:definition "Driving a vehicle having failed to notify a disability"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "LC40" .
+
+vocab:OffenceLC50 a skos:Concept ;
+    skos:prefLabel "LC50"@en ;
+    skos:definition "Driving after a licence has been revoked or refused on medical grounds"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "LC50" .
+
+# Miscellaneous (MS)
+vocab:OffenceMS10 a skos:Concept ;
+    skos:prefLabel "MS10"@en ;
+    skos:definition "Leaving a vehicle in a dangerous position"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "MS10" .
+
+vocab:OffenceMS20 a skos:Concept ;
+    skos:prefLabel "MS20"@en ;
+    skos:definition "Unlawful pillion riding"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "MS20" .
+
+vocab:OffenceMS30 a skos:Concept ;
+    skos:prefLabel "MS30"@en ;
+    skos:definition "Play street offences"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "MS30" .
+
+vocab:OffenceMS50 a skos:Concept ;
+    skos:prefLabel "MS50"@en ;
+    skos:definition "Motor racing on the highway"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "MS50" .
+
+vocab:OffenceMS60 a skos:Concept ;
+    skos:prefLabel "MS60"@en ;
+    skos:definition "Offences not covered by other codes"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "MS60" .
+
+vocab:OffenceMS70 a skos:Concept ;
+    skos:prefLabel "MS70"@en ;
+    skos:definition "Driving with uncorrected defective eyesight"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "MS70" .
+
+vocab:OffenceMS80 a skos:Concept ;
+    skos:prefLabel "MS80"@en ;
+    skos:definition "Refusing to submit to an eyesight test"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "MS80" .
+
+vocab:OffenceMS90 a skos:Concept ;
+    skos:prefLabel "MS90"@en ;
+    skos:definition "Failure to give information as to identity of driver"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "MS90" .
+
+# Motorway Offences (MW)
+vocab:OffenceMW10 a skos:Concept ;
+    skos:prefLabel "MW10"@en ;
+    skos:definition "Contravention of special roads regulations (excluding speed limits)"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "MW10" .
+
+# Pedestrian Crossings (PC)
+vocab:OffencePC10 a skos:Concept ;
+    skos:prefLabel "PC10"@en ;
+    skos:definition "Undefined contravention of pedestrian crossing regulations"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "PC10" .
+
+vocab:OffencePC20 a skos:Concept ;
+    skos:prefLabel "PC20"@en ;
+    skos:definition "Contravention of pedestrian crossing regulations with moving vehicle"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "PC20" .
+
+vocab:OffencePC30 a skos:Concept ;
+    skos:prefLabel "PC30"@en ;
+    skos:definition "Contravention of pedestrian crossing regulations with stationary vehicle"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "PC30" .
+
+# Speed Limits (SP)
+vocab:OffenceSP10 a skos:Concept ;
+    skos:prefLabel "SP10"@en ;
+    skos:definition "Exceeding goods vehicle speed limits"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "SP10" .
+
+vocab:OffenceSP20 a skos:Concept ;
+    skos:prefLabel "SP20"@en ;
+    skos:definition "Exceeding speed limit for type of vehicle (excluding goods or passenger vehicles)"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "SP20" .
+
+vocab:OffenceSP30 a skos:Concept ;
+    skos:prefLabel "SP30"@en ;
+    skos:altLabel "Speeding"@en ;
+    skos:definition "Exceeding statutory speed limit on a public road"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "SP30" .
+
+vocab:OffenceSP40 a skos:Concept ;
+    skos:prefLabel "SP40"@en ;
+    skos:definition "Exceeding passenger vehicle speed limit"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "SP40" .
+
+vocab:OffenceSP50 a skos:Concept ;
+    skos:prefLabel "SP50"@en ;
+    skos:definition "Exceeding speed limit on a motorway"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "SP50" .
+
+# Traffic Directions & Signs (TS)
+vocab:OffenceTS10 a skos:Concept ;
+    skos:prefLabel "TS10"@en ;
+    skos:definition "Failing to comply with traffic light signals"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "TS10" .
+
+vocab:OffenceTS20 a skos:Concept ;
+    skos:prefLabel "TS20"@en ;
+    skos:definition "Failing to comply with double white lines"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "TS20" .
+
+vocab:OffenceTS30 a skos:Concept ;
+    skos:prefLabel "TS30"@en ;
+    skos:definition "Failing to comply with a stop sign"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "TS30" .
+
+vocab:OffenceTS40 a skos:Concept ;
+    skos:prefLabel "TS40"@en ;
+    skos:definition "Failing to comply with direction of a constable/warden"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "TS40" .
+
+vocab:OffenceTS50 a skos:Concept ;
+    skos:prefLabel "TS50"@en ;
+    skos:definition "Failing to comply with traffic sign (excluding stop signs, traffic lights or double white lines)"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "TS50" .
+
+vocab:OffenceTS60 a skos:Concept ;
+    skos:prefLabel "TS60"@en ;
+    skos:definition "Failing to comply with school crossing patrol sign"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "TS60" .
+
+vocab:OffenceTS70 a skos:Concept ;
+    skos:prefLabel "TS70"@en ;
+    skos:definition "Undefined failure to comply with a traffic direction or sign"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "TS70" .
+
+# Special Code (TT)
+vocab:OffenceTT99 a skos:Concept ;
+    skos:prefLabel "TT99"@en ;
+    skos:altLabel "Totting up"@en, "Totting"@en ;
+    skos:definition "To signify a disqualification under totting-up procedure (12+ points within 3 years)"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "TT99" .
+
+# Theft or Unauthorised Taking (UT)
+vocab:OffenceUT50 a skos:Concept ;
+    skos:prefLabel "UT50"@en ;
+    skos:definition "Aggravated taking of a vehicle"@en ;
+    skos:inScheme vocab:UKDrivingOffenceCodes ;
+    skos:notation "UT50" .
+
+# ==============================================================================
+# Marital Status Options
+# ==============================================================================
+vocab:MaritalStatusOptions a skos:ConceptScheme ;
+    skos:prefLabel "Marital Status Options"@en ;
+    skos:definition "Legal marital status options for insurance purposes"@en .
+
+vocab:MaritalSingle a skos:Concept ;
+    skos:prefLabel "Single"@en ;
+    skos:altLabel "Never married"@en, "Unmarried"@en ;
+    skos:definition "Not currently married or in a civil partnership"@en ;
+    skos:inScheme vocab:MaritalStatusOptions ;
+    skos:notation "SINGLE" .
+
+vocab:MaritalMarried a skos:Concept ;
+    skos:prefLabel "Married"@en ;
+    skos:definition "Legally married"@en ;
+    skos:inScheme vocab:MaritalStatusOptions ;
+    skos:notation "MARRIED" .
+
+vocab:MaritalCivilPartnership a skos:Concept ;
+    skos:prefLabel "Civil Partnership"@en ;
+    skos:altLabel "Civil partner"@en ;
+    skos:definition "In a legally recognized civil partnership"@en ;
+    skos:inScheme vocab:MaritalStatusOptions ;
+    skos:notation "CIVIL_PARTNERSHIP" .
+
+vocab:MaritalDivorced a skos:Concept ;
+    skos:prefLabel "Divorced"@en ;
+    skos:definition "Previously married but now legally divorced"@en ;
+    skos:inScheme vocab:MaritalStatusOptions ;
+    skos:notation "DIVORCED" .
+
+vocab:MaritalWidowed a skos:Concept ;
+    skos:prefLabel "Widowed"@en ;
+    skos:altLabel "Widow"@en, "Widower"@en ;
+    skos:definition "Spouse has passed away"@en ;
+    skos:inScheme vocab:MaritalStatusOptions ;
+    skos:notation "WIDOWED" .
+
+vocab:MaritalSeparated a skos:Concept ;
+    skos:prefLabel "Separated"@en ;
+    skos:definition "Married but living separately from spouse"@en ;
+    skos:inScheme vocab:MaritalStatusOptions ;
+    skos:notation "SEPARATED" .
+
+vocab:MaritalCohabiting a skos:Concept ;
+    skos:prefLabel "Cohabiting"@en ;
+    skos:altLabel "Living together"@en, "Common law"@en, "Partner"@en ;
+    skos:definition "Living with a partner but not legally married or in civil partnership"@en ;
+    skos:inScheme vocab:MaritalStatusOptions ;
+    skos:notation "COHABITING" .
+
+# ==============================================================================
+# Gender Options
+# ==============================================================================
+vocab:GenderOptions a skos:ConceptScheme ;
+    skos:prefLabel "Gender Options"@en ;
+    skos:definition "Gender options for insurance purposes"@en .
+
+vocab:GenderMale a skos:Concept ;
+    skos:prefLabel "Male"@en ;
+    skos:altLabel "Man"@en, "M"@en ;
+    skos:definition "Male gender identity"@en ;
+    skos:inScheme vocab:GenderOptions ;
+    skos:notation "MALE" .
+
+vocab:GenderFemale a skos:Concept ;
+    skos:prefLabel "Female"@en ;
+    skos:altLabel "Woman"@en, "F"@en ;
+    skos:definition "Female gender identity"@en ;
+    skos:inScheme vocab:GenderOptions ;
+    skos:notation "FEMALE" .
+
+vocab:GenderOther a skos:Concept ;
+    skos:prefLabel "Other"@en ;
+    skos:altLabel "Non-binary"@en, "Gender diverse"@en ;
+    skos:definition "Gender identity other than male or female"@en ;
+    skos:inScheme vocab:GenderOptions ;
+    skos:notation "OTHER" .
+
+vocab:GenderPreferNotToSay a skos:Concept ;
+    skos:prefLabel "Prefer not to say"@en ;
+    skos:altLabel "Not specified"@en, "Undisclosed"@en ;
+    skos:definition "Prefers not to disclose gender"@en ;
+    skos:inScheme vocab:GenderOptions ;
+    skos:notation "NOT_SPECIFIED" .
+
+# ==============================================================================
+# UK Licence Types
+# ==============================================================================
+vocab:UKLicenceTypes a skos:ConceptScheme ;
+    skos:prefLabel "UK Licence Types"@en ;
+    skos:definition "Types of UK driving licences"@en .
+
+vocab:LicenceFullUK a skos:Concept ;
+    skos:prefLabel "Full UK Licence"@en ;
+    skos:altLabel "Full"@en, "Full licence"@en, "UK full"@en ;
+    skos:definition "Full UK driving licence entitling holder to drive unsupervised"@en ;
+    skos:inScheme vocab:UKLicenceTypes ;
+    skos:notation "FULL_UK" .
+
+vocab:LicenceProvisional a skos:Concept ;
+    skos:prefLabel "Provisional Licence"@en ;
+    skos:altLabel "Provisional"@en, "Learner"@en, "L plates"@en ;
+    skos:definition "Provisional driving licence for learner drivers"@en ;
+    skos:inScheme vocab:UKLicenceTypes ;
+    skos:notation "PROVISIONAL" .
+
+vocab:LicenceEU a skos:Concept ;
+    skos:prefLabel "EU Licence"@en ;
+    skos:altLabel "European"@en, "EU"@en, "EEA licence"@en ;
+    skos:definition "Driving licence from an EU/EEA member state"@en ;
+    skos:inScheme vocab:UKLicenceTypes ;
+    skos:notation "EU" .
+
+vocab:LicenceInternational a skos:Concept ;
+    skos:prefLabel "International Licence"@en ;
+    skos:altLabel "International"@en, "Foreign"@en, "Overseas"@en ;
+    skos:definition "International Driving Permit or non-EU foreign licence"@en ;
+    skos:inScheme vocab:UKLicenceTypes ;
+    skos:notation "INTERNATIONAL" .
+
+vocab:LicenceAutomatic a skos:Concept ;
+    skos:prefLabel "Automatic Only"@en ;
+    skos:altLabel "Automatic"@en, "Auto only"@en ;
+    skos:definition "Full UK licence restricted to automatic transmission vehicles only"@en ;
+    skos:inScheme vocab:UKLicenceTypes ;
+    skos:notation "AUTOMATIC_ONLY" .
+
+# ==============================================================================
+# Employment Status Options
+# ==============================================================================
+vocab:EmploymentStatusOptions a skos:ConceptScheme ;
+    skos:prefLabel "Employment Status Options"@en ;
+    skos:definition "Employment status categories for UK insurance"@en .
+
+vocab:EmployedFullTime a skos:Concept ;
+    skos:prefLabel "Employed - Full Time"@en ;
+    skos:altLabel "Full time employee"@en, "Full time"@en, "Employed full time"@en ;
+    skos:definition "Working as an employee for 30+ hours per week"@en ;
+    skos:inScheme vocab:EmploymentStatusOptions ;
+    skos:notation "EMPLOYED_FT" .
+
+vocab:EmployedPartTime a skos:Concept ;
+    skos:prefLabel "Employed - Part Time"@en ;
+    skos:altLabel "Part time employee"@en, "Part time"@en, "Employed part time"@en ;
+    skos:definition "Working as an employee for less than 30 hours per week"@en ;
+    skos:inScheme vocab:EmploymentStatusOptions ;
+    skos:notation "EMPLOYED_PT" .
+
+vocab:SelfEmployed a skos:Concept ;
+    skos:prefLabel "Self Employed"@en ;
+    skos:altLabel "Self-employed"@en, "Own business"@en, "Freelance"@en, "Contractor"@en ;
+    skos:definition "Running own business or working as a freelancer/contractor"@en ;
+    skos:inScheme vocab:EmploymentStatusOptions ;
+    skos:notation "SELF_EMPLOYED" .
+
+vocab:Unemployed a skos:Concept ;
+    skos:prefLabel "Unemployed"@en ;
+    skos:altLabel "Not working"@en, "Job seeker"@en, "Out of work"@en ;
+    skos:definition "Currently not in employment but available for work"@en ;
+    skos:inScheme vocab:EmploymentStatusOptions ;
+    skos:notation "UNEMPLOYED" .
+
+vocab:Retired a skos:Concept ;
+    skos:prefLabel "Retired"@en ;
+    skos:altLabel "Pensioner"@en, "OAP"@en ;
+    skos:definition "No longer working, receiving pension"@en ;
+    skos:inScheme vocab:EmploymentStatusOptions ;
+    skos:notation "RETIRED" .
+
+vocab:Student a skos:Concept ;
+    skos:prefLabel "Student"@en ;
+    skos:altLabel "In education"@en, "Full time student"@en, "University student"@en ;
+    skos:definition "Currently enrolled in full-time education"@en ;
+    skos:inScheme vocab:EmploymentStatusOptions ;
+    skos:notation "STUDENT" .
+
+vocab:Homemaker a skos:Concept ;
+    skos:prefLabel "Homemaker"@en ;
+    skos:altLabel "Housewife"@en, "Househusband"@en, "House person"@en, "Stay at home"@en ;
+    skos:definition "Not employed outside the home, managing household"@en ;
+    skos:inScheme vocab:EmploymentStatusOptions ;
+    skos:notation "HOMEMAKER" .
+
+vocab:NotEmployedDueToIllness a skos:Concept ;
+    skos:prefLabel "Not Employed Due to Illness"@en ;
+    skos:altLabel "Disabled"@en, "Long term sick"@en, "Unable to work"@en ;
+    skos:definition "Unable to work due to illness or disability"@en ;
+    skos:inScheme vocab:EmploymentStatusOptions ;
+    skos:notation "ILL_DISABLED" .
+
+vocab:Carer a skos:Concept ;
+    skos:prefLabel "Carer"@en ;
+    skos:altLabel "Full time carer"@en, "Looking after family"@en ;
+    skos:definition "Providing unpaid care for family member or friend"@en ;
+    skos:inScheme vocab:EmploymentStatusOptions ;
+    skos:notation "CARER" .
+
+vocab:ZeroHoursContract a skos:Concept ;
+    skos:prefLabel "Zero Hours Contract"@en ;
+    skos:altLabel "Casual worker"@en, "Zero hours"@en ;
+    skos:definition "Employed on a zero-hours or casual contract"@en ;
+    skos:inScheme vocab:EmploymentStatusOptions ;
+    skos:notation "ZERO_HOURS" .
+
+# ==============================================================================
+# UK Occupation Types (Common for Insurance)
+# ==============================================================================
+vocab:OccupationTypes a skos:ConceptScheme ;
+    skos:prefLabel "Occupation Types"@en ;
+    skos:definition "Common occupation types for UK motor insurance"@en .
+
+vocab:OccupAccountant a skos:Concept ;
+    skos:prefLabel "Accountant"@en ;
+    skos:altLabel "Chartered accountant"@en, "Tax accountant"@en, "Auditor"@en ;
+    skos:definition "Professional dealing with financial accounts and taxation"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "ACCOUNTANT" .
+
+vocab:OccupAdministrator a skos:Concept ;
+    skos:prefLabel "Administrator"@en ;
+    skos:altLabel "Admin"@en, "Office administrator"@en, "Clerical"@en ;
+    skos:definition "Office-based administrative role"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "ADMINISTRATOR" .
+
+vocab:OccupBarrister a skos:Concept ;
+    skos:prefLabel "Barrister"@en ;
+    skos:altLabel "Lawyer"@en, "Advocate"@en, "QC"@en ;
+    skos:definition "Legal professional specialising in courtroom advocacy"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "BARRISTER" .
+
+vocab:OccupBuilder a skos:Concept ;
+    skos:prefLabel "Builder"@en ;
+    skos:altLabel "Construction worker"@en, "Bricklayer"@en, "Tradesman"@en ;
+    skos:definition "Construction industry worker"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "BUILDER" .
+
+vocab:OccupBusinessOwner a skos:Concept ;
+    skos:prefLabel "Business Owner"@en ;
+    skos:altLabel "Company director"@en, "Managing director"@en, "MD"@en, "CEO"@en ;
+    skos:definition "Owner or director of a business"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "BUSINESS_OWNER" .
+
+vocab:OccupCivilServant a skos:Concept ;
+    skos:prefLabel "Civil Servant"@en ;
+    skos:altLabel "Government employee"@en, "Public sector"@en ;
+    skos:definition "Employee of central or local government"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "CIVIL_SERVANT" .
+
+vocab:OccupDeliveryDriver a skos:Concept ;
+    skos:prefLabel "Delivery Driver"@en ;
+    skos:altLabel "Courier"@en, "Van driver"@en, "Parcel delivery"@en ;
+    skos:definition "Professional delivery or courier driver"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "DELIVERY_DRIVER" .
+
+vocab:OccupDoctor a skos:Concept ;
+    skos:prefLabel "Doctor"@en ;
+    skos:altLabel "Medical doctor"@en, "GP"@en, "Physician"@en, "Surgeon"@en ;
+    skos:definition "Qualified medical practitioner"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "DOCTOR" .
+
+vocab:OccupElectrician a skos:Concept ;
+    skos:prefLabel "Electrician"@en ;
+    skos:altLabel "Electrical engineer"@en, "Sparky"@en ;
+    skos:definition "Qualified electrical tradesperson"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "ELECTRICIAN" .
+
+vocab:OccupEngineer a skos:Concept ;
+    skos:prefLabel "Engineer"@en ;
+    skos:altLabel "Engineering"@en, "Technical engineer"@en ;
+    skos:definition "Professional engineer in various disciplines"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "ENGINEER" .
+
+vocab:OccupFactoryWorker a skos:Concept ;
+    skos:prefLabel "Factory Worker"@en ;
+    skos:altLabel "Manufacturing"@en, "Production worker"@en, "Assembly"@en ;
+    skos:definition "Employee in manufacturing or production facility"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "FACTORY_WORKER" .
+
+vocab:OccupFarmer a skos:Concept ;
+    skos:prefLabel "Farmer"@en ;
+    skos:altLabel "Agricultural worker"@en, "Farm worker"@en ;
+    skos:definition "Agricultural business owner or worker"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "FARMER" .
+
+vocab:OccupHairdresser a skos:Concept ;
+    skos:prefLabel "Hairdresser"@en ;
+    skos:altLabel "Barber"@en, "Stylist"@en, "Hair stylist"@en ;
+    skos:definition "Professional hair care and styling"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "HAIRDRESSER" .
+
+vocab:OccupITprofessional a skos:Concept ;
+    skos:prefLabel "IT Professional"@en ;
+    skos:altLabel "Software developer"@en, "Programmer"@en, "IT consultant"@en, "Developer"@en ;
+    skos:definition "Information technology specialist"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "IT_PROFESSIONAL" .
+
+vocab:OccupManager a skos:Concept ;
+    skos:prefLabel "Manager"@en ;
+    skos:altLabel "Office manager"@en, "Team leader"@en, "Supervisor"@en ;
+    skos:definition "Management or supervisory role"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "MANAGER" .
+
+vocab:OccupMechanic a skos:Concept ;
+    skos:prefLabel "Mechanic"@en ;
+    skos:altLabel "Motor mechanic"@en, "Car mechanic"@en, "Vehicle technician"@en ;
+    skos:definition "Vehicle repair and maintenance technician"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "MECHANIC" .
+
+vocab:OccupNurse a skos:Concept ;
+    skos:prefLabel "Nurse"@en ;
+    skos:altLabel "Registered nurse"@en, "RN"@en, "Healthcare"@en ;
+    skos:definition "Registered nursing professional"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "NURSE" .
+
+vocab:OccupPlumber a skos:Concept ;
+    skos:prefLabel "Plumber"@en ;
+    skos:altLabel "Gas engineer"@en, "Heating engineer"@en ;
+    skos:definition "Plumbing and heating tradesperson"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "PLUMBER" .
+
+vocab:OccupPoliceOfficer a skos:Concept ;
+    skos:prefLabel "Police Officer"@en ;
+    skos:altLabel "Policeman"@en, "Policewoman"@en, "Constable"@en ;
+    skos:definition "Serving police officer"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "POLICE_OFFICER" .
+
+vocab:OccupRetail a skos:Concept ;
+    skos:prefLabel "Retail Assistant"@en ;
+    skos:altLabel "Shop assistant"@en, "Sales assistant"@en, "Retail"@en ;
+    skos:definition "Retail shop or store worker"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "RETAIL" .
+
+vocab:OccupSalesRep a skos:Concept ;
+    skos:prefLabel "Sales Representative"@en ;
+    skos:altLabel "Sales rep"@en, "Salesperson"@en, "Account manager"@en ;
+    skos:definition "Professional sales role"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "SALES_REP" .
+
+vocab:OccupSolicitor a skos:Concept ;
+    skos:prefLabel "Solicitor"@en ;
+    skos:altLabel "Lawyer"@en, "Legal professional"@en ;
+    skos:definition "Legal professional handling legal matters"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "SOLICITOR" .
+
+vocab:OccupTeacher a skos:Concept ;
+    skos:prefLabel "Teacher"@en ;
+    skos:altLabel "School teacher"@en, "Lecturer"@en, "Education"@en ;
+    skos:definition "Educational profession"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "TEACHER" .
+
+vocab:OccupWarehouseWorker a skos:Concept ;
+    skos:prefLabel "Warehouse Worker"@en ;
+    skos:altLabel "Warehouse operative"@en, "Picker packer"@en, "Logistics"@en ;
+    skos:definition "Warehouse and distribution worker"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "WAREHOUSE" .
+
+vocab:OccupOther a skos:Concept ;
+    skos:prefLabel "Other"@en ;
+    skos:altLabel "Not listed"@en ;
+    skos:definition "Occupation not listed in standard categories"@en ;
+    skos:inScheme vocab:OccupationTypes ;
+    skos:notation "OTHER" .
+
+# ==============================================================================
+# Industry Sector Options
+# ==============================================================================
+vocab:IndustrySectorOptions a skos:ConceptScheme ;
+    skos:prefLabel "Industry Sectors"@en ;
+    skos:definition "UK industry sectors for insurance purposes"@en .
+
+vocab:SectorAgriculture a skos:Concept ;
+    skos:prefLabel "Agriculture, Forestry & Fishing"@en ;
+    skos:altLabel "Farming"@en, "Agriculture"@en ;
+    skos:definition "Agricultural, forestry and fishing industries"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "AGRICULTURE" .
+
+vocab:SectorConstruction a skos:Concept ;
+    skos:prefLabel "Construction"@en ;
+    skos:altLabel "Building"@en, "Building trade"@en ;
+    skos:definition "Construction and building industry"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "CONSTRUCTION" .
+
+vocab:SectorEducation a skos:Concept ;
+    skos:prefLabel "Education"@en ;
+    skos:altLabel "Schools"@en, "Teaching"@en, "Academia"@en ;
+    skos:definition "Education sector including schools and universities"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "EDUCATION" .
+
+vocab:SectorFinance a skos:Concept ;
+    skos:prefLabel "Finance & Insurance"@en ;
+    skos:altLabel "Banking"@en, "Financial services"@en ;
+    skos:definition "Financial services and insurance sector"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "FINANCE" .
+
+vocab:SectorHealthcare a skos:Concept ;
+    skos:prefLabel "Health & Social Care"@en ;
+    skos:altLabel "NHS"@en, "Healthcare"@en, "Medical"@en ;
+    skos:definition "Health and social care services"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "HEALTHCARE" .
+
+vocab:SectorHospitality a skos:Concept ;
+    skos:prefLabel "Hospitality & Leisure"@en ;
+    skos:altLabel "Hotels"@en, "Restaurants"@en, "Tourism"@en, "Catering"@en ;
+    skos:definition "Hotels, restaurants, tourism and leisure"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "HOSPITALITY" .
+
+vocab:SectorIT a skos:Concept ;
+    skos:prefLabel "Information Technology"@en ;
+    skos:altLabel "IT"@en, "Tech"@en, "Software"@en, "Computing"@en ;
+    skos:definition "Information technology and computing"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "IT" .
+
+vocab:SectorManufacturing a skos:Concept ;
+    skos:prefLabel "Manufacturing"@en ;
+    skos:altLabel "Production"@en, "Factory"@en ;
+    skos:definition "Manufacturing and production industry"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "MANUFACTURING" .
+
+vocab:SectorMedia a skos:Concept ;
+    skos:prefLabel "Media & Entertainment"@en ;
+    skos:altLabel "TV"@en, "Film"@en, "Broadcasting"@en, "Creative"@en ;
+    skos:definition "Media, entertainment and creative industries"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "MEDIA" .
+
+vocab:SectorPublicSector a skos:Concept ;
+    skos:prefLabel "Public Sector"@en ;
+    skos:altLabel "Government"@en, "Civil service"@en, "Council"@en ;
+    skos:definition "Government and public sector"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "PUBLIC_SECTOR" .
+
+vocab:SectorRetail a skos:Concept ;
+    skos:prefLabel "Retail & Wholesale"@en ;
+    skos:altLabel "Shops"@en, "Retail"@en, "Wholesale"@en ;
+    skos:definition "Retail and wholesale trade"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "RETAIL" .
+
+vocab:SectorTransport a skos:Concept ;
+    skos:prefLabel "Transport & Logistics"@en ;
+    skos:altLabel "Haulage"@en, "Distribution"@en, "Delivery"@en ;
+    skos:definition "Transport, logistics and distribution"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "TRANSPORT" .
+
+vocab:SectorProfessionalServices a skos:Concept ;
+    skos:prefLabel "Professional Services"@en ;
+    skos:altLabel "Consulting"@en, "Legal"@en, "Accounting"@en ;
+    skos:definition "Professional and business services"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "PROFESSIONAL" .
+
+vocab:SectorOther a skos:Concept ;
+    skos:prefLabel "Other"@en ;
+    skos:altLabel "Not listed"@en ;
+    skos:definition "Industry not listed in standard categories"@en ;
+    skos:inScheme vocab:IndustrySectorOptions ;
+    skos:notation "OTHER" .
+
+# ==============================================================================
+# Vehicle Primary Use Options
+# ==============================================================================
+vocab:VehicleUseOptions a skos:ConceptScheme ;
+    skos:prefLabel "Vehicle Primary Use"@en ;
+    skos:definition "Primary use categories for vehicles"@en .
+
+vocab:UseSocialDomestic a skos:Concept ;
+    skos:prefLabel "Social, Domestic & Pleasure"@en ;
+    skos:altLabel "Social only"@en, "Pleasure only"@en, "SDP"@en, "Personal use"@en ;
+    skos:definition "Vehicle used only for personal, social and leisure purposes - not for commuting"@en ;
+    skos:inScheme vocab:VehicleUseOptions ;
+    skos:notation "SDP" .
+
+vocab:UseCommuting a skos:Concept ;
+    skos:prefLabel "Social & Commuting"@en ;
+    skos:altLabel "Commuting"@en, "Work travel"@en, "SDPC"@en ;
+    skos:definition "Social, domestic, pleasure plus commuting to a single place of work"@en ;
+    skos:inScheme vocab:VehicleUseOptions ;
+    skos:notation "SDPC" .
+
+vocab:UseBusinessUse a skos:Concept ;
+    skos:prefLabel "Business Use"@en ;
+    skos:altLabel "Business"@en, "Work use"@en, "Class 1 business"@en ;
+    skos:definition "Used in connection with the policyholder's business, visiting clients etc."@en ;
+    skos:inScheme vocab:VehicleUseOptions ;
+    skos:notation "BUSINESS" .
+
+vocab:UseCommercial a skos:Concept ;
+    skos:prefLabel "Commercial Use"@en ;
+    skos:altLabel "Commercial"@en, "Carriage of goods"@en ;
+    skos:definition "Commercial use including carriage of goods for hire or reward"@en ;
+    skos:inScheme vocab:VehicleUseOptions ;
+    skos:notation "COMMERCIAL" .
+
+vocab:UseHireReward a skos:Concept ;
+    skos:prefLabel "Hire & Reward"@en ;
+    skos:altLabel "Taxi"@en, "Private hire"@en, "Rideshare"@en ;
+    skos:definition "Carrying passengers for payment including taxi and rideshare"@en ;
+    skos:inScheme vocab:VehicleUseOptions ;
+    skos:notation "HIRE_REWARD" .
+
+# ==============================================================================
+# Parking Location Options
+# ==============================================================================
+vocab:ParkingLocationOptions a skos:ConceptScheme ;
+    skos:prefLabel "Parking Location Options"@en ;
+    skos:definition "Where the vehicle is kept overnight"@en .
+
+vocab:ParkGarage a skos:Concept ;
+    skos:prefLabel "Garage"@en ;
+    skos:altLabel "Locked garage"@en, "Private garage"@en ;
+    skos:definition "Kept in a locked garage attached to or near the home"@en ;
+    skos:inScheme vocab:ParkingLocationOptions ;
+    skos:notation "GARAGE" .
+
+vocab:ParkDriveway a skos:Concept ;
+    skos:prefLabel "Driveway"@en ;
+    skos:altLabel "Drive"@en, "Private drive"@en ;
+    skos:definition "Kept on a private driveway"@en ;
+    skos:inScheme vocab:ParkingLocationOptions ;
+    skos:notation "DRIVEWAY" .
+
+vocab:ParkStreet a skos:Concept ;
+    skos:prefLabel "Street"@en ;
+    skos:altLabel "Road"@en, "Public road"@en, "On street"@en, "Kerbside"@en ;
+    skos:definition "Kept on a public road or street"@en ;
+    skos:inScheme vocab:ParkingLocationOptions ;
+    skos:notation "STREET" .
+
+vocab:ParkCarPark a skos:Concept ;
+    skos:prefLabel "Car Park"@en ;
+    skos:altLabel "Parking lot"@en, "Private car park"@en ;
+    skos:definition "Kept in a private or public car park"@en ;
+    skos:inScheme vocab:ParkingLocationOptions ;
+    skos:notation "CAR_PARK" .
+
+vocab:ParkCompoundSecured a skos:Concept ;
+    skos:prefLabel "Secured Compound"@en ;
+    skos:altLabel "Secure compound"@en, "Locked compound"@en ;
+    skos:definition "Kept in a secured, locked compound"@en ;
+    skos:inScheme vocab:ParkingLocationOptions ;
+    skos:notation "COMPOUND_SECURED" .
+
+vocab:ParkUnderground a skos:Concept ;
+    skos:prefLabel "Underground Car Park"@en ;
+    skos:altLabel "Underground parking"@en, "Basement parking"@en ;
+    skos:definition "Kept in an underground parking facility"@en ;
+    skos:inScheme vocab:ParkingLocationOptions ;
+    skos:notation "UNDERGROUND" .
+
+# ==============================================================================
+# Fuel Type Options
+# ==============================================================================
+vocab:FuelTypeOptions a skos:ConceptScheme ;
+    skos:prefLabel "Fuel Type Options"@en ;
+    skos:definition "Vehicle fuel type categories"@en .
+
+vocab:FuelPetrol a skos:Concept ;
+    skos:prefLabel "Petrol"@en ;
+    skos:altLabel "Gasoline"@en, "Unleaded"@en, "Benzine"@en ;
+    skos:definition "Petrol/gasoline powered vehicle"@en ;
+    skos:inScheme vocab:FuelTypeOptions ;
+    skos:notation "PETROL" .
+
+vocab:FuelDiesel a skos:Concept ;
+    skos:prefLabel "Diesel"@en ;
+    skos:altLabel "Derv"@en ;
+    skos:definition "Diesel powered vehicle"@en ;
+    skos:inScheme vocab:FuelTypeOptions ;
+    skos:notation "DIESEL" .
+
+vocab:FuelElectric a skos:Concept ;
+    skos:prefLabel "Electric"@en ;
+    skos:altLabel "EV"@en, "Battery electric"@en, "BEV"@en, "Full electric"@en ;
+    skos:definition "Fully electric battery vehicle"@en ;
+    skos:inScheme vocab:FuelTypeOptions ;
+    skos:notation "ELECTRIC" .
+
+vocab:FuelHybridPetrol a skos:Concept ;
+    skos:prefLabel "Hybrid (Petrol)"@en ;
+    skos:altLabel "Petrol hybrid"@en, "Self-charging hybrid"@en, "HEV"@en ;
+    skos:definition "Petrol-electric hybrid without plug-in charging"@en ;
+    skos:inScheme vocab:FuelTypeOptions ;
+    skos:notation "HYBRID_PETROL" .
+
+vocab:FuelHybridDiesel a skos:Concept ;
+    skos:prefLabel "Hybrid (Diesel)"@en ;
+    skos:altLabel "Diesel hybrid"@en ;
+    skos:definition "Diesel-electric hybrid without plug-in charging"@en ;
+    skos:inScheme vocab:FuelTypeOptions ;
+    skos:notation "HYBRID_DIESEL" .
+
+vocab:FuelPluginHybridPetrol a skos:Concept ;
+    skos:prefLabel "Plug-in Hybrid (Petrol)"@en ;
+    skos:altLabel "PHEV"@en, "Plug-in petrol"@en, "Petrol PHEV"@en ;
+    skos:definition "Petrol plug-in hybrid with external charging capability"@en ;
+    skos:inScheme vocab:FuelTypeOptions ;
+    skos:notation "PHEV_PETROL" .
+
+vocab:FuelPluginHybridDiesel a skos:Concept ;
+    skos:prefLabel "Plug-in Hybrid (Diesel)"@en ;
+    skos:altLabel "Diesel PHEV"@en, "Plug-in diesel"@en ;
+    skos:definition "Diesel plug-in hybrid with external charging capability"@en ;
+    skos:inScheme vocab:FuelTypeOptions ;
+    skos:notation "PHEV_DIESEL" .
+
+vocab:FuelLPG a skos:Concept ;
+    skos:prefLabel "LPG"@en ;
+    skos:altLabel "Liquid petroleum gas"@en, "Autogas"@en ;
+    skos:definition "Liquefied petroleum gas powered vehicle"@en ;
+    skos:inScheme vocab:FuelTypeOptions ;
+    skos:notation "LPG" .
+
+vocab:FuelHydrogen a skos:Concept ;
+    skos:prefLabel "Hydrogen"@en ;
+    skos:altLabel "Fuel cell"@en, "FCEV"@en, "Hydrogen fuel cell"@en ;
+    skos:definition "Hydrogen fuel cell electric vehicle"@en ;
+    skos:inScheme vocab:FuelTypeOptions ;
+    skos:notation "HYDROGEN" .
+
+# ==============================================================================
+# Relationship to Proposer Options
+# ==============================================================================
+vocab:RelationshipOptions a skos:ConceptScheme ;
+    skos:prefLabel "Relationship to Proposer"@en ;
+    skos:definition "Relationship of additional driver to main policyholder"@en .
+
+vocab:RelSpouse a skos:Concept ;
+    skos:prefLabel "Spouse"@en ;
+    skos:altLabel "Husband"@en, "Wife"@en, "Married partner"@en ;
+    skos:definition "Legal spouse of the policyholder"@en ;
+    skos:inScheme vocab:RelationshipOptions ;
+    skos:notation "SPOUSE" .
+
+vocab:RelCivilPartner a skos:Concept ;
+    skos:prefLabel "Civil Partner"@en ;
+    skos:altLabel "Partner"@en ;
+    skos:definition "Civil partner of the policyholder"@en ;
+    skos:inScheme vocab:RelationshipOptions ;
+    skos:notation "CIVIL_PARTNER" .
+
+vocab:RelCohabitee a skos:Concept ;
+    skos:prefLabel "Cohabitee"@en ;
+    skos:altLabel "Partner"@en, "Common law partner"@en, "Living together"@en ;
+    skos:definition "Unmarried partner living with the policyholder"@en ;
+    skos:inScheme vocab:RelationshipOptions ;
+    skos:notation "COHABITEE" .
+
+vocab:RelParent a skos:Concept ;
+    skos:prefLabel "Parent"@en ;
+    skos:altLabel "Mother"@en, "Father"@en, "Mum"@en, "Dad"@en ;
+    skos:definition "Parent of the policyholder"@en ;
+    skos:inScheme vocab:RelationshipOptions ;
+    skos:notation "PARENT" .
+
+vocab:RelChild a skos:Concept ;
+    skos:prefLabel "Son/Daughter"@en ;
+    skos:altLabel "Child"@en, "Son"@en, "Daughter"@en ;
+    skos:definition "Son or daughter of the policyholder"@en ;
+    skos:inScheme vocab:RelationshipOptions ;
+    skos:notation "CHILD" .
+
+vocab:RelSibling a skos:Concept ;
+    skos:prefLabel "Brother/Sister"@en ;
+    skos:altLabel "Sibling"@en, "Brother"@en, "Sister"@en ;
+    skos:definition "Brother or sister of the policyholder"@en ;
+    skos:inScheme vocab:RelationshipOptions ;
+    skos:notation "SIBLING" .
+
+vocab:RelFriend a skos:Concept ;
+    skos:prefLabel "Friend"@en ;
+    skos:altLabel "Mate"@en ;
+    skos:definition "Friend of the policyholder"@en ;
+    skos:inScheme vocab:RelationshipOptions ;
+    skos:notation "FRIEND" .
+
+vocab:RelEmployee a skos:Concept ;
+    skos:prefLabel "Employee"@en ;
+    skos:altLabel "Staff"@en, "Worker"@en ;
+    skos:definition "Employee of the policyholder"@en ;
+    skos:inScheme vocab:RelationshipOptions ;
+    skos:notation "EMPLOYEE" .
+
+vocab:RelEmployer a skos:Concept ;
+    skos:prefLabel "Employer"@en ;
+    skos:altLabel "Boss"@en ;
+    skos:definition "Employer of the policyholder"@en ;
+    skos:inScheme vocab:RelationshipOptions ;
+    skos:notation "EMPLOYER" .
+
+vocab:RelOther a skos:Concept ;
+    skos:prefLabel "Other"@en ;
+    skos:definition "Other relationship not listed"@en ;
+    skos:inScheme vocab:RelationshipOptions ;
+    skos:notation "OTHER" .
+
+# ==============================================================================
+# Payment Frequency Options
+# ==============================================================================
+vocab:PaymentFrequencyOptions a skos:ConceptScheme ;
+    skos:prefLabel "Payment Frequency"@en ;
+    skos:definition "How often premium payments are made"@en .
+
+vocab:PayAnnual a skos:Concept ;
+    skos:prefLabel "Annual"@en ;
+    skos:altLabel "Yearly"@en, "Once a year"@en, "Pay in full"@en ;
+    skos:definition "Single annual payment for the full premium"@en ;
+    skos:inScheme vocab:PaymentFrequencyOptions ;
+    skos:notation "ANNUAL" .
+
+vocab:PayMonthly a skos:Concept ;
+    skos:prefLabel "Monthly"@en ;
+    skos:altLabel "Per month"@en, "12 payments"@en ;
+    skos:definition "Spread cost over 12 monthly payments"@en ;
+    skos:inScheme vocab:PaymentFrequencyOptions ;
+    skos:notation "MONTHLY" .
+
+# ==============================================================================
+# Payment Method Options
+# ==============================================================================
+vocab:PaymentMethodOptions a skos:ConceptScheme ;
+    skos:prefLabel "Payment Methods"@en ;
+    skos:definition "Available payment methods for insurance"@en .
+
+vocab:PayMethodDebit a skos:Concept ;
+    skos:prefLabel "Debit Card"@en ;
+    skos:altLabel "Bank card"@en, "Visa debit"@en ;
+    skos:definition "Payment by debit card"@en ;
+    skos:inScheme vocab:PaymentMethodOptions ;
+    skos:notation "DEBIT_CARD" .
+
+vocab:PayMethodCredit a skos:Concept ;
+    skos:prefLabel "Credit Card"@en ;
+    skos:altLabel "Visa"@en, "Mastercard"@en ;
+    skos:definition "Payment by credit card"@en ;
+    skos:inScheme vocab:PaymentMethodOptions ;
+    skos:notation "CREDIT_CARD" .
+
+vocab:PayMethodDirectDebit a skos:Concept ;
+    skos:prefLabel "Direct Debit"@en ;
+    skos:altLabel "DD"@en, "Bank transfer"@en ;
+    skos:definition "Automatic payment from bank account via Direct Debit"@en ;
+    skos:inScheme vocab:PaymentMethodOptions ;
+    skos:notation "DIRECT_DEBIT" .
+
+# ==============================================================================
+# No Claims Discount Years Options
+# ==============================================================================
+vocab:NCDYearsOptions a skos:ConceptScheme ;
+    skos:prefLabel "No Claims Discount Years"@en ;
+    skos:definition "Number of years no claims bonus"@en .
+
+vocab:NCD0 a skos:Concept ;
+    skos:prefLabel "0 years"@en ;
+    skos:altLabel "None"@en, "No NCD"@en, "Zero"@en ;
+    skos:definition "No no-claims discount"@en ;
+    skos:inScheme vocab:NCDYearsOptions ;
+    skos:notation "0" .
+
+vocab:NCD1 a skos:Concept ;
+    skos:prefLabel "1 year"@en ;
+    skos:altLabel "One year"@en ;
+    skos:definition "1 year no-claims discount"@en ;
+    skos:inScheme vocab:NCDYearsOptions ;
+    skos:notation "1" .
+
+vocab:NCD2 a skos:Concept ;
+    skos:prefLabel "2 years"@en ;
+    skos:altLabel "Two years"@en ;
+    skos:definition "2 years no-claims discount"@en ;
+    skos:inScheme vocab:NCDYearsOptions ;
+    skos:notation "2" .
+
+vocab:NCD3 a skos:Concept ;
+    skos:prefLabel "3 years"@en ;
+    skos:altLabel "Three years"@en ;
+    skos:definition "3 years no-claims discount"@en ;
+    skos:inScheme vocab:NCDYearsOptions ;
+    skos:notation "3" .
+
+vocab:NCD4 a skos:Concept ;
+    skos:prefLabel "4 years"@en ;
+    skos:altLabel "Four years"@en ;
+    skos:definition "4 years no-claims discount"@en ;
+    skos:inScheme vocab:NCDYearsOptions ;
+    skos:notation "4" .
+
+vocab:NCD5 a skos:Concept ;
+    skos:prefLabel "5 years"@en ;
+    skos:altLabel "Five years"@en ;
+    skos:definition "5 years no-claims discount"@en ;
+    skos:inScheme vocab:NCDYearsOptions ;
+    skos:notation "5" .
+
+vocab:NCD6 a skos:Concept ;
+    skos:prefLabel "6 years"@en ;
+    skos:altLabel "Six years"@en ;
+    skos:definition "6 years no-claims discount"@en ;
+    skos:inScheme vocab:NCDYearsOptions ;
+    skos:notation "6" .
+
+vocab:NCD7 a skos:Concept ;
+    skos:prefLabel "7 years"@en ;
+    skos:altLabel "Seven years"@en ;
+    skos:definition "7 years no-claims discount"@en ;
+    skos:inScheme vocab:NCDYearsOptions ;
+    skos:notation "7" .
+
+vocab:NCD8 a skos:Concept ;
+    skos:prefLabel "8 years"@en ;
+    skos:altLabel "Eight years"@en ;
+    skos:definition "8 years no-claims discount"@en ;
+    skos:inScheme vocab:NCDYearsOptions ;
+    skos:notation "8" .
+
+vocab:NCD9Plus a skos:Concept ;
+    skos:prefLabel "9+ years"@en ;
+    skos:altLabel "Nine or more"@en, "9 years"@en, "10 years"@en ;
+    skos:definition "9 or more years no-claims discount (maximum)"@en ;
+    skos:inScheme vocab:NCDYearsOptions ;
+    skos:notation "9+" .
+
+# ==============================================================================
+# Claim Type Options
+# ==============================================================================
+vocab:ClaimTypeOptions a skos:ConceptScheme ;
+    skos:prefLabel "Claim Types"@en ;
+    skos:definition "Types of motor insurance claims"@en .
+
+vocab:ClaimAccidentFault a skos:Concept ;
+    skos:prefLabel "Accident - Fault"@en ;
+    skos:altLabel "At fault accident"@en, "My fault"@en ;
+    skos:definition "Accident where policyholder was at fault"@en ;
+    skos:inScheme vocab:ClaimTypeOptions ;
+    skos:notation "ACCIDENT_FAULT" .
+
+vocab:ClaimAccidentNonFault a skos:Concept ;
+    skos:prefLabel "Accident - Non Fault"@en ;
+    skos:altLabel "Not my fault"@en, "Third party fault"@en ;
+    skos:definition "Accident where another party was at fault"@en ;
+    skos:inScheme vocab:ClaimTypeOptions ;
+    skos:notation "ACCIDENT_NON_FAULT" .
+
+vocab:ClaimTheft a skos:Concept ;
+    skos:prefLabel "Theft"@en ;
+    skos:altLabel "Vehicle stolen"@en, "Theft of vehicle"@en ;
+    skos:definition "Vehicle stolen or attempted theft"@en ;
+    skos:inScheme vocab:ClaimTypeOptions ;
+    skos:notation "THEFT" .
+
+vocab:ClaimTheftFromVehicle a skos:Concept ;
+    skos:prefLabel "Theft from Vehicle"@en ;
+    skos:altLabel "Items stolen"@en, "Contents theft"@en ;
+    skos:definition "Theft of items from the vehicle"@en ;
+    skos:inScheme vocab:ClaimTypeOptions ;
+    skos:notation "THEFT_FROM" .
+
+vocab:ClaimVandalism a skos:Concept ;
+    skos:prefLabel "Vandalism"@en ;
+    skos:altLabel "Malicious damage"@en, "Criminal damage"@en ;
+    skos:definition "Intentional damage by third party"@en ;
+    skos:inScheme vocab:ClaimTypeOptions ;
+    skos:notation "VANDALISM" .
+
+vocab:ClaimFire a skos:Concept ;
+    skos:prefLabel "Fire"@en ;
+    skos:altLabel "Vehicle fire"@en, "Arson"@en ;
+    skos:definition "Fire damage to vehicle"@en ;
+    skos:inScheme vocab:ClaimTypeOptions ;
+    skos:notation "FIRE" .
+
+vocab:ClaimWindscreen a skos:Concept ;
+    skos:prefLabel "Windscreen"@en ;
+    skos:altLabel "Glass"@en, "Window"@en, "Cracked windscreen"@en ;
+    skos:definition "Windscreen or glass damage"@en ;
+    skos:inScheme vocab:ClaimTypeOptions ;
+    skos:notation "WINDSCREEN" .
+
+vocab:ClaimStorm a skos:Concept ;
+    skos:prefLabel "Storm/Weather"@en ;
+    skos:altLabel "Weather damage"@en, "Flood"@en, "Hail"@en ;
+    skos:definition "Damage caused by weather event"@en ;
+    skos:inScheme vocab:ClaimTypeOptions ;
+    skos:notation "STORM" .
+
+vocab:ClaimAnimal a skos:Concept ;
+    skos:prefLabel "Animal"@en ;
+    skos:altLabel "Hit animal"@en, "Deer"@en ;
+    skos:definition "Damage from collision with animal"@en ;
+    skos:inScheme vocab:ClaimTypeOptions ;
+    skos:notation "ANIMAL" .
+
+vocab:ClaimParking a skos:Concept ;
+    skos:prefLabel "Parked/Hit While Parked"@en ;
+    skos:altLabel "Hit and run"@en, "Unknown third party"@en ;
+    skos:definition "Damage while parked, often by unknown party"@en ;
+    skos:inScheme vocab:ClaimTypeOptions ;
+    skos:notation "PARKING" .
+
+vocab:ClaimOther a skos:Concept ;
+    skos:prefLabel "Other"@en ;
+    skos:definition "Other type of claim not listed"@en ;
+    skos:inScheme vocab:ClaimTypeOptions ;
+    skos:notation "OTHER" .
+
+# ==============================================================================
+# Voluntary Excess Options
+# ==============================================================================
+vocab:VoluntaryExcessOptions a skos:ConceptScheme ;
+    skos:prefLabel "Voluntary Excess Options"@en ;
+    skos:definition "Additional voluntary excess amounts to reduce premium"@en .
+
+vocab:Excess0 a skos:Concept ;
+    skos:prefLabel "£0"@en ;
+    skos:altLabel "None"@en, "No voluntary excess"@en, "Zero"@en ;
+    skos:definition "No voluntary excess - compulsory excess only"@en ;
+    skos:inScheme vocab:VoluntaryExcessOptions ;
+    skos:notation "0" .
+
+vocab:Excess100 a skos:Concept ;
+    skos:prefLabel "£100"@en ;
+    skos:altLabel "100 pounds"@en, "One hundred"@en ;
+    skos:definition "£100 voluntary excess"@en ;
+    skos:inScheme vocab:VoluntaryExcessOptions ;
+    skos:notation "100" .
+
+vocab:Excess150 a skos:Concept ;
+    skos:prefLabel "£150"@en ;
+    skos:altLabel "150 pounds"@en ;
+    skos:definition "£150 voluntary excess"@en ;
+    skos:inScheme vocab:VoluntaryExcessOptions ;
+    skos:notation "150" .
+
+vocab:Excess200 a skos:Concept ;
+    skos:prefLabel "£200"@en ;
+    skos:altLabel "200 pounds"@en, "Two hundred"@en ;
+    skos:definition "£200 voluntary excess"@en ;
+    skos:inScheme vocab:VoluntaryExcessOptions ;
+    skos:notation "200" .
+
+vocab:Excess250 a skos:Concept ;
+    skos:prefLabel "£250"@en ;
+    skos:altLabel "250 pounds"@en ;
+    skos:definition "£250 voluntary excess"@en ;
+    skos:inScheme vocab:VoluntaryExcessOptions ;
+    skos:notation "250" .
+
+vocab:Excess300 a skos:Concept ;
+    skos:prefLabel "£300"@en ;
+    skos:altLabel "300 pounds"@en, "Three hundred"@en ;
+    skos:definition "£300 voluntary excess"@en ;
+    skos:inScheme vocab:VoluntaryExcessOptions ;
+    skos:notation "300" .
+
+vocab:Excess350 a skos:Concept ;
+    skos:prefLabel "£350"@en ;
+    skos:altLabel "350 pounds"@en ;
+    skos:definition "£350 voluntary excess"@en ;
+    skos:inScheme vocab:VoluntaryExcessOptions ;
+    skos:notation "350" .
+
+vocab:Excess400 a skos:Concept ;
+    skos:prefLabel "£400"@en ;
+    skos:altLabel "400 pounds"@en, "Four hundred"@en ;
+    skos:definition "£400 voluntary excess"@en ;
+    skos:inScheme vocab:VoluntaryExcessOptions ;
+    skos:notation "400" .
+
+vocab:Excess500 a skos:Concept ;
+    skos:prefLabel "£500"@en ;
+    skos:altLabel "500 pounds"@en, "Five hundred"@en ;
+    skos:definition "£500 voluntary excess"@en ;
+    skos:inScheme vocab:VoluntaryExcessOptions ;
+    skos:notation "500" .
+
+vocab:Excess750 a skos:Concept ;
+    skos:prefLabel "£750"@en ;
+    skos:altLabel "750 pounds"@en ;
+    skos:definition "£750 voluntary excess"@en ;
+    skos:inScheme vocab:VoluntaryExcessOptions ;
+    skos:notation "750" .
+
+vocab:Excess1000 a skos:Concept ;
+    skos:prefLabel "£1000"@en ;
+    skos:altLabel "1000 pounds"@en, "One thousand"@en ;
+    skos:definition "£1000 voluntary excess"@en ;
+    skos:inScheme vocab:VoluntaryExcessOptions ;
+    skos:notation "1000" .
+
+# ==============================================================================
+# Previous Insurer Options
+# ==============================================================================
+vocab:PreviousInsurerOptions a skos:ConceptScheme ;
+    skos:prefLabel "Previous Insurer"@en ;
+    skos:definition "UK motor insurance providers"@en .
+
+vocab:InsurerAdmiral a skos:Concept ;
+    skos:prefLabel "Admiral"@en ;
+    skos:altLabel "Admiral Insurance"@en ;
+    skos:definition "Admiral Group plc"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "ADMIRAL" .
+
+vocab:InsurerAviva a skos:Concept ;
+    skos:prefLabel "Aviva"@en ;
+    skos:altLabel "Norwich Union"@en ;
+    skos:definition "Aviva plc"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "AVIVA" .
+
+vocab:InsurerAxa a skos:Concept ;
+    skos:prefLabel "AXA"@en ;
+    skos:altLabel "AXA Insurance"@en ;
+    skos:definition "AXA Insurance UK"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "AXA" .
+
+vocab:InsurerChurchill a skos:Concept ;
+    skos:prefLabel "Churchill"@en ;
+    skos:definition "Churchill Insurance (Direct Line Group)"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "CHURCHILL" .
+
+vocab:InsurerDirectLine a skos:Concept ;
+    skos:prefLabel "Direct Line"@en ;
+    skos:definition "Direct Line Insurance"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "DIRECT_LINE" .
+
+vocab:InsurerEsure a skos:Concept ;
+    skos:prefLabel "Esure"@en ;
+    skos:altLabel "e-sure"@en ;
+    skos:definition "Esure Group"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "ESURE" .
+
+vocab:InsurerHastings a skos:Concept ;
+    skos:prefLabel "Hastings Direct"@en ;
+    skos:altLabel "Hastings"@en ;
+    skos:definition "Hastings Insurance Services"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "HASTINGS" .
+
+vocab:InsurerLV a skos:Concept ;
+    skos:prefLabel "LV="@en ;
+    skos:altLabel "Liverpool Victoria"@en, "LV"@en ;
+    skos:definition "Liverpool Victoria General Insurance"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "LV" .
+
+vocab:InsurerMoreThan a skos:Concept ;
+    skos:prefLabel "MORE TH>N"@en ;
+    skos:altLabel "More Than"@en ;
+    skos:definition "MORE TH>N (RSA)"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "MORETHAN" .
+
+vocab:InsurerRAC a skos:Concept ;
+    skos:prefLabel "RAC"@en ;
+    skos:altLabel "RAC Insurance"@en ;
+    skos:definition "RAC Insurance"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "RAC" .
+
+vocab:InsurerSaga a skos:Concept ;
+    skos:prefLabel "Saga"@en ;
+    skos:altLabel "Saga Insurance"@en ;
+    skos:definition "Saga Insurance (50+ specialists)"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "SAGA" .
+
+vocab:InsurerSwinton a skos:Concept ;
+    skos:prefLabel "Swinton"@en ;
+    skos:definition "Swinton Insurance"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "SWINTON" .
+
+vocab:InsurerTesco a skos:Concept ;
+    skos:prefLabel "Tesco Bank"@en ;
+    skos:altLabel "Tesco Insurance"@en ;
+    skos:definition "Tesco Bank Insurance"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "TESCO" .
+
+vocab:InsurerOther a skos:Concept ;
+    skos:prefLabel "Other"@en ;
+    skos:altLabel "Not listed"@en ;
+    skos:definition "Previous insurer not in the list"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "OTHER" .
+
+vocab:InsurerNone a skos:Concept ;
+    skos:prefLabel "No Previous Insurance"@en ;
+    skos:altLabel "First time"@en, "None"@en, "Not insured before"@en ;
+    skos:definition "No previous motor insurance"@en ;
+    skos:inScheme vocab:PreviousInsurerOptions ;
+    skos:notation "NONE" .
+
+# ==============================================================================
+# Add-on Cover Options
+# ==============================================================================
+vocab:BreakdownCoverOptions a skos:ConceptScheme ;
+    skos:prefLabel "Breakdown Cover Options"@en ;
+    skos:definition "Breakdown assistance cover levels"@en .
+
+vocab:BreakdownNone a skos:Concept ;
+    skos:prefLabel "No Breakdown Cover"@en ;
+    skos:altLabel "None"@en, "No thanks"@en ;
+    skos:definition "No breakdown cover required"@en ;
+    skos:inScheme vocab:BreakdownCoverOptions ;
+    skos:notation "NONE" .
+
+vocab:BreakdownRoadside a skos:Concept ;
+    skos:prefLabel "Roadside Assistance"@en ;
+    skos:altLabel "Roadside"@en, "Basic breakdown"@en ;
+    skos:definition "Roadside repair or recovery to nearest garage"@en ;
+    skos:inScheme vocab:BreakdownCoverOptions ;
+    skos:notation "ROADSIDE" .
+
+vocab:BreakdownHome a skos:Concept ;
+    skos:prefLabel "Home Start"@en ;
+    skos:altLabel "Home cover"@en, "At home"@en ;
+    skos:definition "Roadside plus assistance at home address"@en ;
+    skos:inScheme vocab:BreakdownCoverOptions ;
+    skos:notation "HOME_START" .
+
+vocab:BreakdownNational a skos:Concept ;
+    skos:prefLabel "National Recovery"@en ;
+    skos:altLabel "Nationwide"@en, "Recovery"@en ;
+    skos:definition "Recovery to any UK destination"@en ;
+    skos:inScheme vocab:BreakdownCoverOptions ;
+    skos:notation "NATIONAL" .
+
+vocab:BreakdownEuropean a skos:Concept ;
+    skos:prefLabel "European Cover"@en ;
+    skos:altLabel "Europe"@en, "Continental"@en ;
+    skos:definition "Full cover including European travel"@en ;
+    skos:inScheme vocab:BreakdownCoverOptions ;
+    skos:notation "EUROPEAN" .
+
+# ==============================================================================
+# Legal Expenses Cover Options
+# ==============================================================================
+vocab:LegalExpensesCoverOptions a skos:ConceptScheme ;
+    skos:prefLabel "Legal Expenses Cover"@en ;
+    skos:definition "Motor legal protection cover"@en .
+
+vocab:LegalNone a skos:Concept ;
+    skos:prefLabel "No Legal Cover"@en ;
+    skos:altLabel "None"@en, "No thanks"@en ;
+    skos:definition "No legal expenses cover"@en ;
+    skos:inScheme vocab:LegalExpensesCoverOptions ;
+    skos:notation "NONE" .
+
+vocab:LegalStandard a skos:Concept ;
+    skos:prefLabel "Motor Legal Protection"@en ;
+    skos:altLabel "Legal cover"@en, "Legal protection"@en, "MLP"@en ;
+    skos:definition "Cover for legal costs to recover uninsured losses"@en ;
+    skos:inScheme vocab:LegalExpensesCoverOptions ;
+    skos:notation "STANDARD" .
+
+# ==============================================================================
+# Courtesy Car Options
+# ==============================================================================
+vocab:CourtesyCarOptions a skos:ConceptScheme ;
+    skos:prefLabel "Courtesy Car Options"@en ;
+    skos:definition "Replacement vehicle cover options"@en .
+
+vocab:CourtesyNone a skos:Concept ;
+    skos:prefLabel "No Courtesy Car"@en ;
+    skos:altLabel "None"@en, "No thanks"@en ;
+    skos:definition "No courtesy car cover"@en ;
+    skos:inScheme vocab:CourtesyCarOptions ;
+    skos:notation "NONE" .
+
+vocab:CourtesyStandard a skos:Concept ;
+    skos:prefLabel "Standard Courtesy Car"@en ;
+    skos:altLabel "Courtesy car"@en, "Replacement car"@en ;
+    skos:definition "Small courtesy car while yours is being repaired"@en ;
+    skos:inScheme vocab:CourtesyCarOptions ;
+    skos:notation "STANDARD" .
+
+vocab:CourtesyLikeForLike a skos:Concept ;
+    skos:prefLabel "Like-for-Like"@en ;
+    skos:altLabel "Similar car"@en, "Equivalent vehicle"@en ;
+    skos:definition "Replacement vehicle of similar size and specification"@en ;
+    skos:inScheme vocab:CourtesyCarOptions ;
+    skos:notation "LIKE_FOR_LIKE" .

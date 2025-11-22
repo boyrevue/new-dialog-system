@@ -4019,6 +4019,8 @@ vocab:usesSpaceSeparator a owl:DatatypeProperty ;
     :required true ;
     :slotName "vehicle_registration" ;
     :spellingRequired true ;
+    :extractableFrom doc:V5C ;
+    mm:documentFillable true ;
     mm:hasFAQ :VehicleRegFAQ1 ;
     mm:hasTTSPrompt :VehicleRegTTS ;
     mm:hasVisualComponent :VehicleRegVisual .
@@ -4665,3 +4667,240 @@ mm:SelectOption a owl:Class ;
     rdfs:label "Select Option" ;
     rdfs:comment "A selectable option for multiple choice questions" .
 
+# ==============================================================================
+# DRIVING HISTORY SECTION - OFFENCES AND CONVICTIONS
+# ==============================================================================
+# These questions should be added to dialog-sections.ttl in the Driving History section
+
+# Main Question: Do you have any driving convictions?
+:DrivingConvictionsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Driving Convictions" ;
+    :inSection :DrivingHistorySection ;
+    :order 50 ;
+    :questionId "q_driving_convictions" ;
+    :questionText "Do you have any driving convictions or penalty points on your licence?" ;
+    :required true ;
+    :slotName "drivingConvictions" ;
+    mm:hasOption :ConvictionsYes,
+        :ConvictionsNo ;
+    mm:hasTTSPrompt :DrivingConvictionsTTS .
+
+:DrivingConvictionsTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Do you have any driving convictions or penalty points on your licence? This includes speeding tickets, driving bans, or other motoring offences." ;
+    mm:ttsVariant1 "Do you have any driving convictions or penalty points on your licence? This includes speeding tickets, driving bans, or other motoring offences." ;
+    mm:ttsVariant2 "Any penalty points or convictions on your driving record?" ;
+    mm:ttsVariant3 "Have you been convicted of any driving offences?" ;
+    mm:ttsVariant4 "Any motoring convictions or points?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+# Conditional Question: Offence Type (DVLA Code)
+:OffenceTypeQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Type of Offence" ;
+    :inSection :DrivingHistorySection ;
+    :order 51 ;
+    :questionId "q_offence_type" ;
+    :questionText "What type of offence was it?" ;
+    :required true ;
+    :slotName "offenceType" ;
+    :showIf "drivingConvictions == YES" ;
+    mm:hasOption :OffenceSP30Option,  # Speeding (most common)
+        :OffenceDR10Option,  # Drink driving
+        :OffenceCU80Option,  # Mobile phone
+        :OffenceCD10Option,  # Careless driving
+        :OffenceIN10Option,  # No insurance
+        :OffenceLC20Option,  # No licence
+        :OffenceTS10Option,  # Traffic lights
+        :OffenceDD40Option,  # Dangerous driving
+        :OffenceAC10Option,  # Fail to stop
+        :OffenceTT99Option,  # Totting up
+        :OffenceOtherOption ;  # Other
+    mm:hasTTSPrompt :OffenceTypeTTS .
+
+:OffenceTypeTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What type of offence was it? For example, speeding, drink driving, or using a mobile phone while driving." ;
+    mm:ttsVariant1 "What type of offence was it? For example, speeding, drink driving, or using a mobile phone while driving." ;
+    mm:ttsVariant2 "What was the offence?" ;
+    mm:ttsVariant3 "Tell me the type of conviction." ;
+    mm:ttsVariant4 "Which offence?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+# Select Options for Common Offences
+:OffenceSP30Option a mm:SelectOption ;
+    mm:optionValue "SP30" ;
+    mm:optionLabel "SP30 - Speeding" ;
+    mm:optionDescription "Exceeding statutory speed limit on a public road" ;
+    mm:optionAlias "speeding, speed, too fast" ;
+    mm:optionPhonetic "sierra papa three zero" ;
+    mm:optionOrder 1 .
+
+:OffenceDR10Option a mm:SelectOption ;
+    mm:optionValue "DR10" ;
+    mm:optionLabel "DR10 - Drink Driving" ;
+    mm:optionDescription "Driving with alcohol level above limit" ;
+    mm:optionAlias "drink driving, DUI, drunk, over the limit" ;
+    mm:optionPhonetic "delta romeo one zero" ;
+    mm:optionOrder 2 .
+
+:OffenceCU80Option a mm:SelectOption ;
+    mm:optionValue "CU80" ;
+    mm:optionLabel "CU80 - Mobile Phone" ;
+    mm:optionDescription "Using a mobile phone while driving" ;
+    mm:optionAlias "mobile phone, phone, texting, calling" ;
+    mm:optionPhonetic "charlie uniform eight zero" ;
+    mm:optionOrder 3 .
+
+:OffenceCD10Option a mm:SelectOption ;
+    mm:optionValue "CD10" ;
+    mm:optionLabel "CD10 - Careless Driving" ;
+    mm:optionDescription "Driving without due care and attention" ;
+    mm:optionAlias "careless driving, driving without care" ;
+    mm:optionPhonetic "charlie delta one zero" ;
+    mm:optionOrder 4 .
+
+:OffenceIN10Option a mm:SelectOption ;
+    mm:optionValue "IN10" ;
+    mm:optionLabel "IN10 - No Insurance" ;
+    mm:optionDescription "Using a vehicle uninsured against third party risks" ;
+    mm:optionAlias "no insurance, uninsured, driving without insurance" ;
+    mm:optionPhonetic "india november one zero" ;
+    mm:optionOrder 5 .
+
+:OffenceLC20Option a mm:SelectOption ;
+    mm:optionValue "LC20" ;
+    mm:optionLabel "LC20 - Driving Without Licence" ;
+    mm:optionDescription "Driving otherwise than in accordance with a licence" ;
+    mm:optionAlias "no licence, without licence, unlicensed" ;
+    mm:optionPhonetic "lima charlie two zero" ;
+    mm:optionOrder 6 .
+
+:OffenceTS10Option a mm:SelectOption ;
+    mm:optionValue "TS10" ;
+    mm:optionLabel "TS10 - Traffic Lights" ;
+    mm:optionDescription "Failing to comply with traffic light signals" ;
+    mm:optionAlias "red light, traffic lights, running red light" ;
+    mm:optionPhonetic "tango sierra one zero" ;
+    mm:optionOrder 7 .
+
+:OffenceDD40Option a mm:SelectOption ;
+    mm:optionValue "DD40" ;
+    mm:optionLabel "DD40 - Dangerous Driving" ;
+    mm:optionDescription "Dangerous driving" ;
+    mm:optionAlias "dangerous driving, reckless" ;
+    mm:optionPhonetic "delta delta four zero" ;
+    mm:optionOrder 8 .
+
+:OffenceAC10Option a mm:SelectOption ;
+    mm:optionValue "AC10" ;
+    mm:optionLabel "AC10 - Fail to Stop" ;
+    mm:optionDescription "Failing to stop after an accident" ;
+    mm:optionAlias "fail to stop, hit and run, leaving scene" ;
+    mm:optionPhonetic "alpha charlie one zero" ;
+    mm:optionOrder 9 .
+
+:OffenceTT99Option a mm:SelectOption ;
+    mm:optionValue "TT99" ;
+    mm:optionLabel "TT99 - Totting Up" ;
+    mm:optionDescription "Disqualification under totting-up (12+ points)" ;
+    mm:optionAlias "totting up, twelve points, ban" ;
+    mm:optionPhonetic "tango tango nine nine" ;
+    mm:optionOrder 10 .
+
+:OffenceOtherOption a mm:SelectOption ;
+    mm:optionValue "OTHER" ;
+    mm:optionLabel "Other Offence" ;
+    mm:optionDescription "Other driving offence not listed" ;
+    mm:optionAlias "other, different, something else" ;
+    mm:optionOrder 11 .
+
+# Conditional Question: Offence Date
+:OffenceDateQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Date of Offence" ;
+    :inSection :DrivingHistorySection ;
+    :order 52 ;
+    :questionId "q_offence_date" ;
+    :questionText "When did the offence occur?" ;
+    :required true ;
+    :slotName "offenceDate" ;
+    :showIf "drivingConvictions == YES" ;
+    :hasInputMode vocab:DateInputMode ;
+    mm:hasTTSPrompt :OffenceDateTTS .
+
+:OffenceDateTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "When did the offence occur? Please tell me the month and year." ;
+    mm:ttsVariant1 "When did the offence occur? Please tell me the month and year." ;
+    mm:ttsVariant2 "What date was the offence?" ;
+    mm:ttsVariant3 "When did this happen?" ;
+    mm:ttsVariant4 "Date of the offence?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+# Conditional Question: Penalty Points
+:PenaltyPointsQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Penalty Points" ;
+    :inSection :DrivingHistorySection ;
+    :order 53 ;
+    :questionId "q_penalty_points" ;
+    :questionText "How many penalty points did you receive?" ;
+    :required true ;
+    :slotName "penaltyPoints" ;
+    :showIf "drivingConvictions == YES" ;
+    mm:hasTTSPrompt :PenaltyPointsTTS .
+
+:PenaltyPointsTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "How many penalty points did you receive for this offence?" ;
+    mm:ttsVariant1 "How many penalty points did you receive for this offence?" ;
+    mm:ttsVariant2 "How many points?" ;
+    mm:ttsVariant3 "Number of penalty points?" ;
+    mm:ttsVariant4 "Points received?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+# Conditional Question: Fine Amount
+:FineAmountQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Fine Amount" ;
+    :inSection :DrivingHistorySection ;
+    :order 54 ;
+    :questionId "q_fine_amount" ;
+    :questionText "What was the fine amount in pounds?" ;
+    :required false ;
+    :slotName "fineAmount" ;
+    :showIf "drivingConvictions == YES" ;
+    mm:hasTTSPrompt :FineAmountTTS .
+
+:FineAmountTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "What was the fine amount in pounds? If you don't remember, you can say skip." ;
+    mm:ttsVariant1 "What was the fine amount in pounds? If you don't remember, you can say skip." ;
+    mm:ttsVariant2 "How much was the fine?" ;
+    mm:ttsVariant3 "Fine amount in pounds?" ;
+    mm:ttsVariant4 "What was the penalty?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .
+
+# Conditional Question: Ban Duration
+:BanDurationQuestion a mm:MultimodalQuestion ;
+    rdfs:label "Ban Duration" ;
+    :inSection :DrivingHistorySection ;
+    :order 55 ;
+    :questionId "q_ban_duration" ;
+    :questionText "Were you banned from driving? If yes, for how many months?" ;
+    :required false ;
+    :slotName "banDuration" ;
+    :showIf "drivingConvictions == YES" ;
+    mm:hasTTSPrompt :BanDurationTTS .
+
+:BanDurationTTS a mm:TTSPrompt ;
+    mm:ttsPitch 1.0 ;
+    mm:ttsRate 1.0 ;
+    mm:ttsText "Were you banned from driving? If yes, tell me how many months. Otherwise, say no or zero." ;
+    mm:ttsVariant1 "Were you banned from driving? If yes, tell me how many months. Otherwise, say no or zero." ;
+    mm:ttsVariant2 "Any driving ban? How long?" ;
+    mm:ttsVariant3 "Were you disqualified? For how long?" ;
+    mm:ttsVariant4 "Driving ban duration?" ;
+    mm:ttsVoice "en-GB-Neural2-A" .

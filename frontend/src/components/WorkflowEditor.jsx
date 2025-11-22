@@ -185,9 +185,9 @@ const WorkflowEditor = ({ droppedFields = [] }) => {
           onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           fitView
-          className="bg-[#1a1a1a]"
+          className="bg-white"
           style={{
-            background: 'linear-gradient(to bottom, #1a1a1a 0%, #2d2d2d 100%)'
+            background: '#ffffff'
           }}
         >
           <Controls />
@@ -209,8 +209,8 @@ const WorkflowEditor = ({ droppedFields = [] }) => {
             variant="dots"
             gap={16}
             size={1}
-            color="#444"
-            style={{ backgroundColor: '#1a1a1a' }}
+            color="#d1d5db"
+            style={{ backgroundColor: '#ffffff' }}
           />
 
           {/* Toolbar Panel - Compact with tooltip on hover */}

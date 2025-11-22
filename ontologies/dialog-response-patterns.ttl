@@ -1,0 +1,704 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix resp: <http://diggi.io/ontology/response#> .
+@prefix asr: <http://diggi.io/ontology/asr#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+# ASR Response Patterns Ontology
+<http://diggi.io/ontology/response-patterns> a owl:Ontology ;
+    rdfs:label "ASR Response Patterns Ontology" ;
+    rdfs:comment "Comprehensive collection of ASR response patterns for natural language understanding" ;
+    owl:versionInfo "1.0" .
+
+# Core Classes
+
+resp:ResponsePatternCategory a owl:Class ;
+    rdfs:label "Response Pattern Category" ;
+    rdfs:comment "Category grouping for response patterns (e.g., direct, possessive, conversational)" .
+
+resp:ResponsePattern a owl:Class ;
+    rdfs:label "Response Pattern" ;
+    rdfs:comment "A natural language pattern that users might use to respond to questions" .
+
+resp:PatternType a owl:Class ;
+    rdfs:label "Pattern Type" ;
+    rdfs:comment "Type of response pattern (simple, compound, formal, informal)" .
+
+# Properties
+
+resp:hasPattern a owl:DatatypeProperty ;
+    rdfs:label "has pattern" ;
+    rdfs:domain resp:ResponsePattern ;
+    rdfs:range xsd:string ;
+    rdfs:comment "The pattern template with <answer> placeholder" .
+
+resp:hasCategory a owl:ObjectProperty ;
+    rdfs:label "has category" ;
+    rdfs:domain resp:ResponsePattern ;
+    rdfs:range resp:ResponsePatternCategory ;
+    rdfs:comment "Links pattern to its category" .
+
+resp:hasExampleValue a owl:DatatypeProperty ;
+    rdfs:label "has example value" ;
+    rdfs:domain resp:ResponsePattern ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Example utterance using this pattern" .
+
+resp:confidenceWeight a owl:DatatypeProperty ;
+    rdfs:label "confidence weight" ;
+    rdfs:domain resp:ResponsePattern ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Weight for confidence scoring (0.0-1.0)" .
+
+resp:formality a owl:DatatypeProperty ;
+    rdfs:label "formality" ;
+    rdfs:domain resp:ResponsePattern ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Formality level: formal, neutral, informal, casual" .
+
+resp:appliesToFieldType a owl:DatatypeProperty ;
+    rdfs:label "applies to field type" ;
+    rdfs:domain resp:ResponsePattern ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Field types this pattern applies to (name, email, phone, etc.)" .
+
+# Categories
+
+resp:DirectAnswerCategory a resp:ResponsePatternCategory ;
+    rdfs:label "Direct Answer" ;
+    skos:definition "Simple direct answer without preamble" .
+
+resp:PossessiveCategory a resp:ResponsePatternCategory ;
+    rdfs:label "Possessive" ;
+    skos:definition "Answers using possessive pronouns (my X is, the X is)" .
+
+resp:DemonstrativeCategory a resp:ResponsePatternCategory ;
+    rdfs:label "Demonstrative" ;
+    skos:definition "Answers using demonstrative pronouns (it's, that's, this is)" .
+
+resp:ConversationalCategory a resp:ResponsePatternCategory ;
+    rdfs:label "Conversational" ;
+    skos:definition "Conversational responses with affirmations (sure, okay, yes)" .
+
+resp:FormalCategory a resp:ResponsePatternCategory ;
+    rdfs:label "Formal" ;
+    skos:definition "Polite and formal responses (certainly, of course)" .
+
+resp:HedgingCategory a resp:ResponsePatternCategory ;
+    rdfs:label "Hedging" ;
+    skos:definition "Uncertain or hedging responses (I think, probably)" .
+
+resp:TemporalCategory a resp:ResponsePatternCategory ;
+    rdfs:label "Temporal" ;
+    skos:definition "Time-qualified responses (right now, currently)" .
+
+resp:NameSpecificCategory a resp:ResponsePatternCategory ;
+    rdfs:label "Name-Specific" ;
+    skos:definition "Patterns specific to name questions" .
+
+# ========================================
+# DIRECT ANSWER PATTERNS
+# ========================================
+
+resp:DirectAnswer a resp:ResponsePattern ;
+    resp:hasPattern "<answer>" ;
+    resp:hasCategory resp:DirectAnswerCategory ;
+    resp:hasExampleValue "John" ;
+    resp:confidenceWeight 1.0 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+# ========================================
+# POSSESSIVE PATTERNS
+# ========================================
+
+resp:MyXIs a resp:ResponsePattern ;
+    resp:hasPattern "my {subject} is <answer>" ;
+    resp:hasCategory resp:PossessiveCategory ;
+    resp:hasExampleValue "my first name is John" ;
+    resp:confidenceWeight 1.0 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, address" .
+
+resp:MyX a resp:ResponsePattern ;
+    resp:hasPattern "my {subject} <answer>" ;
+    resp:hasCategory resp:PossessiveCategory ;
+    resp:hasExampleValue "my name John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "informal" ;
+    resp:appliesToFieldType "name, email, phone, address" .
+
+resp:TheXIs a resp:ResponsePattern ;
+    resp:hasPattern "the {subject} is <answer>" ;
+    resp:hasCategory resp:PossessiveCategory ;
+    resp:hasExampleValue "the first name is John" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name, email, phone, address" .
+
+resp:MyXContraction a resp:ResponsePattern ;
+    resp:hasPattern "my {subject}'s <answer>" ;
+    resp:hasCategory resp:PossessiveCategory ;
+    resp:hasExampleValue "my name's John" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "informal" ;
+    resp:appliesToFieldType "name, email, phone, address" .
+
+resp:MyXWouldBe a resp:ResponsePattern ;
+    resp:hasPattern "my {subject} would be <answer>" ;
+    resp:hasCategory resp:PossessiveCategory ;
+    resp:hasExampleValue "my name would be John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name, email, phone, address" .
+
+resp:MyXWillBe a resp:ResponsePattern ;
+    resp:hasPattern "my {subject} will be <answer>" ;
+    resp:hasCategory resp:PossessiveCategory ;
+    resp:hasExampleValue "my name will be John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, address" .
+
+resp:MyXWas a resp:ResponsePattern ;
+    resp:hasPattern "my {subject} was <answer>" ;
+    resp:hasCategory resp:PossessiveCategory ;
+    resp:hasExampleValue "my name was John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, address" .
+
+# ========================================
+# NAME-SPECIFIC PATTERNS
+# ========================================
+
+resp:MyNameIs a resp:ResponsePattern ;
+    resp:hasPattern "my name is <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "my name is John" ;
+    resp:confidenceWeight 1.0 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name" .
+
+resp:MyNameContraction a resp:ResponsePattern ;
+    resp:hasPattern "my name's <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "my name's John" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "informal" ;
+    resp:appliesToFieldType "name" .
+
+resp:NameIs a resp:ResponsePattern ;
+    resp:hasPattern "name is <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "name is John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "informal" ;
+    resp:appliesToFieldType "name" .
+
+resp:NameContraction a resp:ResponsePattern ;
+    resp:hasPattern "name's <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "name's John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "informal" ;
+    resp:appliesToFieldType "name" .
+
+resp:ImX a resp:ResponsePattern ;
+    resp:hasPattern "i'm <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "i'm John" ;
+    resp:confidenceWeight 1.0 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name" .
+
+resp:IAmX a resp:ResponsePattern ;
+    resp:hasPattern "i am <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "i am John" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name" .
+
+resp:ImCalled a resp:ResponsePattern ;
+    resp:hasPattern "i'm called <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "i'm called John" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name" .
+
+resp:IAmCalled a resp:ResponsePattern ;
+    resp:hasPattern "i am called <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "i am called John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name" .
+
+resp:CallMe a resp:ResponsePattern ;
+    resp:hasPattern "call me <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "call me John" ;
+    resp:confidenceWeight 1.0 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name" .
+
+resp:PeopleCallMe a resp:ResponsePattern ;
+    resp:hasPattern "people call me <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "people call me John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name" .
+
+resp:TheyCallMe a resp:ResponsePattern ;
+    resp:hasPattern "they call me <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "they call me John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name" .
+
+resp:EveryoneCallsMe a resp:ResponsePattern ;
+    resp:hasPattern "everyone calls me <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "everyone calls me John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name" .
+
+resp:MySurnameIs a resp:ResponsePattern ;
+    resp:hasPattern "my surname is <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "my surname is Smith" ;
+    resp:confidenceWeight 1.0 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name" .
+
+resp:MySurnameContraction a resp:ResponsePattern ;
+    resp:hasPattern "my surname's <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "my surname's Smith" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "informal" ;
+    resp:appliesToFieldType "name" .
+
+resp:SurnameIs a resp:ResponsePattern ;
+    resp:hasPattern "surname is <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "surname is Smith" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "informal" ;
+    resp:appliesToFieldType "name" .
+
+resp:SurnameContraction a resp:ResponsePattern ;
+    resp:hasPattern "surname's <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "surname's Smith" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "informal" ;
+    resp:appliesToFieldType "name" .
+
+resp:MyFamilyNameIs a resp:ResponsePattern ;
+    resp:hasPattern "my family name is <answer>" ;
+    resp:hasCategory resp:NameSpecificCategory ;
+    resp:hasExampleValue "my family name is Smith" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name" .
+
+# ========================================
+# DEMONSTRATIVE PATTERNS
+# ========================================
+
+resp:ItsX a resp:ResponsePattern ;
+    resp:hasPattern "it's <answer>" ;
+    resp:hasCategory resp:DemonstrativeCategory ;
+    resp:hasExampleValue "it's John" ;
+    resp:confidenceWeight 1.0 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:ItIsX a resp:ResponsePattern ;
+    resp:hasPattern "it is <answer>" ;
+    resp:hasCategory resp:DemonstrativeCategory ;
+    resp:hasExampleValue "it is John" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:ThatsX a resp:ResponsePattern ;
+    resp:hasPattern "that's <answer>" ;
+    resp:hasCategory resp:DemonstrativeCategory ;
+    resp:hasExampleValue "that's John" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:ThatIsX a resp:ResponsePattern ;
+    resp:hasPattern "that is <answer>" ;
+    resp:hasCategory resp:DemonstrativeCategory ;
+    resp:hasExampleValue "that is John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:ThatWouldBe a resp:ResponsePattern ;
+    resp:hasPattern "that would be <answer>" ;
+    resp:hasCategory resp:DemonstrativeCategory ;
+    resp:hasExampleValue "that would be John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:ThatdBe a resp:ResponsePattern ;
+    resp:hasPattern "that'd be <answer>" ;
+    resp:hasCategory resp:DemonstrativeCategory ;
+    resp:hasExampleValue "that'd be John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:ThisIs a resp:ResponsePattern ;
+    resp:hasPattern "this is <answer>" ;
+    resp:hasCategory resp:DemonstrativeCategory ;
+    resp:hasExampleValue "this is John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:ThisWouldBe a resp:ResponsePattern ;
+    resp:hasPattern "this would be <answer>" ;
+    resp:hasCategory resp:DemonstrativeCategory ;
+    resp:hasExampleValue "this would be John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+# ========================================
+# THE ANSWER PATTERNS
+# ========================================
+
+resp:TheAnswerIs a resp:ResponsePattern ;
+    resp:hasPattern "the answer is <answer>" ;
+    resp:hasCategory resp:DemonstrativeCategory ;
+    resp:hasExampleValue "the answer is John" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "generic" .
+
+resp:TheAnswerContraction a resp:ResponsePattern ;
+    resp:hasPattern "the answer's <answer>" ;
+    resp:hasCategory resp:DemonstrativeCategory ;
+    resp:hasExampleValue "the answer's John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "informal" ;
+    resp:appliesToFieldType "generic" .
+
+resp:AnswerIs a resp:ResponsePattern ;
+    resp:hasPattern "answer is <answer>" ;
+    resp:hasCategory resp:DemonstrativeCategory ;
+    resp:hasExampleValue "answer is John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "informal" ;
+    resp:appliesToFieldType "generic" .
+
+resp:AnswerContraction a resp:ResponsePattern ;
+    resp:hasPattern "answer's <answer>" ;
+    resp:hasCategory resp:DemonstrativeCategory ;
+    resp:hasExampleValue "answer's John" ;
+    resp:confidenceWeight 0.8 ;
+    resp:formality "informal" ;
+    resp:appliesToFieldType "generic" .
+
+# ========================================
+# CONVERSATIONAL AFFIRMATION PATTERNS
+# ========================================
+
+resp:SureItsX a resp:ResponsePattern ;
+    resp:hasPattern "sure it's <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "sure it's John" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:YesItsX a resp:ResponsePattern ;
+    resp:hasPattern "yes it's <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "yes it's John" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:YeahItsX a resp:ResponsePattern ;
+    resp:hasPattern "yeah it's <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "yeah it's John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:YepItsX a resp:ResponsePattern ;
+    resp:hasPattern "yep it's <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "yep it's John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:OkayItsX a resp:ResponsePattern ;
+    resp:hasPattern "okay it's <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "okay it's John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:OkItsX a resp:ResponsePattern ;
+    resp:hasPattern "ok it's <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "ok it's John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:AlrightItsX a resp:ResponsePattern ;
+    resp:hasPattern "alright it's <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "alright it's John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:SureX a resp:ResponsePattern ;
+    resp:hasPattern "sure <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "sure John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:YesX a resp:ResponsePattern ;
+    resp:hasPattern "yes <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "yes John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:OkayX a resp:ResponsePattern ;
+    resp:hasPattern "okay <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "okay John" ;
+    resp:confidenceWeight 0.8 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:OkX a resp:ResponsePattern ;
+    resp:hasPattern "ok <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "ok John" ;
+    resp:confidenceWeight 0.75 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:YeahX a resp:ResponsePattern ;
+    resp:hasPattern "yeah <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "yeah John" ;
+    resp:confidenceWeight 0.8 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:YepX a resp:ResponsePattern ;
+    resp:hasPattern "yep <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "yep John" ;
+    resp:confidenceWeight 0.75 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:AlrightX a resp:ResponsePattern ;
+    resp:hasPattern "alright <answer>" ;
+    resp:hasCategory resp:ConversationalCategory ;
+    resp:hasExampleValue "alright John" ;
+    resp:confidenceWeight 0.8 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+# ========================================
+# POLITE/FORMAL PATTERNS
+# ========================================
+
+resp:CertainlyX a resp:ResponsePattern ;
+    resp:hasPattern "certainly <answer>" ;
+    resp:hasCategory resp:FormalCategory ;
+    resp:hasExampleValue "certainly John" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:OfCourseX a resp:ResponsePattern ;
+    resp:hasPattern "of course <answer>" ;
+    resp:hasCategory resp:FormalCategory ;
+    resp:hasExampleValue "of course John" ;
+    resp:confidenceWeight 0.95 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:AbsolutelyX a resp:ResponsePattern ;
+    resp:hasPattern "absolutely <answer>" ;
+    resp:hasCategory resp:FormalCategory ;
+    resp:hasExampleValue "absolutely John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:DefinitelyX a resp:ResponsePattern ;
+    resp:hasPattern "definitely <answer>" ;
+    resp:hasCategory resp:FormalCategory ;
+    resp:hasExampleValue "definitely John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:HereIs a resp:ResponsePattern ;
+    resp:hasPattern "here is <answer>" ;
+    resp:hasCategory resp:FormalCategory ;
+    resp:hasExampleValue "here is John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:HeresX a resp:ResponsePattern ;
+    resp:hasPattern "here's <answer>" ;
+    resp:hasCategory resp:FormalCategory ;
+    resp:hasExampleValue "here's John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:HereYouGo a resp:ResponsePattern ;
+    resp:hasPattern "here you go <answer>" ;
+    resp:hasCategory resp:FormalCategory ;
+    resp:hasExampleValue "here you go John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:ThereYouGo a resp:ResponsePattern ;
+    resp:hasPattern "there you go <answer>" ;
+    resp:hasCategory resp:FormalCategory ;
+    resp:hasExampleValue "there you go John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+# ========================================
+# UNCERTAIN/HEDGING PATTERNS
+# ========================================
+
+resp:IThinkItsX a resp:ResponsePattern ;
+    resp:hasPattern "i think it's <answer>" ;
+    resp:hasCategory resp:HedgingCategory ;
+    resp:hasExampleValue "i think it's John" ;
+    resp:confidenceWeight 0.7 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:IThinkX a resp:ResponsePattern ;
+    resp:hasPattern "i think <answer>" ;
+    resp:hasCategory resp:HedgingCategory ;
+    resp:hasExampleValue "i think John" ;
+    resp:confidenceWeight 0.65 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:IBelieveItsX a resp:ResponsePattern ;
+    resp:hasPattern "i believe it's <answer>" ;
+    resp:hasCategory resp:HedgingCategory ;
+    resp:hasExampleValue "i believe it's John" ;
+    resp:confidenceWeight 0.7 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:IBelieveX a resp:ResponsePattern ;
+    resp:hasPattern "i believe <answer>" ;
+    resp:hasCategory resp:HedgingCategory ;
+    resp:hasExampleValue "i believe John" ;
+    resp:confidenceWeight 0.65 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:ProbablyX a resp:ResponsePattern ;
+    resp:hasPattern "probably <answer>" ;
+    resp:hasCategory resp:HedgingCategory ;
+    resp:hasExampleValue "probably John" ;
+    resp:confidenceWeight 0.6 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:MaybeX a resp:ResponsePattern ;
+    resp:hasPattern "maybe <answer>" ;
+    resp:hasCategory resp:HedgingCategory ;
+    resp:hasExampleValue "maybe John" ;
+    resp:confidenceWeight 0.5 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:PossiblyX a resp:ResponsePattern ;
+    resp:hasPattern "possibly <answer>" ;
+    resp:hasCategory resp:HedgingCategory ;
+    resp:hasExampleValue "possibly John" ;
+    resp:confidenceWeight 0.55 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:ImPrettySure a resp:ResponsePattern ;
+    resp:hasPattern "i'm pretty sure it's <answer>" ;
+    resp:hasCategory resp:HedgingCategory ;
+    resp:hasExampleValue "i'm pretty sure it's John" ;
+    resp:confidenceWeight 0.75 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+# ========================================
+# TEMPORAL PATTERNS
+# ========================================
+
+resp:RightNowItsX a resp:ResponsePattern ;
+    resp:hasPattern "right now it's <answer>" ;
+    resp:hasCategory resp:TemporalCategory ;
+    resp:hasExampleValue "right now it's John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "casual" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:CurrentlyItsX a resp:ResponsePattern ;
+    resp:hasPattern "currently it's <answer>" ;
+    resp:hasCategory resp:TemporalCategory ;
+    resp:hasExampleValue "currently it's John" ;
+    resp:confidenceWeight 0.9 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:AtTheMomentItsX a resp:ResponsePattern ;
+    resp:hasPattern "at the moment it's <answer>" ;
+    resp:hasCategory resp:TemporalCategory ;
+    resp:hasExampleValue "at the moment it's John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "neutral" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .
+
+resp:AsOfNowItsX a resp:ResponsePattern ;
+    resp:hasPattern "as of now it's <answer>" ;
+    resp:hasCategory resp:TemporalCategory ;
+    resp:hasExampleValue "as of now it's John" ;
+    resp:confidenceWeight 0.85 ;
+    resp:formality "formal" ;
+    resp:appliesToFieldType "name, email, phone, postcode, address, generic" .

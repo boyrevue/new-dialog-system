@@ -52,6 +52,7 @@ const SectionManager = () => {
     sectionTitle: '',
     sectionDescription: '',
     sectionOrder: 1,
+    sectionType: 'standard',
     semanticAliases: '',
     skosLabels: ''
   });
@@ -166,6 +167,7 @@ const SectionManager = () => {
           section_title: newSection.sectionTitle,
           section_description: newSection.sectionDescription,
           section_order: newSection.sectionOrder,
+          section_type: newSection.sectionType || 'standard',
           semantic_aliases: newSection.semanticAliases.split(',').map(s => s.trim()).filter(Boolean),
           skos_labels: newSection.skosLabels.split(',').map(s => s.trim()).filter(Boolean)
         })
@@ -180,6 +182,7 @@ const SectionManager = () => {
         sectionTitle: '',
         sectionDescription: '',
         sectionOrder: 1,
+        sectionType: 'standard',
         semanticAliases: '',
         skosLabels: ''
       });
@@ -375,11 +378,11 @@ const SectionManager = () => {
       {/* Sections List */}
       <div className="space-y-4">
         {loading && sections.length === 0 ? (
-          <Card>
+          <Card className="bg-white border-gray-200">
             <p className="text-center text-gray-500">Loading sections...</p>
           </Card>
         ) : sections.length === 0 ? (
-          <Card>
+          <Card className="bg-white border-gray-200">
             <div className="text-center py-8">
               <FolderPlus className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 text-lg">No sections created yet</p>
@@ -392,11 +395,10 @@ const SectionManager = () => {
             .map((section) => (
               <Card
                 key={section.section_id}
-                className={`transition-all ${
-                  dragOverSection === section.section_id
-                    ? 'ring-2 ring-blue-500 bg-blue-50'
-                    : ''
-                }`}
+                className={`transition-all bg-white border-gray-200 ${dragOverSection === section.section_id
+                  ? 'ring-2 ring-blue-500 bg-blue-50'
+                  : ''
+                  }`}
                 onDragOver={(e) => handleDragOver(e, section.section_id)}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, section.section_id)}
@@ -418,14 +420,14 @@ const SectionManager = () => {
                       <Badge color="info" className="text-sm">
                         Order: {section.section_order}
                       </Badge>
-                      <h3 className="text-xl font-bold text-white">
+                      <h3 className="text-xl font-bold text-gray-900">
                         {section.section_title}
                       </h3>
                       <Badge color="gray" size="sm" className="ml-2">
                         {questionsBySection[section.section_id]?.length || 0} questions
                       </Badge>
                     </div>
-                    <p className="text-gray-300 text-sm mt-2">{section.section_description}</p>
+                    <p className="text-gray-600 text-sm mt-2">{section.section_description}</p>
                     <div className="flex gap-2 mt-2">
                       <Badge color="gray" size="xs">
                         ID: {section.section_id}
@@ -461,13 +463,13 @@ const SectionManager = () => {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 mb-3">
                       <Move className="w-4 h-4 text-gray-400" />
-                      <p className="text-sm font-semibold text-gray-200">
+                      <p className="text-sm font-semibold text-gray-700">
                         Questions ({questionsBySection[section.section_id]?.length || 0})
                       </p>
                     </div>
 
                     {questionsBySection[section.section_id]?.length === 0 ||
-                    !questionsBySection[section.section_id] ? (
+                      !questionsBySection[section.section_id] ? (
                       <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                         <p className="text-gray-600 text-sm">
                           Drop questions here to assign them to this section
@@ -525,92 +527,110 @@ const SectionManager = () => {
                 ✕
               </button>
             </div>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="sectionId">Section ID*</Label>
-              <TextInput
-                id="sectionId"
-                value={newSection.sectionId}
-                onChange={(e) => setNewSection({ ...newSection, sectionId: e.target.value })}
-                placeholder="e.g., section_vehicle_details"
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Use lowercase with underscores (e.g., section_personal_info)
-              </p>
-            </div>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="sectionId">Section ID*</Label>
+                <TextInput
+                  id="sectionId"
+                  value={newSection.sectionId}
+                  onChange={(e) => setNewSection({ ...newSection, sectionId: e.target.value })}
+                  placeholder="e.g., section_vehicle_details"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Use lowercase with underscores (e.g., section_personal_info)
+                </p>
+              </div>
 
-            <div>
-              <Label htmlFor="sectionTitle">Section Title*</Label>
-              <TextInput
-                id="sectionTitle"
-                value={newSection.sectionTitle}
-                onChange={(e) => setNewSection({ ...newSection, sectionTitle: e.target.value })}
-                placeholder="e.g., Vehicle Details"
-                required
-              />
-            </div>
+              <div>
+                <Label htmlFor="sectionTitle">Section Title*</Label>
+                <TextInput
+                  id="sectionTitle"
+                  value={newSection.sectionTitle}
+                  onChange={(e) => setNewSection({ ...newSection, sectionTitle: e.target.value })}
+                  placeholder="e.g., Vehicle Details"
+                  required
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="sectionDescription">Description</Label>
-              <Textarea
-                id="sectionDescription"
-                value={newSection.sectionDescription}
-                onChange={(e) => setNewSection({ ...newSection, sectionDescription: e.target.value })}
-                placeholder="Brief description of this section"
-                rows={2}
-              />
-            </div>
+              <div>
+                <Label htmlFor="sectionType">Section Type</Label>
+                <select
+                  id="sectionType"
+                  value={newSection.sectionType || 'standard'}
+                  onChange={(e) => setNewSection({ ...newSection, sectionType: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="standard">Standard Questions</option>
+                  <option value="documents_fast_track">Documents Fast Track</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {newSection.sectionType === 'documents_fast_track'
+                    ? '📄 Document upload section - appears first to auto-fill form'
+                    : 'Standard question section'}
+                </p>
+              </div>
 
-            <div>
-              <Label htmlFor="sectionOrder">Display Order</Label>
-              <TextInput
-                id="sectionOrder"
-                type="number"
-                value={newSection.sectionOrder}
-                onChange={(e) => setNewSection({ ...newSection, sectionOrder: parseInt(e.target.value) })}
-                min="1"
-              />
-            </div>
+              <div>
+                <Label htmlFor="sectionDescription">Description</Label>
+                <Textarea
+                  id="sectionDescription"
+                  value={newSection.sectionDescription}
+                  onChange={(e) => setNewSection({ ...newSection, sectionDescription: e.target.value })}
+                  placeholder="Brief description of this section"
+                  rows={2}
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="semanticAliases">Semantic Aliases (SKOS:altLabel)</Label>
-              <TextInput
-                id="semanticAliases"
-                value={newSection.semanticAliases}
-                onChange={(e) => setNewSection({ ...newSection, semanticAliases: e.target.value })}
-                placeholder="car info, vehicle data, auto details (comma-separated)"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Alternative names for semantic search and NLP
-              </p>
-            </div>
+              <div>
+                <Label htmlFor="sectionOrder">Display Order</Label>
+                <TextInput
+                  id="sectionOrder"
+                  type="number"
+                  value={newSection.sectionOrder}
+                  onChange={(e) => setNewSection({ ...newSection, sectionOrder: parseInt(e.target.value) })}
+                  min="1"
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="skosLabels">SKOS Preferred Labels</Label>
-              <TextInput
-                id="skosLabels"
-                value={newSection.skosLabels}
-                onChange={(e) => setNewSection({ ...newSection, skosLabels: e.target.value })}
-                placeholder="Vehicle Information, Car Details (comma-separated)"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Formal labels for knowledge graph relationships
-              </p>
-            </div>
+              <div>
+                <Label htmlFor="semanticAliases">Semantic Aliases (SKOS:altLabel)</Label>
+                <TextInput
+                  id="semanticAliases"
+                  value={newSection.semanticAliases}
+                  onChange={(e) => setNewSection({ ...newSection, semanticAliases: e.target.value })}
+                  placeholder="car info, vehicle data, auto details (comma-separated)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Alternative names for semantic search and NLP
+                </p>
+              </div>
 
-            <Alert color="info">
-              <p className="text-sm">
-                <strong>OWL/SPARQL Relationships:</strong> Creating a section will automatically:
-              </p>
-              <ul className="text-sm mt-2 ml-4 list-disc">
-                <li>Add OWL Class definition to dialog-sections.ttl</li>
-                <li>Create SKOS:Concept with prefLabel and altLabel properties</li>
-                <li>Establish rdfs:label and rdfs:comment annotations</li>
-                <li>Define section ordering relationships</li>
-              </ul>
-            </Alert>
-          </div>
+              <div>
+                <Label htmlFor="skosLabels">SKOS Preferred Labels</Label>
+                <TextInput
+                  id="skosLabels"
+                  value={newSection.skosLabels}
+                  onChange={(e) => setNewSection({ ...newSection, skosLabels: e.target.value })}
+                  placeholder="Vehicle Information, Car Details (comma-separated)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Formal labels for knowledge graph relationships
+                </p>
+              </div>
+
+              <Alert color="info">
+                <p className="text-sm">
+                  <strong>OWL/SPARQL Relationships:</strong> Creating a section will automatically:
+                </p>
+                <ul className="text-sm mt-2 ml-4 list-disc">
+                  <li>Add OWL Class definition to dialog-sections.ttl</li>
+                  <li>Create SKOS:Concept with prefLabel and altLabel properties</li>
+                  <li>Establish rdfs:label and rdfs:comment annotations</li>
+                  <li>Define section ordering relationships</li>
+                </ul>
+              </Alert>
+            </div>
             <div className="flex justify-end gap-2 mt-6">
               <Button color="gray" onClick={() => setShowNewSectionModal(false)}>
                 Cancel
@@ -646,113 +666,113 @@ const SectionManager = () => {
                 ✕
               </button>
             </div>
-          {editingSectionData && (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="editSectionTitle">Section Title*</Label>
-                <TextInput
-                  id="editSectionTitle"
-                  value={editingSectionData.section_title}
-                  onChange={(e) => setEditingSectionData({ ...editingSectionData, section_title: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="editSectionDescription">Description</Label>
-                <Textarea
-                  id="editSectionDescription"
-                  value={editingSectionData.section_description}
-                  onChange={(e) => setEditingSectionData({ ...editingSectionData, section_description: e.target.value })}
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="editSectionOrder">Display Order</Label>
-                <TextInput
-                  id="editSectionOrder"
-                  type="number"
-                  value={editingSectionData.section_order}
-                  onChange={(e) => setEditingSectionData({ ...editingSectionData, section_order: parseInt(e.target.value) })}
-                  min="1"
-                />
-              </div>
-
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <Label>Semantic Aliases</Label>
-                  <Button
-                    size="sm"
-                    color="purple"
-                    onClick={handleGenerateAliases}
-                    disabled={generatingAliases}
-                  >
-                    {generatingAliases ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Generate with AI
-                      </>
-                    )}
-                  </Button>
+            {editingSectionData && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="editSectionTitle">Section Title*</Label>
+                  <TextInput
+                    id="editSectionTitle"
+                    value={editingSectionData.section_title}
+                    onChange={(e) => setEditingSectionData({ ...editingSectionData, section_title: e.target.value })}
+                    required
+                  />
                 </div>
 
-                {generatedAliases.length > 0 && (
-                  <Alert color="info" className="mb-3">
-                    <p className="text-sm">
-                      Select aliases to add to this section. These will be used for semantic search and NLP matching.
-                    </p>
-                  </Alert>
-                )}
+                <div>
+                  <Label htmlFor="editSectionDescription">Description</Label>
+                  <Textarea
+                    id="editSectionDescription"
+                    value={editingSectionData.section_description}
+                    onChange={(e) => setEditingSectionData({ ...editingSectionData, section_description: e.target.value })}
+                    rows={2}
+                  />
+                </div>
 
-                {/* Generated Aliases Checkboxes */}
-                {generatedAliases.length > 0 && (
-                  <div className="space-y-2 max-h-60 overflow-y-auto bg-gray-50 p-3 rounded-lg">
-                    <p className="text-sm font-semibold mb-2">Generated Aliases ({generatedAliases.length}):</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {generatedAliases.map((alias, index) => (
-                        <label key={index} className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 rounded">
-                          <input
-                            type="checkbox"
-                            checked={selectedAliases[alias] || false}
-                            onChange={() => toggleAlias(alias)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-sm">{alias}</span>
-                        </label>
-                      ))}
-                    </div>
+                <div>
+                  <Label htmlFor="editSectionOrder">Display Order</Label>
+                  <TextInput
+                    id="editSectionOrder"
+                    type="number"
+                    value={editingSectionData.section_order}
+                    onChange={(e) => setEditingSectionData({ ...editingSectionData, section_order: parseInt(e.target.value) })}
+                    min="1"
+                  />
+                </div>
+
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <Label>Semantic Aliases</Label>
+                    <Button
+                      size="sm"
+                      color="purple"
+                      onClick={handleGenerateAliases}
+                      disabled={generatingAliases}
+                    >
+                      {generatingAliases ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Generate with AI
+                        </>
+                      )}
+                    </Button>
                   </div>
-                )}
 
-                {/* Existing Aliases (if any not in generated) */}
-                {editingSectionData.semantic_aliases && editingSectionData.semantic_aliases.length > 0 && (
+                  {generatedAliases.length > 0 && (
+                    <Alert color="info" className="mb-3">
+                      <p className="text-sm">
+                        Select aliases to add to this section. These will be used for semantic search and NLP matching.
+                      </p>
+                    </Alert>
+                  )}
+
+                  {/* Generated Aliases Checkboxes */}
+                  {generatedAliases.length > 0 && (
+                    <div className="space-y-2 max-h-60 overflow-y-auto bg-gray-50 p-3 rounded-lg">
+                      <p className="text-sm font-semibold mb-2">Generated Aliases ({generatedAliases.length}):</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {generatedAliases.map((alias, index) => (
+                          <label key={index} className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 rounded">
+                            <input
+                              type="checkbox"
+                              checked={selectedAliases[alias] || false}
+                              onChange={() => toggleAlias(alias)}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="text-sm">{alias}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Existing Aliases (if any not in generated) */}
+                  {editingSectionData.semantic_aliases && editingSectionData.semantic_aliases.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-sm font-semibold mb-2">Current Aliases:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {editingSectionData.semantic_aliases.map((alias, index) => (
+                          <Badge key={index} color={selectedAliases[alias] ? "success" : "gray"}>
+                            {alias}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Selected count */}
                   <div className="mt-3">
-                    <p className="text-sm font-semibold mb-2">Current Aliases:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {editingSectionData.semantic_aliases.map((alias, index) => (
-                        <Badge key={index} color={selectedAliases[alias] ? "success" : "gray"}>
-                          {alias}
-                        </Badge>
-                      ))}
-                    </div>
+                    <Badge color="blue">
+                      {Object.keys(selectedAliases).filter(k => selectedAliases[k]).length} aliases selected
+                    </Badge>
                   </div>
-                )}
-
-                {/* Selected count */}
-                <div className="mt-3">
-                  <Badge color="blue">
-                    {Object.keys(selectedAliases).filter(k => selectedAliases[k]).length} aliases selected
-                  </Badge>
                 </div>
               </div>
-            </div>
-          )}
+            )}
             <div className="flex justify-end gap-2 mt-6">
               <Button
                 color="gray"

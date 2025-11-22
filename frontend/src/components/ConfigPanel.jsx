@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, Button, TextInput, Textarea, Label, Select, Badge, Alert } from 'flowbite-react';
 import {
   Settings,
@@ -26,6 +27,7 @@ import FormASRTester from './FormASRTester';
 const API_BASE_URL = '/api/config';
 
 const ConfigPanel = () => {
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('questions');
   const [questions, setQuestions] = useState([]);
   const [ontologies, setOntologies] = useState([]);
@@ -35,6 +37,14 @@ const ConfigPanel = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
+  // Handle tab query parameter from URL
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['questions', 'asr', 'ontologies', 'system', 'field-asr'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     loadQuestions();

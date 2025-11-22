@@ -1,0 +1,1259 @@
+[
+  {
+    "question_id": "q_title",
+    "question_text": "What is your title?",
+    "field_type": "select",
+    "required": false,
+    "category": "personal_info",
+    "options": [
+      {
+        "value": "mr",
+        "label": "Mr",
+        "aliases": [
+          "mister"
+        ]
+      },
+      {
+        "value": "mrs",
+        "label": "Mrs",
+        "aliases": [
+          "missus"
+        ]
+      },
+      {
+        "value": "miss",
+        "label": "Miss",
+        "aliases": []
+      },
+      {
+        "value": "ms",
+        "label": "Ms",
+        "aliases": []
+      },
+      {
+        "value": "dr",
+        "label": "Dr",
+        "aliases": [
+          "doctor"
+        ]
+      },
+      {
+        "value": "prof",
+        "label": "Prof",
+        "aliases": [
+          "professor"
+        ]
+      },
+      {
+        "value": "rev",
+        "label": "Rev",
+        "aliases": [
+          "reverend"
+        ]
+      },
+      {
+        "value": "sir",
+        "label": "Sir",
+        "aliases": []
+      },
+      {
+        "value": "lord",
+        "label": "Lord",
+        "aliases": []
+      },
+      {
+        "value": "lady",
+        "label": "Lady",
+        "aliases": []
+      },
+      {
+        "value": "dame",
+        "label": "Dame",
+        "aliases": []
+      }
+    ]
+  },
+  {
+    "question_id": "q_gender",
+    "question_text": "What is your gender?",
+    "field_type": "select",
+    "required": true,
+    "category": "personal_info",
+    "options": [
+      {
+        "value": "male",
+        "label": "Male",
+        "aliases": [
+          "man",
+          "m"
+        ]
+      },
+      {
+        "value": "female",
+        "label": "Female",
+        "aliases": [
+          "woman",
+          "f"
+        ]
+      },
+      {
+        "value": "non_binary",
+        "label": "Non-binary",
+        "aliases": [
+          "other",
+          "nb",
+          "non binary"
+        ]
+      },
+      {
+        "value": "prefer_not_to_say",
+        "label": "Prefer not to say",
+        "aliases": [
+          "not saying",
+          "decline"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_marital_status",
+    "question_text": "What is your marital status?",
+    "field_type": "select",
+    "required": true,
+    "category": "personal_info",
+    "options": [
+      {
+        "value": "single",
+        "label": "Single",
+        "aliases": [
+          "unmarried",
+          "not married"
+        ]
+      },
+      {
+        "value": "married",
+        "label": "Married",
+        "aliases": [
+          "wed"
+        ]
+      },
+      {
+        "value": "civil_partnership",
+        "label": "Civil Partnership",
+        "aliases": [
+          "civil partner"
+        ]
+      },
+      {
+        "value": "divorced",
+        "label": "Divorced",
+        "aliases": []
+      },
+      {
+        "value": "separated",
+        "label": "Separated",
+        "aliases": []
+      },
+      {
+        "value": "widowed",
+        "label": "Widowed",
+        "aliases": [
+          "widow",
+          "widower"
+        ]
+      },
+      {
+        "value": "cohabiting",
+        "label": "Cohabiting",
+        "aliases": [
+          "living together",
+          "partner"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_employment_status",
+    "question_text": "What is your employment status?",
+    "field_type": "select",
+    "required": true,
+    "category": "personal_info",
+    "options": [
+      {
+        "value": "employed_full_time",
+        "label": "Employed (Full Time)",
+        "aliases": [
+          "full time employed",
+          "full time"
+        ]
+      },
+      {
+        "value": "employed_part_time",
+        "label": "Employed (Part Time)",
+        "aliases": [
+          "part time employed",
+          "part time"
+        ]
+      },
+      {
+        "value": "self_employed",
+        "label": "Self-Employed",
+        "aliases": [
+          "freelance",
+          "contractor"
+        ]
+      },
+      {
+        "value": "unemployed",
+        "label": "Unemployed",
+        "aliases": [
+          "not working",
+          "jobless"
+        ]
+      },
+      {
+        "value": "retired",
+        "label": "Retired",
+        "aliases": [
+          "pensioner"
+        ]
+      },
+      {
+        "value": "student",
+        "label": "Student",
+        "aliases": [
+          "in education",
+          "studying"
+        ]
+      },
+      {
+        "value": "homemaker",
+        "label": "Homemaker / House Person",
+        "aliases": [
+          "housewife",
+          "househusband",
+          "stay at home"
+        ]
+      },
+      {
+        "value": "unable_to_work",
+        "label": "Unable to Work (Disability/Illness)",
+        "aliases": [
+          "disabled",
+          "long term sick"
+        ]
+      },
+      {
+        "value": "voluntary_work",
+        "label": "Voluntary Work",
+        "aliases": [
+          "volunteer"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_vehicle_type",
+    "question_text": "What type of vehicle is it?",
+    "field_type": "select",
+    "required": true,
+    "category": "vehicle",
+    "options": [
+      {
+        "value": "car",
+        "label": "Car",
+        "aliases": []
+      },
+      {
+        "value": "van",
+        "label": "Van",
+        "aliases": []
+      },
+      {
+        "value": "motorcycle",
+        "label": "Motorcycle",
+        "aliases": [
+          "motorbike",
+          "bike"
+        ]
+      },
+      {
+        "value": "motorhome",
+        "label": "Motorhome",
+        "aliases": [
+          "camper van",
+          "rv"
+        ]
+      },
+      {
+        "value": "minibus",
+        "label": "Minibus",
+        "aliases": []
+      }
+    ]
+  },
+  {
+    "question_id": "q_fuel_type",
+    "question_text": "What fuel type does your vehicle use?",
+    "field_type": "select",
+    "required": true,
+    "category": "vehicle",
+    "options": [
+      {
+        "value": "petrol",
+        "label": "Petrol",
+        "aliases": [
+          "gasoline",
+          "gas"
+        ]
+      },
+      {
+        "value": "diesel",
+        "label": "Diesel",
+        "aliases": []
+      },
+      {
+        "value": "electric",
+        "label": "Electric (Battery)",
+        "aliases": [
+          "ev",
+          "battery electric",
+          "bev"
+        ]
+      },
+      {
+        "value": "hybrid_petrol",
+        "label": "Hybrid (Petrol)",
+        "aliases": [
+          "petrol hybrid"
+        ]
+      },
+      {
+        "value": "hybrid_diesel",
+        "label": "Hybrid (Diesel)",
+        "aliases": [
+          "diesel hybrid"
+        ]
+      },
+      {
+        "value": "plug_in_hybrid_petrol",
+        "label": "Plug-in Hybrid (Petrol)",
+        "aliases": [
+          "phev petrol",
+          "petrol phev"
+        ]
+      },
+      {
+        "value": "plug_in_hybrid_diesel",
+        "label": "Plug-in Hybrid (Diesel)",
+        "aliases": [
+          "phev diesel",
+          "diesel phev"
+        ]
+      },
+      {
+        "value": "lpg",
+        "label": "LPG (Liquefied Petroleum Gas)",
+        "aliases": [
+          "gas conversion"
+        ]
+      },
+      {
+        "value": "hydrogen",
+        "label": "Hydrogen Fuel Cell",
+        "aliases": [
+          "fuel cell"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_transmission",
+    "question_text": "What transmission type does your vehicle have?",
+    "field_type": "select",
+    "required": true,
+    "category": "vehicle",
+    "options": [
+      {
+        "value": "manual",
+        "label": "Manual",
+        "aliases": [
+          "stick shift"
+        ]
+      },
+      {
+        "value": "automatic",
+        "label": "Automatic",
+        "aliases": [
+          "auto"
+        ]
+      },
+      {
+        "value": "semi_automatic",
+        "label": "Semi-Automatic",
+        "aliases": [
+          "semi auto",
+          "tiptronic"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_main_use",
+    "question_text": "What is the main use of your vehicle?",
+    "field_type": "select",
+    "required": true,
+    "category": "usage",
+    "options": [
+      {
+        "value": "social_domestic",
+        "label": "Social, Domestic & Pleasure",
+        "aliases": [
+          "personal use",
+          "private use"
+        ]
+      },
+      {
+        "value": "commuting",
+        "label": "Commuting to/from Work",
+        "aliases": [
+          "work commute",
+          "driving to work"
+        ]
+      },
+      {
+        "value": "business",
+        "label": "Business Use",
+        "aliases": [
+          "work use",
+          "commercial"
+        ]
+      },
+      {
+        "value": "delivery",
+        "label": "Delivery / Courier",
+        "aliases": [
+          "courier work"
+        ]
+      },
+      {
+        "value": "taxi",
+        "label": "Taxi / Private Hire",
+        "aliases": [
+          "uber",
+          "minicab"
+        ]
+      },
+      {
+        "value": "driving_instruction",
+        "label": "Driving Instruction",
+        "aliases": [
+          "driving lessons",
+          "learner driver"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_annual_mileage",
+    "question_text": "What is your estimated annual mileage?",
+    "field_type": "select",
+    "required": true,
+    "category": "usage",
+    "options": [
+      {
+        "value": "0_3000",
+        "label": "Up to 3,000 miles",
+        "aliases": [
+          "under 3000",
+          "less than 3000"
+        ]
+      },
+      {
+        "value": "3001_5000",
+        "label": "3,001 - 5,000 miles",
+        "aliases": []
+      },
+      {
+        "value": "5001_7000",
+        "label": "5,001 - 7,000 miles",
+        "aliases": []
+      },
+      {
+        "value": "7001_10000",
+        "label": "7,001 - 10,000 miles",
+        "aliases": []
+      },
+      {
+        "value": "10001_12000",
+        "label": "10,001 - 12,000 miles",
+        "aliases": []
+      },
+      {
+        "value": "12001_15000",
+        "label": "12,001 - 15,000 miles",
+        "aliases": []
+      },
+      {
+        "value": "15001_20000",
+        "label": "15,001 - 20,000 miles",
+        "aliases": []
+      },
+      {
+        "value": "20001_25000",
+        "label": "20,001 - 25,000 miles",
+        "aliases": []
+      },
+      {
+        "value": "25001_30000",
+        "label": "25,001 - 30,000 miles",
+        "aliases": []
+      },
+      {
+        "value": "30001_plus",
+        "label": "Over 30,000 miles",
+        "aliases": [
+          "more than 30000"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_overnight_parking",
+    "question_text": "Where is your car parked overnight?",
+    "field_type": "select",
+    "required": true,
+    "category": "usage",
+    "options": [
+      {
+        "value": "garage",
+        "label": "Locked Garage",
+        "aliases": [
+          "in garage",
+          "private garage"
+        ]
+      },
+      {
+        "value": "driveway",
+        "label": "Driveway",
+        "aliases": [
+          "drive",
+          "on driveway"
+        ]
+      },
+      {
+        "value": "car_park",
+        "label": "Car Park",
+        "aliases": [
+          "parking lot"
+        ]
+      },
+      {
+        "value": "street",
+        "label": "On Street",
+        "aliases": [
+          "road",
+          "public road",
+          "on the street"
+        ]
+      },
+      {
+        "value": "secure_compound",
+        "label": "Secure Compound",
+        "aliases": [
+          "locked compound",
+          "secured area"
+        ]
+      },
+      {
+        "value": "residents_parking",
+        "label": "Residents Parking",
+        "aliases": [
+          "permit parking"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_licence_type",
+    "question_text": "What type of driving licence do you hold?",
+    "field_type": "select",
+    "required": true,
+    "category": "driving_history",
+    "options": [
+      {
+        "value": "full_uk",
+        "label": "Full UK Licence",
+        "aliases": [
+          "uk full",
+          "full british"
+        ]
+      },
+      {
+        "value": "full_eu",
+        "label": "Full EU Licence",
+        "aliases": [
+          "eu full",
+          "european"
+        ]
+      },
+      {
+        "value": "full_international",
+        "label": "Full International Licence",
+        "aliases": [
+          "international full"
+        ]
+      },
+      {
+        "value": "provisional_uk",
+        "label": "Provisional UK Licence",
+        "aliases": [
+          "learner",
+          "provisional"
+        ]
+      },
+      {
+        "value": "no_licence",
+        "label": "No Licence",
+        "aliases": [
+          "none",
+          "unlicensed"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_years_held_licence",
+    "question_text": "How many years have you held your licence?",
+    "field_type": "select",
+    "required": true,
+    "category": "driving_history",
+    "options": [
+      {
+        "value": "0_1",
+        "label": "Less than 1 year",
+        "aliases": [
+          "under a year",
+          "under 1 year"
+        ]
+      },
+      {
+        "value": "1_2",
+        "label": "1-2 years",
+        "aliases": [
+          "one to two years"
+        ]
+      },
+      {
+        "value": "2_3",
+        "label": "2-3 years",
+        "aliases": []
+      },
+      {
+        "value": "3_4",
+        "label": "3-4 years",
+        "aliases": []
+      },
+      {
+        "value": "4_5",
+        "label": "4-5 years",
+        "aliases": []
+      },
+      {
+        "value": "5_10",
+        "label": "5-10 years",
+        "aliases": []
+      },
+      {
+        "value": "10_plus",
+        "label": "Over 10 years",
+        "aliases": [
+          "more than 10 years",
+          "10+ years"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_no_claims_years",
+    "question_text": "How many years of no claims bonus do you have?",
+    "field_type": "select",
+    "required": true,
+    "category": "driving_history",
+    "options": [
+      {
+        "value": "0",
+        "label": "0 years",
+        "aliases": [
+          "none",
+          "no bonus"
+        ]
+      },
+      {
+        "value": "1",
+        "label": "1 year",
+        "aliases": [
+          "one year"
+        ]
+      },
+      {
+        "value": "2",
+        "label": "2 years",
+        "aliases": [
+          "two years"
+        ]
+      },
+      {
+        "value": "3",
+        "label": "3 years",
+        "aliases": [
+          "three years"
+        ]
+      },
+      {
+        "value": "4",
+        "label": "4 years",
+        "aliases": [
+          "four years"
+        ]
+      },
+      {
+        "value": "5",
+        "label": "5 years",
+        "aliases": [
+          "five years"
+        ]
+      },
+      {
+        "value": "6",
+        "label": "6 years",
+        "aliases": [
+          "six years"
+        ]
+      },
+      {
+        "value": "7",
+        "label": "7 years",
+        "aliases": [
+          "seven years"
+        ]
+      },
+      {
+        "value": "8",
+        "label": "8 years",
+        "aliases": [
+          "eight years"
+        ]
+      },
+      {
+        "value": "9",
+        "label": "9 years",
+        "aliases": [
+          "nine years"
+        ]
+      },
+      {
+        "value": "9_plus",
+        "label": "9+ years",
+        "aliases": [
+          "more than 9",
+          "maximum"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_no_claims_protected",
+    "question_text": "Is your no claims bonus protected?",
+    "field_type": "select",
+    "required": false,
+    "category": "driving_history",
+    "options": [
+      {
+        "value": "yes",
+        "label": "Yes",
+        "aliases": [
+          "protected",
+          "yeah"
+        ]
+      },
+      {
+        "value": "no",
+        "label": "No",
+        "aliases": [
+          "unprotected",
+          "nope"
+        ]
+      },
+      {
+        "value": "dont_know",
+        "label": "Don't Know",
+        "aliases": [
+          "not sure",
+          "unsure"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_accidents_last_5_years",
+    "question_text": "How many accidents or claims have you had in the last 5 years?",
+    "field_type": "select",
+    "required": true,
+    "category": "driving_history",
+    "options": [
+      {
+        "value": "0",
+        "label": "0 (None)",
+        "aliases": [
+          "none",
+          "zero"
+        ]
+      },
+      {
+        "value": "1",
+        "label": "1",
+        "aliases": [
+          "one"
+        ]
+      },
+      {
+        "value": "2",
+        "label": "2",
+        "aliases": [
+          "two"
+        ]
+      },
+      {
+        "value": "3",
+        "label": "3",
+        "aliases": [
+          "three"
+        ]
+      },
+      {
+        "value": "4",
+        "label": "4",
+        "aliases": [
+          "four"
+        ]
+      },
+      {
+        "value": "5_plus",
+        "label": "5 or more",
+        "aliases": [
+          "more than 4"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_convictions",
+    "question_text": "Do you have any motoring convictions?",
+    "field_type": "select",
+    "required": true,
+    "category": "driving_history",
+    "options": [
+      {
+        "value": "none",
+        "label": "No Convictions",
+        "aliases": [
+          "none",
+          "no",
+          "clean licence"
+        ]
+      },
+      {
+        "value": "sp30",
+        "label": "SP30 - Speeding",
+        "aliases": [
+          "speeding"
+        ]
+      },
+      {
+        "value": "sp50",
+        "label": "SP50 - Exceeding speed limit on motorway",
+        "aliases": [
+          "motorway speeding"
+        ]
+      },
+      {
+        "value": "ts10",
+        "label": "TS10 - Failing to comply with traffic signals",
+        "aliases": [
+          "traffic lights",
+          "red light"
+        ]
+      },
+      {
+        "value": "cd10",
+        "label": "CD10 - Driving without due care",
+        "aliases": [
+          "careless driving"
+        ]
+      },
+      {
+        "value": "in10",
+        "label": "IN10 - Driving without insurance",
+        "aliases": [
+          "no insurance"
+        ]
+      },
+      {
+        "value": "dr10",
+        "label": "DR10 - Drink driving",
+        "aliases": [
+          "drunk driving",
+          "dui"
+        ]
+      },
+      {
+        "value": "other",
+        "label": "Other Conviction",
+        "aliases": [
+          "different",
+          "something else"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_cover_type",
+    "question_text": "What type of insurance cover do you want?",
+    "field_type": "select",
+    "required": true,
+    "category": "cover",
+    "options": [
+      {
+        "value": "comprehensive",
+        "label": "Comprehensive (Fully Comprehensive)",
+        "aliases": [
+          "full cover",
+          "fully comp",
+          "comp"
+        ]
+      },
+      {
+        "value": "third_party_fire_theft",
+        "label": "Third Party, Fire & Theft",
+        "aliases": [
+          "tpft",
+          "third party fire and theft"
+        ]
+      },
+      {
+        "value": "third_party_only",
+        "label": "Third Party Only",
+        "aliases": [
+          "tpo",
+          "third party"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_voluntary_excess",
+    "question_text": "What voluntary excess would you like?",
+    "field_type": "select",
+    "required": true,
+    "category": "cover",
+    "options": [
+      {
+        "value": "0",
+        "label": "£0",
+        "aliases": [
+          "none",
+          "zero",
+          "no excess"
+        ]
+      },
+      {
+        "value": "100",
+        "label": "£100",
+        "aliases": [
+          "one hundred"
+        ]
+      },
+      {
+        "value": "250",
+        "label": "£250",
+        "aliases": [
+          "two fifty",
+          "two hundred fifty"
+        ]
+      },
+      {
+        "value": "500",
+        "label": "£500",
+        "aliases": [
+          "five hundred"
+        ]
+      },
+      {
+        "value": "750",
+        "label": "£750",
+        "aliases": [
+          "seven fifty"
+        ]
+      },
+      {
+        "value": "1000",
+        "label": "£1,000",
+        "aliases": [
+          "one thousand",
+          "a thousand"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_has_alarm",
+    "question_text": "Does your vehicle have an alarm?",
+    "field_type": "select",
+    "required": true,
+    "category": "security",
+    "options": [
+      {
+        "value": "yes_factory",
+        "label": "Yes - Factory Fitted",
+        "aliases": [
+          "factory alarm",
+          "manufacturer fitted"
+        ]
+      },
+      {
+        "value": "yes_aftermarket",
+        "label": "Yes - Aftermarket (Thatcham Approved)",
+        "aliases": [
+          "aftermarket alarm",
+          "thatcham"
+        ]
+      },
+      {
+        "value": "no",
+        "label": "No",
+        "aliases": [
+          "none",
+          "no alarm"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_has_immobiliser",
+    "question_text": "Does your vehicle have an immobiliser?",
+    "field_type": "select",
+    "required": true,
+    "category": "security",
+    "options": [
+      {
+        "value": "yes_factory",
+        "label": "Yes - Factory Fitted",
+        "aliases": [
+          "factory immobiliser"
+        ]
+      },
+      {
+        "value": "yes_aftermarket",
+        "label": "Yes - Aftermarket",
+        "aliases": [
+          "aftermarket immobiliser"
+        ]
+      },
+      {
+        "value": "no",
+        "label": "No",
+        "aliases": [
+          "none",
+          "no immobiliser"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_has_tracker",
+    "question_text": "Does your vehicle have a tracker?",
+    "field_type": "select",
+    "required": false,
+    "category": "security",
+    "options": [
+      {
+        "value": "yes",
+        "label": "Yes",
+        "aliases": [
+          "fitted",
+          "installed"
+        ]
+      },
+      {
+        "value": "no",
+        "label": "No",
+        "aliases": [
+          "none",
+          "not fitted"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_additional_drivers",
+    "question_text": "How many additional drivers?",
+    "field_type": "select",
+    "required": true,
+    "category": "additional_drivers",
+    "options": [
+      {
+        "value": "0",
+        "label": "None (Only me)",
+        "aliases": [
+          "zero",
+          "just me",
+          "no one else"
+        ]
+      },
+      {
+        "value": "1",
+        "label": "1 additional driver",
+        "aliases": [
+          "one",
+          "one other"
+        ]
+      },
+      {
+        "value": "2",
+        "label": "2 additional drivers",
+        "aliases": [
+          "two"
+        ]
+      },
+      {
+        "value": "3",
+        "label": "3 additional drivers",
+        "aliases": [
+          "three"
+        ]
+      },
+      {
+        "value": "4_plus",
+        "label": "4 or more",
+        "aliases": [
+          "four or more"
+        ]
+      }
+    ]
+  },
+  {
+    "question_id": "q_additional_driver_relationship",
+    "question_text": "What is the additional driver's relationship to you?",
+    "field_type": "select",
+    "required": false,
+    "category": "additional_drivers",
+    "options": [
+      {
+        "value": "spouse",
+        "label": "Spouse / Partner",
+        "aliases": [
+          "husband",
+          "wife",
+          "partner"
+        ]
+      },
+      {
+        "value": "parent",
+        "label": "Parent",
+        "aliases": [
+          "mother",
+          "father",
+          "mum",
+          "dad"
+        ]
+      },
+      {
+        "value": "child",
+        "label": "Son / Daughter",
+        "aliases": [
+          "son",
+          "daughter",
+          "child"
+        ]
+      },
+      {
+        "value": "sibling",
+        "label": "Brother / Sister",
+        "aliases": [
+          "brother",
+          "sister"
+        ]
+      },
+      {
+        "value": "friend",
+        "label": "Friend",
+        "aliases": [
+          "mate"
+        ]
+      },
+      {
+        "value": "colleague",
+        "label": "Colleague",
+        "aliases": [
+          "coworker",
+          "work colleague"
+        ]
+      },
+      {
+        "value": "other_relative",
+        "label": "Other Relative",
+        "aliases": [
+          "relative",
+          "family member"
+        ]
+      },
+      {
+        "value": "other",
+        "label": "Other",
+        "aliases": []
+      }
+    ]
+  },
+  {
+    "question_id": "q_has_modifications",
+    "question_text": "Does your vehicle have any modifications?",
+    "field_type": "select",
+    "required": true,
+    "category": "modifications",
+    "options": [
+      {
+        "value": "no",
+        "label": "No Modifications",
+        "aliases": [
+          "none",
+          "standard",
+          "stock"
+        ]
+      },
+      {
+        "value": "yes_cosmetic",
+        "label": "Yes - Cosmetic Only",
+        "aliases": [
+          "cosmetic mods",
+          "appearance"
+        ]
+      },
+      {
+        "value": "yes_performance",
+        "label": "Yes - Performance",
+        "aliases": [
+          "performance mods",
+          "engine mods"
+        ]
+      },
+      {
+        "value": "yes_both",
+        "label": "Yes - Both Cosmetic & Performance",
+        "aliases": [
+          "both types"
+        ]
+      }
+    ]
+  }
+]

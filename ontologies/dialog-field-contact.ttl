@@ -1,0 +1,425 @@
+@prefix : <http://diggi.io/ontology/dialog#> .
+@prefix field: <http://diggi.io/ontology/field#> .
+@prefix asr: <http://diggi.io/ontology/asr#> .
+@prefix tts: <http://diggi.io/ontology/tts#> .
+@prefix resp: <http://diggi.io/ontology/response#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Contact/Personal Information Field Ontology
+<http://diggi.io/ontology/field-contact> a owl:Ontology ;
+    rdfs:label "Contact/Personal Information Field Ontology" ;
+    rdfs:comment "Reusable contact and personal information field definitions with ASR grammars" ;
+    owl:versionInfo "1.0" .
+
+# ========================================
+# FIRST NAME FIELD
+# ========================================
+
+field:FirstNameField a :Field ;
+    rdfs:label "First Name" ;
+    :fieldType "text" ;
+    :validationPredicate "isAlpha" ;
+    :required true ;
+    :spellingRequired true ;
+    :hasASRGrammar field:FirstNameASRGrammar ;
+    :hasTTSPrompt field:FirstNameTTSPrompt .
+
+field:FirstNameASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar first_name;
+
+public <response> = [my first name is] <name> |
+                    [my name is] <name> |
+                    [my given name is] <name> |
+                    [my forename is] <name> |
+                    [i'm called] <name> |
+                    [call me] <name> |
+                    [it's] <name>;
+
+<name> = <letter> [<name>];
+
+<letter> = alpha | bravo | charlie | delta | echo | foxtrot | golf | hotel |
+           india | juliet | kilo | lima | mike | november | oscar | papa |
+           quebec | romeo | sierra | tango | uniform | victor | whiskey |
+           x-ray | yankee | zulu;
+""" .
+
+field:FirstNameTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What is your first name?" ;
+    tts:variant1 "What's your first name?" ;
+    tts:variant2 "Please tell me your first name" ;
+    tts:variant3 "Could you provide your first name?" ;
+    tts:variant4 "What's your given name?" ;
+    tts:voice "en-GB-Neural2-A" ;
+    tts:rate 0.95 .
+
+# Link to response patterns
+field:FirstNameField resp:hasApplicablePattern
+    resp:DirectAnswer,
+    resp:MyNameIs,
+    resp:ImX,
+    resp:IAmX,
+    resp:CallMe,
+    resp:MyXIs,
+    resp:ItsX .
+
+# ========================================
+# LAST NAME / SURNAME FIELD
+# ========================================
+
+field:LastNameField a :Field ;
+    rdfs:label "Last Name" ;
+    :fieldType "text" ;
+    :validationPredicate "isAlpha" ;
+    :required true ;
+    :spellingRequired true ;
+    :hasASRGrammar field:LastNameASRGrammar ;
+    :hasTTSPrompt field:LastNameTTSPrompt .
+
+field:LastNameASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar last_name;
+
+public <response> = [my last name is] <name> |
+                    [my surname is] <name> |
+                    [my family name is] <name> |
+                    [it's] <name>;
+
+<name> = <letter> [<name>];
+
+<letter> = alpha | bravo | charlie | delta | echo | foxtrot | golf | hotel |
+           india | juliet | kilo | lima | mike | november | oscar | papa |
+           quebec | romeo | sierra | tango | uniform | victor | whiskey |
+           x-ray | yankee | zulu;
+""" .
+
+field:LastNameTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What is your last name?" ;
+    tts:variant1 "What's your surname?" ;
+    tts:variant2 "Please tell me your surname" ;
+    tts:variant3 "What's your family name?" ;
+    tts:variant4 "And your last name?" .
+
+field:LastNameField resp:hasApplicablePattern
+    resp:DirectAnswer,
+    resp:MySurnameIs,
+    resp:MyXIs,
+    resp:ItsX .
+
+# ========================================
+# EMAIL ADDRESS FIELD
+# ========================================
+
+field:EmailField a :Field ;
+    rdfs:label "Email Address" ;
+    :fieldType "email" ;
+    :validationPredicate "isEmail" ;
+    :required true ;
+    :spellingRequired true ;
+    :hasASRGrammar field:EmailASRGrammar ;
+    :hasTTSPrompt field:EmailTTSPrompt .
+
+field:EmailASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar email;
+
+public <response> = [my email is] <email> |
+                    [it's] <email>;
+
+<email> = <localpart> at <domain>;
+
+<localpart> = <letter_or_digit> [<localpart>];
+
+<domain> = <letter_or_digit> [dot] <letter_or_digit> [<domain>];
+
+<letter_or_digit> = alpha | bravo | charlie | delta | echo | foxtrot | golf | hotel |
+                    india | juliet | kilo | lima | mike | november | oscar | papa |
+                    quebec | romeo | sierra | tango | uniform | victor | whiskey |
+                    x-ray | yankee | zulu |
+                    zero | one | two | three | four | five | six | seven | eight | nine |
+                    dot | dash | underscore;
+""" .
+
+field:EmailTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What is your email address?" ;
+    tts:variant1 "What's your email?" ;
+    tts:variant2 "Please provide your email address" ;
+    tts:variant3 "Could you tell me your email?" ;
+    tts:variant4 "What email address should I use?" .
+
+field:EmailField resp:hasApplicablePattern
+    resp:DirectAnswer,
+    resp:MyXIs,
+    resp:ItsX .
+
+# ========================================
+# PHONE NUMBER FIELD
+# ========================================
+
+field:PhoneField a :Field ;
+    rdfs:label "Phone Number" ;
+    :fieldType "tel" ;
+    :validationPredicate "isNumeric" ;
+    :required true ;
+    :hasASRGrammar field:PhoneASRGrammar ;
+    :hasTTSPrompt field:PhoneTTSPrompt .
+
+field:PhoneASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar phone;
+
+public <response> = [my phone number is] <phone> |
+                    [my number is] <phone> |
+                    [it's] <phone>;
+
+<phone> = <digit> [<phone>];
+
+<digit> = zero | oh | one | two | three | four | five | six | seven | eight | nine |
+          0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+""" .
+
+field:PhoneTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What is your phone number?" ;
+    tts:variant1 "What's your phone number?" ;
+    tts:variant2 "Please provide your telephone number" ;
+    tts:variant3 "What number should I call you on?" ;
+    tts:variant4 "What's your mobile number?" .
+
+field:PhoneField resp:hasApplicablePattern
+    resp:DirectAnswer,
+    resp:MyXIs,
+    resp:ItsX .
+
+# ========================================
+# POSTCODE FIELD
+# ========================================
+
+field:PostcodeField a :Field ;
+    rdfs:label "Postcode" ;
+    :fieldType "text" ;
+    :validationPredicate "isPostcode" ;
+    :required true ;
+    :spellingRequired true ;
+    :hasASRGrammar field:PostcodeASRGrammar ;
+    :hasTTSPrompt field:PostcodeTTSPrompt .
+
+field:PostcodeASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar postcode;
+
+public <response> = [my postcode is] <postcode> |
+                    [it's] <postcode>;
+
+<postcode> = <outward> <inward>;
+
+<outward> = <letter> <letter> [<digit>] <digit> |
+            <letter> <digit> [<digit>];
+
+<inward> = <digit> <letter> <letter>;
+
+<letter> = alpha | bravo | charlie | delta | echo | foxtrot | golf | hotel |
+           india | juliet | kilo | lima | mike | november | oscar | papa |
+           quebec | romeo | sierra | tango | uniform | victor | whiskey |
+           x-ray | yankee | zulu;
+
+<digit> = zero | oh | one | two | three | four | five | six | seven | eight | nine;
+""" .
+
+field:PostcodeTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What is your postcode?" ;
+    tts:variant1 "What's your postcode?" ;
+    tts:variant2 "Please provide your postcode" ;
+    tts:variant3 "Could you tell me your postcode?" ;
+    tts:variant4 "What postcode are you in?" .
+
+field:PostcodeField resp:hasApplicablePattern
+    resp:DirectAnswer,
+    resp:MyXIs,
+    resp:ItsX .
+
+# ========================================
+# ADDRESS FIELD
+# ========================================
+
+field:AddressLine1Field a :Field ;
+    rdfs:label "Address Line 1" ;
+    :fieldType "text" ;
+    :validationPredicate "isString" ;
+    :required true ;
+    :spellingRequired true ;
+    :hasASRGrammar field:AddressASRGrammar ;
+    :hasTTSPrompt field:AddressTTSPrompt .
+
+field:AddressASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar address;
+
+public <response> = [my address is] <address> |
+                    [i live at] <address> |
+                    [it's] <address>;
+
+<address> = <housenumber> <street> [<address>];
+
+<housenumber> = <digit> [<housenumber>];
+
+<street> = <letter> [<street>];
+
+<letter> = alpha | bravo | charlie | delta | echo | foxtrot | golf | hotel |
+           india | juliet | kilo | lima | mike | november | oscar | papa |
+           quebec | romeo | sierra | tango | uniform | victor | whiskey |
+           x-ray | yankee | zulu;
+
+<digit> = zero | oh | one | two | three | four | five | six | seven | eight | nine;
+""" .
+
+field:AddressTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What is your address?" ;
+    tts:variant1 "Where do you live?" ;
+    tts:variant2 "Please provide your address" ;
+    tts:variant3 "What's your home address?" ;
+    tts:variant4 "Could you tell me your address?" .
+
+field:AddressLine1Field resp:hasApplicablePattern
+    resp:DirectAnswer,
+    resp:MyXIs,
+    resp:ItsX .
+
+field:AddressLine2Field a :Field ;
+    rdfs:label "Address Line 2" ;
+    :fieldType "text" ;
+    :validationPredicate "isString" ;
+    :required false ;
+    :spellingRequired true .
+
+field:TownField a :Field ;
+    rdfs:label "Town/City" ;
+    :fieldType "text" ;
+    :validationPredicate "isAlpha" ;
+    :required true ;
+    :spellingRequired true ;
+    :hasTTSPrompt field:TownTTSPrompt .
+
+field:TownTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What town or city do you live in?" ;
+    tts:variant1 "Which town?" ;
+    tts:variant2 "What's your town or city?" ;
+    tts:variant3 "Please tell me your town" .
+
+field:CountyField a :Field ;
+    rdfs:label "County" ;
+    :fieldType "text" ;
+    :validationPredicate "isAlpha" ;
+    :required false ;
+    :spellingRequired true .
+
+# ========================================
+# TITLE FIELD
+# ========================================
+
+field:TitleField a :Field ;
+    rdfs:label "Title" ;
+    :fieldType "select" ;
+    :required false ;
+    :hasASRGrammar field:TitleASRGrammar ;
+    :hasTTSPrompt field:TitleTTSPrompt .
+
+field:TitleASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar title;
+
+public <title> = mister | mr | miss | missus | mrs | ms | doctor | dr | professor | prof | sir | dame | lord | lady;
+""" .
+
+field:TitleTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What is your title?" ;
+    tts:variant1 "How should I address you?" ;
+    tts:variant2 "What title do you use?" ;
+    tts:variant3 "Mr, Mrs, Miss, Ms, or Dr?" .
+
+# Title options
+field:TitleMr a :SelectOption ;
+    :optionValue "Mr" ;
+    :optionLabel "Mr" ;
+    :optionAlias "Mister" ;
+    :optionOrder 1 .
+
+field:TitleMrs a :SelectOption ;
+    :optionValue "Mrs" ;
+    :optionLabel "Mrs" ;
+    :optionAlias "Missus" ;
+    :optionOrder 2 .
+
+field:TitleMiss a :SelectOption ;
+    :optionValue "Miss" ;
+    :optionLabel "Miss" ;
+    :optionOrder 3 .
+
+field:TitleMs a :SelectOption ;
+    :optionValue "Ms" ;
+    :optionLabel "Ms" ;
+    :optionOrder 4 .
+
+field:TitleDr a :SelectOption ;
+    :optionValue "Dr" ;
+    :optionLabel "Dr" ;
+    :optionAlias "Doctor" ;
+    :optionOrder 5 .
+
+field:TitleField :hasOption field:TitleMr, field:TitleMrs, field:TitleMiss, field:TitleMs, field:TitleDr .
+
+# ========================================
+# GENDER FIELD
+# ========================================
+
+field:GenderField a :Field ;
+    rdfs:label "Gender" ;
+    :fieldType "select" ;
+    :required false ;
+    :hasASRGrammar field:GenderASRGrammar ;
+    :hasTTSPrompt field:GenderTTSPrompt .
+
+field:GenderASRGrammar a asr:ASRGrammar ;
+    asr:grammarFormat "JSGF" ;
+    asr:grammarText """#JSGF V1.0;
+grammar gender;
+
+public <gender> = male | female | other | prefer not to say;
+""" .
+
+field:GenderTTSPrompt a tts:TTSPrompt ;
+    tts:mainText "What is your gender?" ;
+    tts:variant1 "Please select your gender" ;
+    tts:variant2 "Male, female, or other?" ;
+    tts:variant3 "What gender do you identify as?" .
+
+field:GenderMale a :SelectOption ;
+    :optionValue "male" ;
+    :optionLabel "Male" ;
+    :optionOrder 1 .
+
+field:GenderFemale a :SelectOption ;
+    :optionValue "female" ;
+    :optionLabel "Female" ;
+    :optionOrder 2 .
+
+field:GenderOther a :SelectOption ;
+    :optionValue "other" ;
+    :optionLabel "Other" ;
+    :optionOrder 3 .
+
+field:GenderPreferNot a :SelectOption ;
+    :optionValue "prefer_not_to_say" ;
+    :optionLabel "Prefer not to say" ;
+    :optionOrder 4 .
+
+field:GenderField :hasOption field:GenderMale, field:GenderFemale, field:GenderOther, field:GenderPreferNot .

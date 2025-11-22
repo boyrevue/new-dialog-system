@@ -1,10 +1,9 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { MessageSquare, UserCog, Menu, X, Settings, Edit3, FolderTree, GitBranch, TrendingUp, CreditCard, AlertTriangle } from 'lucide-react'
+import { MessageSquare, UserCog, Menu, X, Settings, Edit3, FolderTree, GitBranch, TrendingUp, CreditCard } from 'lucide-react'
 import MultimodalDialog from './components/MultimodalDialog'
 import ChatMultimodalDialog from './components/ChatMultimodalDialog'
 import OperatorPanel from './components/OperatorPanel'
-import OperatorReviewQueue from './components/OperatorReviewQueue'
 import ConfigPanel from './components/ConfigPanel'
 import DialogEditor from './components/DialogEditor'
 import SectionManager from './components/SectionManager'
@@ -25,7 +24,7 @@ function AppContent() {
               <Link to="/" className="flex items-center">
                 <MessageSquare className="h-8 w-8 text-blue-600" />
                 <span className="ml-3 text-lg font-semibold text-gray-900">
-                  Multimodal Dialog System
+                  MultiModal Dialog
                 </span>
               </Link>
             </div>
@@ -40,7 +39,7 @@ function AppContent() {
                     }`}
                 >
                   <MessageSquare className="h-4 w-4" />
-                  Dialog
+                  User UX
                 </Link>
                 <Link
                   to="/operator"
@@ -50,7 +49,7 @@ function AppContent() {
                     }`}
                 >
                   <UserCog className="h-4 w-4" />
-                  Operator Panel
+                  Operator UX
                 </Link>
                 <Link
                   to="/config"
@@ -100,17 +99,7 @@ function AppContent() {
                     }`}
                 >
                   <CreditCard className="h-4 w-4" />
-                  Licence Template
-                </Link>
-                <Link
-                  to="/review-queue"
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium ${location.pathname === '/review-queue'
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                    }`}
-                >
-                  <AlertTriangle className="h-4 w-4" />
-                  Review Queue
+                  Document Templates
                 </Link>
               </div>
             </div>
@@ -142,7 +131,7 @@ function AppContent() {
                   }`}
               >
                 <MessageSquare className="h-5 w-5" />
-                Dialog
+                User UX
               </Link>
               <Link
                 to="/operator"
@@ -153,7 +142,7 @@ function AppContent() {
                   }`}
               >
                 <UserCog className="h-5 w-5" />
-                Operator Panel
+                Operator UX
               </Link>
               <Link
                 to="/config"
@@ -208,18 +197,7 @@ function AppContent() {
                   }`}
               >
                 <CreditCard className="h-5 w-5" />
-                Licence Template
-              </Link>
-              <Link
-                to="/review-queue"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium ${location.pathname === '/review-queue'
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-              >
-                <AlertTriangle className="h-5 w-5" />
-                Review Queue
+                Document Templates
               </Link>
             </div>
           </div>
@@ -230,7 +208,6 @@ function AppContent() {
         <Route path="/flow" element={<DialogFlowEditor />} />
         <Route path="/sessions" element={<DialogFlowView />} />
         <Route path="/licence-template" element={<LicenceTemplateEditor />} />
-        <Route path="/review-queue" element={<OperatorReviewQueue />} />
         <Route path="*" element={
           <main className="container mx-auto px-4 py-8">
             <Routes>

@@ -26,7 +26,11 @@ import {
   Calendar,
   List,
   Plus,
-  Trash2
+  Trash2,
+  Code,
+  Save,
+  Edit3,
+  Copy
 } from 'lucide-react';
 
 const API_BASE_URL = '/api/config';
@@ -52,6 +56,84 @@ const FormASRTester = () => {
   const [confidence, setConfidenceScore] = useState(0);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [jsgfEditing, setJsgfEditing] = useState({}); // { fieldId: { isEditing: boolean, content: string } }
+
+  // Generate JSGF format from patterns
+  const generateJSGF = (fieldId, fieldLabel, patterns) => {
+    const grammarName = fieldLabel.replace(/\s+/g, '_').toLowerCase();
+    const selectedPats = patterns.filter((_, idx) => selectedPatterns[fieldId]?.[idx] !== false);
+
+    let jsgf = `#JSGF V1.0;\n\n`;
+    jsgf += `grammar ${grammarName};\n\n`;
+    jsgf += `// Generated JSGF Grammar for: ${fieldLabel}\n`;
+    jsgf += `// Patterns: ${selectedPats.length}\n\n`;
+
+    // Convert patterns to JSGF rules
+    selectedPats.forEach((pattern, idx) => {
+      // Convert <answer> placeholder to JSGF syntax
+      const jsgfPattern = pattern
+        .replace(/<answer>/g, '<ANSWER>')
+        .replace(/\?/g, '')
+        .replace(/\./g, '');
+      jsgf += `public <rule_${idx + 1}> = ${jsgfPattern};\n`;
+    });
+
+    jsgf += `\n// Main entry point\n`;
+    jsgf += `public <${grammarName}> = ${selectedPats.map((_, idx) => `<rule_${idx + 1}>`).join(' | ')};\n`;
+
+    return jsgf;
+  };
+
+  // Copy JSGF to clipboard
+  const copyJSGF = (jsgfContent) => {
+    navigator.clipboard.writeText(jsgfContent);
+    setSuccess('JSGF grammar copied to clipboard!');
+    setTimeout(() => setSuccess(null), 2000);
+  };
+
+  // Toggle JSGF editing mode
+  const toggleJsgfEditing = (fieldId, patterns, fieldLabel) => {
+    if (jsgfEditing[fieldId]?.isEditing) {
+      setJsgfEditing({ ...jsgfEditing, [fieldId]: { isEditing: false, content: '' } });
+    } else {
+      const jsgf = generateJSGF(fieldId, fieldLabel, patterns);
+      setJsgfEditing({ ...jsgfEditing, [fieldId]: { isEditing: true, content: jsgf } });
+    }
+  };
+
+  // Update JSGF content
+  const updateJsgfContent = (fieldId, content) => {
+    setJsgfEditing({ ...jsgfEditing, [fieldId]: { ...jsgfEditing[fieldId], content } });
+  };
+
+  // Save JSGF grammar
+  const saveJsgfGrammar = async (field) => {
+    const jsgfContent = jsgfEditing[field.id]?.content;
+    if (!jsgfContent) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/save-jsgf-grammar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          field_id: field.id.toString(),
+          field_label: field.label,
+          jsgf_content: jsgfContent
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to save JSGF grammar');
+
+      const data = await response.json();
+      setSuccess(`JSGF grammar saved to ${data.file_path}`);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Speech recognition
   const recognitionRef = useRef(null);
@@ -641,6 +723,76 @@ const FormASRTester = () => {
                               </label>
                             );
                           })}
+                        </div>
+
+                        {/* Generated JSGF Grammar Section */}
+                        <div className="mt-4 pt-3 border-t border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <Code className="w-4 h-4 text-purple-600" />
+                              <span className="text-xs font-semibold text-purple-700">Generated JSGF Grammar</span>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                size="xs"
+                                color="purple"
+                                onClick={() => toggleJsgfEditing(field.id, grammar.patterns, field.label)}
+                              >
+                                {jsgfEditing[field.id]?.isEditing ? (
+                                  <>Hide JSGF</>
+                                ) : (
+                                  <><Code className="w-3 h-3 mr-1" />View/Edit JSGF</>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* JSGF Editor */}
+                          {jsgfEditing[field.id]?.isEditing && (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-1 mb-1">
+                                <Badge color="purple" size="xs">JSGF Format</Badge>
+                                <Badge color="gray" size="xs">Editable</Badge>
+                              </div>
+                              <Textarea
+                                value={jsgfEditing[field.id]?.content || ''}
+                                onChange={(e) => updateJsgfContent(field.id, e.target.value)}
+                                rows={10}
+                                className="font-mono text-xs bg-gray-900 text-green-400"
+                                style={{ fontFamily: 'monospace' }}
+                              />
+                              <div className="flex gap-2">
+                                <Button
+                                  size="xs"
+                                  color="success"
+                                  onClick={() => saveJsgfGrammar(field)}
+                                  disabled={isSaving}
+                                >
+                                  <Save className="w-3 h-3 mr-1" />
+                                  Save JSGF
+                                </Button>
+                                <Button
+                                  size="xs"
+                                  color="light"
+                                  onClick={() => copyJSGF(jsgfEditing[field.id]?.content)}
+                                >
+                                  <Copy className="w-3 h-3 mr-1" />
+                                  Copy
+                                </Button>
+                                <Button
+                                  size="xs"
+                                  color="light"
+                                  onClick={() => {
+                                    const jsgf = generateJSGF(field.id, field.label, grammar.patterns);
+                                    updateJsgfContent(field.id, jsgf);
+                                  }}
+                                >
+                                  <RefreshCw className="w-3 h-3 mr-1" />
+                                  Regenerate
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* Saved Info */}

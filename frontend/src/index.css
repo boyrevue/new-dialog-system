@@ -3,11 +3,76 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply antialiased;
+  html, body {
+    @apply bg-white text-gray-900 antialiased;
+    color-scheme: light !important;
   }
 
   #root {
-    @apply min-h-screen;
+    @apply min-h-screen bg-gray-50;
+  }
+}
+
+/* Force ALL Flowbite components to use light theme */
+/* Override Flowbite's dark mode card backgrounds */
+[class*="rounded-lg"][class*="border"][class*="shadow"] {
+  background-color: white !important;
+  border-color: rgb(229 231 235) !important;
+  color: rgb(17 24 39) !important;
+}
+
+/* Specifically target Flowbite Card component */
+.flex.flex-col.gap-4.p-6 {
+  background-color: white !important;
+}
+
+/* Override any dark: prefixed classes */
+[class*="dark:bg-gray-800"],
+[class*="dark:bg-gray-900"],
+[class*="dark:border-gray-700"],
+[class*="dark:text-white"],
+[class*="dark:text-gray-400"] {
+  background-color: white !important;
+  border-color: rgb(229 231 235) !important;
+  color: rgb(17 24 39) !important;
+}
+
+/* Force light mode on all cards */
+div[class*="bg-gray-800"],
+div[class*="bg-gray-900"] {
+  background-color: white !important;
+}
+
+/* Ensure text is dark */
+div[class*="text-white"],
+div[class*="text-gray-100"] {
+  color: rgb(17 24 39) !important;
+}
+
+/* Badge text should stay visible */
+span[class*="bg-blue-100"],
+span[class*="bg-green-100"],
+span[class*="bg-yellow-100"],
+span[class*="bg-red-100"],
+span[class*="bg-purple-100"] {
+  color: inherit;
+}
+
+/* Override system dark mode preference */
+@media (prefers-color-scheme: dark) {
+  html, body, #root {
+    background-color: white !important;
+    color: rgb(17 24 39) !important;
+    color-scheme: light !important;
+  }
+
+  /* Force all cards to white in dark mode */
+  [class*="rounded-lg"][class*="border"][class*="shadow"],
+  .flex.flex-col.gap-4.p-6,
+  div[class*="bg-gray-800"],
+  div[class*="bg-gray-900"] {
+    background-color: white !important;
+    border-color: rgb(229 231 235) !important;
+    color: rgb(17 24 39) !important;
   }
 }

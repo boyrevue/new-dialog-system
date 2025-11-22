@@ -6,7 +6,7 @@
       "Please provide your first name.",
       "I need your first name."
     ],
-    "updated_at": "{\"timestamp\": \"2025-11-17 08:13:40.474829\"}"
+    "updated_at": "{\"timestamp\": \"2025-11-19 12:13:44.076231\"}"
   },
   "q_last_name": {
     "variants": [
@@ -24,7 +24,7 @@
       "Please provide your date of birth.",
       "I need your date of birth."
     ],
-    "updated_at": "{\"timestamp\": \"2025-11-15 21:59:38.497048\"}"
+    "updated_at": "{\"timestamp\": \"2025-11-21 11:48:37.973226\"}"
   },
   "q_email": {
     "variants": [
@@ -33,7 +33,7 @@
       "Please provide your email address.",
       "I need your email address."
     ],
-    "updated_at": "{\"timestamp\": \"2025-11-15 21:59:57.296018\"}"
+    "updated_at": "{\"timestamp\": \"2025-11-21 12:30:01.207024\"}"
   },
   "q_phone": {
     "variants": [
@@ -88,5 +88,32 @@
       "Vehicle's make, please?"
     ],
     "updated_at": "{\"timestamp\": \"2025-11-16 01:05:27.202306\"}"
+  },
+  "q_gender": {
+    "variants": [
+      "Please tell me your gender.",
+      "Please tell me your gender.",
+      "Please tell me your gender.",
+      "Please tell me your gender."
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-21 12:31:27.636926\"}"
+  },
+  "q_marital_status": {
+    "variants": [
+      "What is your marital status? For example, single, married, or in a civil partnership.",
+      "Could you tell me your marital status? For example, single, married, or in a civil partnership.",
+      "Please provide your marital status? For example, single, married, or in a civil partnership.",
+      "I need your marital status? For example, single, married, or in a civil partnership."
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-21 19:44:41.971943\"}"
+  },
+  "q_driving_licence": {
+    "variants": [
+      "Please spell out your UK driving licence number, letter by letter and number by number. For example, J O N E S 6 0 1 0 5 3 D J 9 B M.",
+      "Please spell out your UK driving licence number, letter by letter and number by number. For example, J O N E S 6 0 1 0 5 3 D J 9 B M.",
+      "Please spell out your UK driving licence number, letter by letter and number by number. For example, J O N E S 6 0 1 0 5 3 D J 9 B M.",
+      "Please spell out your UK driving licence number, letter by letter and number by number. For example, J O N E S 6 0 1 0 5 3 D J 9 B M."
+    ],
+    "updated_at": "{\"timestamp\": \"2025-11-22 14:41:38.658982\"}"
   }
 }

@@ -1,6 +1,14 @@
 """
 Validation Functions for Dialog System
 Zod-style validators for UK-specific and general data validation
+
+Available Validators:
+- Number: isDigit, isNumber, isInteger, isFloat
+- Date/Time: isMonth, isDayOfMonth, isLeapYear
+- String: isString, isAlphanumeric
+- Contact: isEmail, isPhone
+- UK-Specific: isUKPostcode, isUKDrivingLicence, isUKDrivingLicenceCategory,
+               isUKDrivingOffenceCode, isUKCarRegistration
 """
 
 import re
@@ -268,19 +276,82 @@ def is_phone(value: str) -> bool:
 
 
 # ============================================================================
+# STRING VALIDATORS
+# ============================================================================
+
+def is_string(value: Any) -> bool:
+    """Validates if value is a string"""
+    return isinstance(value, str)
+
+
+def is_alphanumeric(value: str) -> bool:
+    """
+    Validates if string contains only alphanumeric characters (letters and numbers)
+    Examples: 'ABC123', 'Test123', 'HelloWorld'
+    Rejects: 'Test 123', 'Test-123', 'Test@123'
+    """
+    if not isinstance(value, str):
+        return False
+
+    return bool(value) and value.isalnum()
+
+
+def is_alpha(value: str) -> bool:
+    """
+    Validates if string contains only alphabetic characters (letters only, no numbers)
+    Examples: 'ABC', 'John', 'Smith', 'HelloWorld'
+    Rejects: 'ABC123', 'Test@123', 'Test 123', 'Test-123'
+    """
+    if not isinstance(value, str):
+        return False
+
+    return bool(value) and value.isalpha()
+
+
+def is_numeric(value: str) -> bool:
+    """
+    Validates if string contains only numeric characters (digits 0-9)
+    Allows: digits, spaces, and hyphens
+    Examples: '12345', '123-456', '123 456'
+    Rejects: 'ABC', 'Test123', '123@456'
+    """
+    if not isinstance(value, str):
+        return False
+
+    # Remove allowed characters (space and hyphen)
+    cleaned = value.replace(' ', '').replace('-', '')
+
+    # Check if remaining characters are all digits
+    return bool(cleaned) and cleaned.isdigit()
+
+
+# ============================================================================
 # VALIDATION MAPPER
 # ============================================================================
 
 VALIDATORS = {
+    # Number validators
     'isDigit': is_digit,
     'isNumber': is_number,
     'isInteger': is_integer,
     'isFloat': is_float,
+
+    # Date/time validators
     'isMonth': is_month,
     'isDayOfMonth': is_day_of_month,
     'isLeapYear': is_leap_year,
+
+    # String validators
+    'isString': is_string,
+    'isAlphanumeric': is_alphanumeric,
+    'isAlpha': is_alpha,
+    'isNumeric': is_numeric,
+
+    # Contact validators
     'isEmail': is_email,
     'isPhone': is_phone,
+
+    # UK-specific validators
     'isUKPostcode': is_uk_postcode,
     'isUKDrivingLicence': is_uk_driving_licence,
     'isUKDrivingLicenceCategory': is_uk_driving_licence_category,
