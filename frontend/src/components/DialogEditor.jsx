@@ -59,7 +59,9 @@ import {
   GripVertical,
   FolderPlus,
   Tag,
-  Loader2
+  Loader2,
+  Edit3,
+  Pencil
 } from 'lucide-react';
 import WorkflowEditor from './WorkflowEditor';
 import ASRGrammarPalette from './ASRGrammarPalette';
